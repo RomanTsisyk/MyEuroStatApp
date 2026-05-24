@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>EU Stats Multiplatform — Live Demo</title>
+  <meta name="description" content="Interactive slide-deck walkthrough of the EU Stats Multiplatform app — eight feature modules demonstrated frame by frame." />
+  <meta name="theme-color" content="#2F4969" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0E0D0C" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://romantsisyk.github.io/MyEuroStatApp/presentation/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <style>
+    :root {
+      --paper: #F4F1EA;
+      --paper-alt: #FFFFFF;
+      --surface-2: #EAE6DD;
+      --ink: #1A1817;
+      --ink-subtle: #3A352E;
+      --muted: #6B6359;
+      --muted-alt: #B3ACA1;
+      --accent: #2F4969;
+      --border: rgba(0,0,0,0.07);
+      --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+      --r-card: 16px;
+      --r-pill: 999px;
+      --mod-accent: var(--accent);
+    }
+    html[data-theme="dark"] {
+      --paper: #0E0D0C;
+      --paper-alt: #1A1816;
+      --surface-2: #252320;
+      --ink: #F5F2EB;
+      --ink-subtle: #E8E2D5;
+      --muted: #9C948A;
+      --muted-alt: #5C544D;
+      --accent: #7DA0C9;
+      --border: rgba(255,255,255,0.1);
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.5);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      font-feature-settings: 'ss01', 'cv01', 'cv11';
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    .num { font-variant-numeric: tabular-nums; }
+    button, select { font-family: inherit; }
+
+    /* TOP BAR — minimal, sticky */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 56px; z-index: 10;
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 24px;
+      background: color-mix(in srgb, var(--paper) 80%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand {
+      font-weight: 700; font-size: 14px; color: var(--ink);
+      text-decoration: none; letter-spacing: -0.01em;
+    }
+    .brand a { color: inherit; text-decoration: none; }
+    .brand .sub { color: var(--muted); font-weight: 400; margin-left: 4px; }
+    .crumbs { color: var(--muted); font-size: 13px; flex: 1; }
+    .crumbs a { color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; }
+    .crumbs a:hover { border-bottom-color: var(--accent); }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    .icon-btn {
+      width: 36px; height: 36px;
+      display: inline-grid; place-items: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--ink-subtle);
+      cursor: pointer;
+      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+    .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .icon-btn svg { width: 16px; height: 16px; }
+    .icon-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    html[data-theme="light"] .icon-moon { display: block; }
+    html[data-theme="light"] .icon-sun { display: none; }
+    html[data-theme="dark"] .icon-moon { display: none; }
+    html[data-theme="dark"] .icon-sun { display: block; }
+    .counter {
+      font-size: 12px; font-weight: 500; color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      min-width: 70px; text-align: right;
+    }
+    .progress {
+      position: fixed; top: 56px; left: 0; right: 0;
+      height: 2px; background: transparent; z-index: 9;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--mod-accent);
+      transition: width .35s cubic-bezier(.4,0,.2,1), background-color .35s ease;
+    }
+
+    /* STAGE — two-pane layout */
+    .stage {
+      position: fixed; top: 58px; left: 0; right: 0; bottom: 60px;
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.2fr);
+      gap: 24px;
+      padding: 24px 40px;
+      align-items: center;
+    }
+    @media (max-width: 900px) {
+      .stage { grid-template-columns: 1fr; padding: 16px; gap: 16px; }
+    }
+
+    /* PHONE FRAME */
+    .phone-wrap {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%;
+      min-height: 0;
+    }
+    .phone {
+      position: relative;
+      aspect-ratio: 9 / 19.5;
+      max-height: 100%;
+      max-width: 100%;
+      width: auto;
+      background: var(--paper-alt);
+      border-radius: 36px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s ease;
+    }
+    .phone::after {
+      /* subtle notch indicator at the top */
+      content: '';
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      width: 64px; height: 4px;
+      background: rgba(0,0,0,.15);
+      border-radius: 2px;
+      z-index: 2;
+    }
+    html[data-theme="dark"] .phone::after { background: rgba(255,255,255,.2); }
+    .phone img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .phone.fade-out img { opacity: 0; transition: opacity .15s ease; }
+    .phone.fade-in img { opacity: 1; transition: opacity .35s ease; }
+
+    /* DESCRIPTION PANEL */
+    .panel {
+      max-width: 540px;
+      padding: 0 16px;
+      animation: slide-in .45s cubic-bezier(.2,.8,.2,1);
+    }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--mod-accent);
+      margin-bottom: 12px;
+    }
+    .eyebrow .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--mod-accent);
+    }
+    .headline {
+      font-size: clamp(40px, 5vw, 64px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1;
+      margin: 0 0 6px;
+      color: var(--ink);
+    }
+    .headline .unit { color: var(--muted); font-weight: 400; font-size: 0.45em; margin-left: 4px; }
+    .subhead {
+      font-size: 15px; color: var(--muted);
+      margin: 0 0 24px;
+      font-variant-numeric: tabular-nums;
+    }
+    h1.title {
+      font-size: clamp(22px, 2.4vw, 30px);
+      font-weight: 600; letter-spacing: -0.015em;
+      margin: 0 0 12px;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+    .description {
+      font-size: 15px; line-height: 1.6;
+      color: var(--ink-subtle);
+      margin: 0 0 20px;
+    }
+    .action {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border-radius: 10px;
+      border-left: 3px solid var(--mod-accent);
+      font-size: 13.5px; color: var(--ink-subtle);
+      margin: 0 0 20px;
+    }
+    .action::before {
+      content: '▸'; color: var(--mod-accent); font-size: 14px; margin-top: 1px;
+    }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      font-size: 12px;
+    }
+    .meta-pill {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--muted);
+      font-family: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+      font-size: 11.5px;
+      letter-spacing: 0.01em;
+    }
+    .meta-pill.accent {
+      color: var(--mod-accent);
+      border-color: color-mix(in srgb, var(--mod-accent) 35%, transparent);
+    }
+
+    /* BOTTOM NAV */
+    .botbar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 60px; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      background: color-mix(in srgb, var(--paper) 80%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      gap: 16px;
+    }
+    .nav-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 0 16px; height: 38px;
+      background: var(--paper-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--ink); font-weight: 500; font-size: 13px;
+      cursor: pointer;
+      transition: background-color .15s ease, transform .1s ease;
+    }
+    .nav-btn:hover { background: var(--surface-2); }
+    .nav-btn:active { transform: scale(0.97); }
+    .nav-btn:disabled { opacity: 0.4; cursor: default; }
+    .nav-btn svg { width: 14px; height: 14px; }
+    .hint {
+      color: var(--muted); font-size: 11.5px;
+      display: flex; gap: 12px;
+    }
+    .hint kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: ui-monospace, 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--ink-subtle);
+    }
+    @media (max-width: 900px) {
+      .hint { display: none; }
+    }
+
+    /* MODULE DOTS — module-level navigation under topbar */
+    .modules {
+      position: fixed; left: 50%; transform: translateX(-50%);
+      bottom: 70px; z-index: 8;
+      display: flex; gap: 6px;
+      padding: 6px 12px;
+      background: color-mix(in srgb, var(--paper-alt) 90%, transparent);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      backdrop-filter: blur(12px);
+    }
+    .mod-dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 9px; font-weight: 700;
+      color: var(--muted);
+      transition: all .15s ease;
+    }
+    .mod-dot.current { border-color: var(--mod-accent); color: var(--ink); }
+    .mod-dot:hover { color: var(--ink); }
+    @media (max-width: 640px) {
+      .modules { display: none; }
+    }
+
+    /* AUTO-PLAY indicator */
+    .autoplay-track {
+      position: fixed; top: 56px; left: 0;
+      height: 2px;
+      background: var(--mod-accent);
+      transition: width .1s linear;
+      z-index: 11;
+      opacity: 0;
+    }
+    .autoplay-track.on { opacity: 1; }
+
+    /* PRINT — hide nav for screen-capture */
+    @media print {
+      .topbar, .botbar, .modules, .progress { display: none; }
+      .stage { top: 0; bottom: 0; }
+    }
+
+    /* REDUCED MOTION */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a href="../">EU Stats <span class="sub">· demo</span></a>
+    </div>
+    <div class="crumbs">
+      <a href="../">← back to landing</a>
+    </div>
+    <div class="counter" id="counter">— / —</div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="autoplay" aria-label="Toggle autoplay" title="Autoplay (space)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-play">
+          <polygon points="6 4 20 12 6 20 6 4"/>
+        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon-pause" style="display:none">
+          <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode" title="Theme (T)">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="progress"><div class="progress-fill" id="progress"></div></div>
+  <div class="autoplay-track" id="autoplayTrack"></div>
+
+  <main class="stage" id="stage">
+    <div class="phone-wrap">
+      <div class="phone" id="phone">
+        <img id="screen" alt="" />
+      </div>
+    </div>
+    <aside class="panel" id="panel">
+      <div class="eyebrow"><span class="dot"></span><span id="moduleLabel">—</span></div>
+      <div class="headline num"><span id="headline">—</span> <span class="unit" id="unit"></span></div>
+      <div class="subhead" id="subhead">—</div>
+      <h1 class="title" id="title">—</h1>
+      <p class="description" id="description">—</p>
+      <div class="action" id="action">—</div>
+      <div class="meta" id="meta"></div>
+    </aside>
+  </main>
+
+  <div class="modules" id="modules" aria-label="Jump to module"></div>
+
+  <nav class="botbar">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous (←)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      <span>Prev</span>
+    </button>
+    <div class="hint">
+      <span><kbd>←</kbd> <kbd>→</kbd> navigate</span>
+      <span><kbd>Space</kbd> autoplay</span>
+      <span><kbd>1</kbd>…<kbd>8</kbd> jump module</span>
+      <span><kbd>T</kbd> theme</span>
+    </div>
+    <button class="nav-btn" id="nextBtn" aria-label="Next (→)">
+      <span>Next</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </nav>
+
+  <script>
+    /* ------------- DATA -------------- */
+    const MOD = {
+      population:  { name: 'Population',  accent: '#5E6B58', datasets: ['demo_pjangroup'] },
+      economy:     { name: 'Economy',     accent: '#2F4969', datasets: ['nama_10_gdp','prc_hicp_aind','gov_10dd_edpt1'] },
+      environment: { name: 'Environment', accent: '#6B8A76', datasets: ['env_air_gge','nrg_bal_c','sdg_13_10'] },
+      trade:       { name: 'Trade',       accent: '#7A5C46', datasets: ['ext_lt_intratrd'] },
+      transport:   { name: 'Transport',   accent: '#4A4A55', datasets: ['road_pa_buscoa','avia_paoc'] },
+      tourism:     { name: 'Tourism',     accent: '#B06A3A', datasets: ['tour_occ_ninat','tour_dem_tttot','tour_occ_nim'] },
+      social:      { name: 'Social',      accent: '#7D5E76', datasets: ['ilc_li02','ilc_peps01','hlth_silc_01'] },
+      science:     { name: 'Science',     accent: '#4A6B7A', datasets: ['rd_e_gerdtot','isoc_ci_ifp_iu','edat_lfse_03'] },
+    };
+    const SLIDES = [
+      // ---- POPULATION ----
+      { img: 'population-01-total.png', mod: 'population', headline: '83.4', unit: 'M', subhead: 'Germany · 2024 · +0.4% YoY',
+        title: 'The pyramid in one glance',
+        description: 'Eighteen five-year age cohorts stacked symmetrically. Men in olive on the left, women in terracotta on the right — split totals annotated below the chart.',
+        action: 'Open the Population module — Total is selected by default.',
+        country: 'DE', year: '2024' },
+      { img: 'population-02-men.png', mod: 'population', headline: '41.1', unit: 'M', subhead: 'men · Germany · 2024',
+        title: 'Tap Men — women fade',
+        description: 'The segmented control dims the inactive side to a muted blush, so the male cohorts read against a quieter background without losing comparability.',
+        action: 'Tap the “Men” segment in the toggle.',
+        country: 'DE', year: '2024' },
+      { img: 'population-03-women.png', mod: 'population', headline: '42.2', unit: 'M', subhead: 'women · Germany · 2024',
+        title: 'Tap Women — men fade',
+        description: 'Women outnumber men in every cohort above age 50. The dimming pattern makes that asymmetry visible at a glance.',
+        action: 'Tap the “Women” segment.',
+        country: 'DE', year: '2024' },
+      { img: 'population-04-picker.png', mod: 'population', headline: '37.9', unit: 'M', subhead: 'Poland · 2020 · picker open',
+        title: 'Add a country, on-demand',
+        description: 'The country picker is a searchable bottom-sheet. Type three letters, get one match, tap Apply — the new country joins the chip row and the comparison.',
+        action: 'Tap “+ add”, type “ita”, see Italy filtered live.',
+        country: 'PL', year: '2020' },
+
+      // ---- ECONOMY ----
+      { img: 'economy-01-gdp.png', mod: 'economy', headline: '4 328', unit: 'B €', subhead: 'GDP · Germany · 2024 · +2.6% YoY',
+        title: 'GDP, four countries on one chart',
+        description: 'Multi-line chart for DE, EU27_2020, FR, PL. The two metrics not in the headline — HICP inflation and government deficit — sit as secondary stat tiles below.',
+        action: 'Switch to Economy module; GDP is the default metric.',
+        country: 'DE', year: '2024' },
+      { img: 'economy-02-year-dropdown.png', mod: 'economy', headline: '4 328', unit: 'B €', subhead: 'year picker · DE · 2024',
+        title: 'Pick any historical year',
+        description: 'The year dropdown lists every observation year from 2024 down to 2010. Picking an older year updates the headline and stat tiles — the chart keeps its full history.',
+        action: 'Tap the “year: 2024” pill.',
+        country: 'DE', year: '2024' },
+      { img: 'economy-03-inflation.png', mod: 'economy', headline: '129.0', unit: 'idx', subhead: 'HICP · Germany · 2024 · +3.1 idx · base 2015=100',
+        title: 'Inflation, since 2015',
+        description: 'Four HICP index series diverge sharply after 2021 — the post-COVID inflation spike is plainly visible. GDP and the deficit demote to secondary tiles.',
+        action: 'Tap the Inflation segment.',
+        country: 'DE', year: '2024' },
+      { img: 'economy-04-deficit.png', mod: 'economy', headline: '−2.7', unit: '% GDP', subhead: 'government balance · Germany · 2024 · −0.2 pp',
+        title: 'Deficit, all four together',
+        description: 'Most EU economies cross into deeper negative territory after 2020. Germany returns to single-digit deficits faster than the rest.',
+        action: 'Tap the Deficit segment.',
+        country: 'DE', year: '2024' },
+      { img: 'economy-05-add-chip.png', mod: 'economy', headline: '4 328', unit: 'B €', subhead: 'GDP · DE · + add chip visible',
+        title: 'Country chip row · scrollable',
+        description: 'When the chip row overflows, the dashed “+ add” affordance stays anchored at the right edge — always reachable, never hidden under the headline.',
+        action: 'Scroll the country chips row sideways.',
+        country: 'DE', year: '2024' },
+      { img: 'economy-06-picker.png', mod: 'economy', headline: '—', unit: '', subhead: 'multi-select country picker',
+        title: 'Pick many at once',
+        description: 'Same bottom-sheet picker as Population — but here you can toggle several countries on or off in one pass, and the chart re-renders only when you tap Apply.',
+        action: 'Tap “+ add” to open the picker.',
+        country: 'DE', year: '2024' },
+      { img: 'economy-07-poland.png', mod: 'economy', headline: '852', unit: 'B €', subhead: 'GDP · Poland · 2024 · +13.3%',
+        title: 'Poland steps forward',
+        description: 'After narrowing to PL + EU27, Poland’s notably higher HICP (148.6) and deeper deficit (−6.4% of GDP) come into view.',
+        action: 'Remove DE and FR; keep PL and EU27.',
+        country: 'PL', year: '2024' },
+
+      // ---- ENVIRONMENT ----
+      { img: 'environment-01-ghg.png', mod: 'environment', headline: '—', unit: 'Mt CO₂-eq', subhead: 'GHG · TOTAL · Germany · 2024',
+        title: 'Greenhouse gas, total economy',
+        description: 'Germany’s line drops from ~4.2 K to ~3.3 K Mt CO₂-eq over the decade. The EU27 average sits much lower because it’s a per-country average.',
+        action: 'Open Environment; GHG is the default metric.',
+        country: 'DE', year: '2024' },
+      { img: 'environment-02-metric-dropdown.png', mod: 'environment', headline: '—', unit: 'Mt CO₂-eq', subhead: 'metric picker · GHG / Energy / SDG',
+        title: 'Three datasets, one dropdown',
+        description: 'Switching metric keeps the country and year selection. Each metric has its own unit and own chart shape — the picker is the only thing that changes.',
+        action: 'Tap the “GHG” metric pill.',
+        country: 'DE', year: '2024' },
+      { img: 'environment-03-year-dropdown.png', mod: 'environment', headline: '—', unit: 'Mt CO₂-eq', subhead: 'year picker · same as Economy',
+        title: 'Same year-picker pattern, every screen',
+        description: 'The year picker is one shared component used across all eight modules. Pick once, apply everywhere it makes sense.',
+        action: 'Tap the year pill.',
+        country: 'DE', year: '2024' },
+      { img: 'environment-04-energy-transport-de.png', mod: 'environment', headline: '55 145', unit: 'ktoe', subhead: 'Energy · TRANSPORT sector · Germany · 2015',
+        title: 'Sector slicing, transport',
+        description: 'Switch to the Energy metric and tap the TRANSPORT sector chip — the chart shows transport-only energy consumption for the active country versus the EU27 average.',
+        action: 'Energy metric + TRANSPORT sector.',
+        country: 'DE', year: '2015' },
+      { img: 'environment-05-energy-transport-fr.png', mod: 'environment', headline: '46 492', unit: 'ktoe', subhead: 'Energy · TRANSPORT · France · 2015',
+        title: 'France uses less transport energy',
+        description: 'Same metric, same sector, different country. Switching the country chip is instant — no network refetch, the data is already in memory.',
+        action: 'Tap the FR chip.',
+        country: 'FR', year: '2015' },
+      { img: 'environment-06-energy-industry-fr.png', mod: 'environment', headline: '28 013', unit: 'ktoe', subhead: 'Energy · INDUSTRY sector · France · 2015',
+        title: 'Industry slice for France',
+        description: 'Sector chips re-slice the same dataset by activity. Industry is well below transport for France — the line shifts dramatically while the country and year stay put.',
+        action: 'Tap the INDUSTRY sector chip.',
+        country: 'FR', year: '2015' },
+
+      // ---- TRADE ----
+      { img: 'trade-01-year-dropdown.png', mod: 'trade', headline: '—', unit: 'B €', subhead: 'year picker · Germany · trade balance',
+        title: 'Year picker on the diverging chart',
+        description: 'Trade uses the same year-picker convention. Exports run right; imports run left; the chart shows the last eight years simultaneously.',
+        action: 'Open Trade; tap the year pill.',
+        country: 'DE', year: '2024' },
+      { img: 'trade-02-france.png', mod: 'trade', headline: '−123', unit: 'B €', subhead: 'France · 2024 · exports 319 / imports 442',
+        title: 'France runs a deficit',
+        description: 'A diverging-bar chart makes the imbalance immediate. France imports significantly more than it exports across the visible window.',
+        action: 'Tap the FR chip.',
+        country: 'FR', year: '2024' },
+      { img: 'trade-03-poland.png', mod: 'trade', headline: '+24', unit: 'B €', subhead: 'Poland · 2024 · exports 262 / imports 238',
+        title: 'Poland runs a surplus',
+        description: 'Same chart, opposite story. The diverging bars flip direction — exports outpace imports in every recent year.',
+        action: 'Tap the PL chip.',
+        country: 'PL', year: '2024' },
+
+      // ---- TRANSPORT ----
+      { img: 'transport-01-linear.png', mod: 'transport', headline: '—', unit: 'bn', subhead: 'road + air · Germany · 2024 · linear scale',
+        title: 'Small multiples — road & air',
+        description: 'Two independent line charts side by side. Both share the same x-axis. The COVID dip is the loudest feature in either panel.',
+        action: 'Open Transport; ALL view, linear scale.',
+        country: 'DE', year: '2024' },
+      { img: 'transport-02-log-scale.png', mod: 'transport', headline: '—', unit: 'bn', subhead: 'log scale ON — compresses COVID dip',
+        title: 'Log scale, one tap',
+        description: 'A single switch toggles the y-axis to logarithmic. The COVID collapse stops dominating the visual range and shape differences become readable.',
+        action: 'Flip the “log scale” switch.',
+        country: 'DE', year: '2024' },
+      { img: 'transport-03-air-only.png', mod: 'transport', headline: '200', unit: 'M', subhead: 'Air passengers · Germany · 2024',
+        title: 'Focus mode — air only',
+        description: 'Pill toggle isolates one panel. The plateau before 2020, the cliff in 2020, and the steady climb back are now the entire story.',
+        action: 'Tap the AIR pill.',
+        country: 'DE', year: '2024' },
+      { img: 'transport-04-year-dropdown.png', mod: 'transport', headline: '—', unit: '', subhead: 'year picker over road chart',
+        title: 'Year picker, road view',
+        description: 'The same dropdown lives on every chart. Pick a year to update the headline; the chart line keeps its full history.',
+        action: 'Tap the year pill.',
+        country: 'DE', year: '2024' },
+      { img: 'transport-05-road-2014.png', mod: 'transport', headline: '5.6', unit: 'bn', subhead: 'Road passengers · Germany · 2014',
+        title: '2014 — before the dip',
+        description: 'Scrubbing back to 2014 shows pre-COVID baseline traffic. Germany was carrying 5.6 billion road passengers a year.',
+        action: 'Select 2014 from the dropdown.',
+        country: 'DE', year: '2014' },
+      { img: 'transport-06-poland.png', mod: 'transport', headline: '3.7', unit: 'bn', subhead: 'Road passengers · Poland · 2024',
+        title: 'Poland — a shallower dip',
+        description: 'Tap PL — the Polish road line shows less COVID disruption and a faster return to trend than Germany.',
+        action: 'Tap the PL chip.',
+        country: 'PL', year: '2024' },
+
+      // ---- TOURISM ----
+      { img: 'tourism-01-foreign.png', mod: 'tourism', headline: '84.7', unit: 'M', subhead: 'foreign nights · Germany · 2024',
+        title: 'Foreign overnights, by year',
+        description: 'A stacked-bar chart splits each year into domestic and foreign nights. Underneath, a seasonality heatmap renders month × year for the same country.',
+        action: 'Open Tourism; tap Foreign in the chip row.',
+        country: 'DE', year: '2024' },
+      { img: 'tourism-02-domestic.png', mod: 'tourism', headline: '354.8', unit: 'M', subhead: 'domestic nights · Germany · 2024',
+        title: 'Domestic overnights, ×4 the foreign',
+        description: 'Germany’s overnight stays are predominantly domestic. The same year on the chip row makes the ratio instantly readable.',
+        action: 'Tap Domestic.',
+        country: 'DE', year: '2024' },
+      { img: 'tourism-03-germany-2014.png', mod: 'tourism', headline: '—', unit: '', subhead: 'Germany · 2014 · year scrub',
+        title: 'A decade back',
+        description: 'Scrub the year picker to 2014. The stacked-bar and the seasonality heatmap shift together — every chart on the screen reflects the chosen year.',
+        action: 'Scrub the year slider back to 2014.',
+        country: 'DE', year: '2014' },
+      { img: 'tourism-04-spain.png', mod: 'tourism', headline: '—', unit: '', subhead: 'Spain · 2024 · foreign-dominant',
+        title: 'Spain flips the chart',
+        description: 'For Spain, foreign overnights tower over domestic — the inverse of Germany. The bar stack shape tells the macro tourism story without numbers.',
+        action: 'Tap the ES chip.',
+        country: 'ES', year: '2024' },
+      { img: 'tourism-05-poland.png', mod: 'tourism', headline: '—', unit: '', subhead: 'Poland · 2024',
+        title: 'Poland, somewhere in between',
+        description: 'Poland is more domestic than Spain, more foreign than Germany. Three countries, three patterns, one chart shape.',
+        action: 'Tap the PL chip.',
+        country: 'PL', year: '2024' },
+
+      // ---- SOCIAL ----
+      { img: 'social-01-poverty.png', mod: 'social', headline: '16.2', unit: '%', subhead: 'at-risk-of-poverty rate · EU27 · 2024',
+        title: 'Three KPIs, three lines, one tap',
+        description: 'KPI tiles act as both metric headers and switchers. Tap a tile to highlight that line; the other two fade to muted grey.',
+        action: 'Open Social; Poverty is the default highlighted tile.',
+        country: 'EU27_2020', year: '2024' },
+      { img: 'social-02-year-dropdown.png', mod: 'social', headline: '—', unit: '%', subhead: 'year picker · social indicators',
+        title: 'Same year-picker, social context',
+        description: 'Social shares the year-picker pattern. The dropdown lists every observation year for the chosen country.',
+        action: 'Tap the year pill.',
+        country: 'EU27_2020', year: '2024' },
+      { img: 'social-03-at-risk.png', mod: 'social', headline: '—', unit: '%', subhead: 'at-risk-of-poverty-or-social-exclusion · EU27',
+        title: 'Switch the highlighted KPI',
+        description: 'Tap “at-risk” — that line jumps to full saturation, the others fade. The headline updates to that indicator’s value for the selected year.',
+        action: 'Tap the AT-RISK KPI tile.',
+        country: 'EU27_2020', year: '2024' },
+      { img: 'social-04-health-2014.png', mod: 'social', headline: '20.5', unit: '%', subhead: 'self-reported very-good health · EU27 · 2014',
+        title: 'Health, ten years ago',
+        description: 'Tap HEALTH and scrub back to 2014 — the EU27 saw 20.5% of adults reporting very-good self-perceived health.',
+        action: 'Tap HEALTH; scrub to 2014.',
+        country: 'EU27_2020', year: '2014' },
+      { img: 'social-05-health-2020.png', mod: 'social', headline: '23.6', unit: '%', subhead: 'self-reported very-good health · EU27 · 2020',
+        title: 'Health, 2020',
+        description: 'By 2020 the same indicator had risen to 23.6%. Whether you call that improvement or measurement drift is the point of the chart — visible context.',
+        action: 'Scrub to 2020.',
+        country: 'EU27_2020', year: '2020' },
+
+      // ---- SCIENCE ----
+      { img: 'science-01-eu.png', mod: 'science', headline: '2.24', unit: '%', subhead: 'R&D spend · EU27 · 2024 · % of GDP',
+        title: 'Three innovation indicators on one radar',
+        description: 'R&D spend, internet usage, and tertiary education attainment are plotted as a triangle. The active country (filled) overlays its top peer (outline).',
+        action: 'Open Science; EU27 is the default.',
+        country: 'EU27_2020', year: '2024' },
+      { img: 'science-02-france.png', mod: 'science', headline: '2.18', unit: '%', subhead: 'R&D spend · France · 2024',
+        title: 'France — R&D ≈ EU average',
+        description: 'France’s R&D-to-GDP sits just shy of the EU mean. The radar overlays FR (grey) against DE (red), making the gap on each axis explicit.',
+        action: 'Tap the FR chip.',
+        country: 'FR', year: '2024' },
+      { img: 'science-03-poland.png', mod: 'science', headline: '1.40', unit: '%', subhead: 'R&D spend · Poland · 2024',
+        title: 'Poland — investing less per GDP',
+        description: 'Poland’s R&D radar triangle is visibly smaller than Germany’s. The number — 1.40% of GDP — quantifies what the shape already shows.',
+        action: 'Tap the PL chip.',
+        country: 'PL', year: '2024' },
+      { img: 'science-04-poland-2016.png', mod: 'science', headline: '0.96', unit: '%', subhead: 'R&D spend · Poland · 2016',
+        title: '2016 — Poland’s R&D was lower still',
+        description: 'Year picker back to 2016. Poland’s R&D share was below 1% then. The radar triangle for PL shrinks accordingly against the DE peer.',
+        action: 'Pick 2016 in the year dropdown.',
+        country: 'PL', year: '2016' },
+      { img: 'science-05-france-2018.png', mod: 'science', headline: '2.20', unit: '%', subhead: 'R&D spend · France · 2018',
+        title: 'France 2018 — the long view',
+        description: 'France’s R&D investment as a share of GDP has hovered around 2.2% for years. The radar holds steady; the sparklines below show the full trend.',
+        action: 'Switch to FR; pick 2018.',
+        country: 'FR', year: '2018' },
+    ];
+
+    /* ------------- STATE ------------- */
+    let idx = 0;
+    let auto = false;
+    let autoTimer = null;
+    let autoStart = 0;
+    const AUTO_INTERVAL_MS = 7000;
+
+    const $ = (id) => document.getElementById(id);
+    const root = document.documentElement;
+    const stage = $('stage');
+    const phone = $('phone');
+    const screen = $('screen');
+    const counter = $('counter');
+    const progress = $('progress');
+    const autoplayTrack = $('autoplayTrack');
+    const autoplayBtn = $('autoplay');
+    const themeBtn = $('themeToggle');
+    const moduleLabel = $('moduleLabel');
+    const headlineEl = $('headline');
+    const unitEl = $('unit');
+    const subheadEl = $('subhead');
+    const titleEl = $('title');
+    const descriptionEl = $('description');
+    const actionEl = $('action');
+    const metaEl = $('meta');
+    const modulesEl = $('modules');
+    const prevBtn = $('prevBtn');
+    const nextBtn = $('nextBtn');
+
+    /* ------------- RENDER ------------- */
+    function setTheme(t) {
+      root.setAttribute('data-theme', t);
+      localStorage.setItem('eu-stats-theme', t);
+    }
+    function initTheme() {
+      const stored = localStorage.getItem('eu-stats-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(stored || (prefersDark ? 'dark' : 'light'));
+    }
+
+    function render() {
+      const s = SLIDES[idx];
+      const m = MOD[s.mod];
+      root.style.setProperty('--mod-accent', m.accent);
+      moduleLabel.textContent = m.name;
+      headlineEl.textContent = s.headline;
+      unitEl.textContent = s.unit || '';
+      subheadEl.textContent = s.subhead;
+      titleEl.textContent = s.title;
+      descriptionEl.textContent = s.description;
+      actionEl.firstChild ? actionEl.replaceChildren(document.createTextNode(s.action)) : actionEl.textContent = s.action;
+      // meta pills
+      metaEl.innerHTML = '';
+      const pills = [
+        ...(s.year ? [`year: ${s.year}`] : []),
+        ...(s.country ? [`geo: ${s.country}`] : []),
+        ...m.datasets.map(d => d),
+      ];
+      pills.forEach((p, i) => {
+        const el = document.createElement('span');
+        el.className = 'meta-pill' + (i < 2 ? ' accent' : '');
+        el.textContent = p;
+        metaEl.appendChild(el);
+      });
+      // image swap with brief fade
+      phone.classList.add('fade-out');
+      setTimeout(() => {
+        screen.src = `../screenshots/v2/${s.img}`;
+        screen.alt = `${m.name} — ${s.title}`;
+        phone.classList.remove('fade-out');
+        phone.classList.add('fade-in');
+        setTimeout(() => phone.classList.remove('fade-in'), 350);
+      }, 100);
+      // counter + progress
+      counter.textContent = `${idx + 1} / ${SLIDES.length}`;
+      const pct = ((idx + 1) / SLIDES.length) * 100;
+      progress.style.width = pct + '%';
+      // module dots
+      Array.from(modulesEl.children).forEach(dot => {
+        dot.classList.toggle('current', dot.dataset.mod === s.mod);
+      });
+      // nav buttons disabled state
+      prevBtn.disabled = (idx === 0);
+      nextBtn.disabled = (idx === SLIDES.length - 1);
+      // preload next image
+      if (SLIDES[idx + 1]) {
+        const pre = new Image();
+        pre.src = `../screenshots/v2/${SLIDES[idx + 1].img}`;
+      }
+    }
+
+    function go(n) {
+      idx = Math.max(0, Math.min(SLIDES.length - 1, n));
+      render();
+      if (auto) {
+        clearTimeout(autoTimer);
+        autoStart = performance.now();
+        scheduleAuto();
+      }
+    }
+
+    function next() { go(idx + 1 < SLIDES.length ? idx + 1 : idx); }
+    function prev() { go(idx - 1 >= 0 ? idx - 1 : idx); }
+
+    function jumpToModule(modKey) {
+      const i = SLIDES.findIndex(s => s.mod === modKey);
+      if (i >= 0) go(i);
+    }
+
+    function buildModuleDots() {
+      modulesEl.innerHTML = '';
+      Object.entries(MOD).forEach(([key, m], i) => {
+        const b = document.createElement('button');
+        b.className = 'mod-dot';
+        b.dataset.mod = key;
+        b.title = `${m.name} (key ${i + 1})`;
+        b.textContent = m.name[0];
+        b.style.setProperty('--mod-accent', m.accent);
+        b.addEventListener('click', () => jumpToModule(key));
+        modulesEl.appendChild(b);
+      });
+    }
+
+    /* ------------- AUTOPLAY ------------- */
+    function toggleAutoplay() {
+      auto = !auto;
+      autoplayBtn.classList.toggle('active', auto);
+      autoplayBtn.querySelector('.icon-play').style.display = auto ? 'none' : '';
+      autoplayBtn.querySelector('.icon-pause').style.display = auto ? '' : 'none';
+      autoplayTrack.classList.toggle('on', auto);
+      if (auto) {
+        autoStart = performance.now();
+        scheduleAuto();
+        animateAutoplayBar();
+      } else {
+        clearTimeout(autoTimer);
+        autoplayTrack.style.width = '0';
+      }
+    }
+    function scheduleAuto() {
+      clearTimeout(autoTimer);
+      autoTimer = setTimeout(() => {
+        if (idx >= SLIDES.length - 1) { toggleAutoplay(); return; }
+        next();
+      }, AUTO_INTERVAL_MS);
+    }
+    function animateAutoplayBar() {
+      if (!auto) { autoplayTrack.style.width = '0'; return; }
+      const elapsed = performance.now() - autoStart;
+      const pct = Math.min(100, (elapsed / AUTO_INTERVAL_MS) * 100);
+      autoplayTrack.style.width = pct + '%';
+      if (pct < 100) requestAnimationFrame(animateAutoplayBar);
+    }
+
+    /* ------------- INPUT ------------- */
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      switch (e.key) {
+        case 'ArrowRight': case 'PageDown': case 'j': next(); break;
+        case 'ArrowLeft':  case 'PageUp':   case 'k': prev(); break;
+        case ' ':          e.preventDefault(); toggleAutoplay(); break;
+        case 't': case 'T': setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); break;
+        case 'Home': go(0); break;
+        case 'End':  go(SLIDES.length - 1); break;
+        case '1': jumpToModule('population'); break;
+        case '2': jumpToModule('economy'); break;
+        case '3': jumpToModule('environment'); break;
+        case '4': jumpToModule('trade'); break;
+        case '5': jumpToModule('transport'); break;
+        case '6': jumpToModule('tourism'); break;
+        case '7': jumpToModule('social'); break;
+        case '8': jumpToModule('science'); break;
+      }
+    });
+    nextBtn.addEventListener('click', next);
+    prevBtn.addEventListener('click', prev);
+    autoplayBtn.addEventListener('click', toggleAutoplay);
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+
+    // Click anywhere on the phone advances
+    phone.addEventListener('click', next);
+
+    /* ------------- INIT ------------- */
+    initTheme();
+    buildModuleDots();
+    render();
+  </script>
+</body>
+</html>

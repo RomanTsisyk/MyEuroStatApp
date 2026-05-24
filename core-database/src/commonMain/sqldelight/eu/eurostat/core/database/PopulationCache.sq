@@ -1,0 +1,28 @@
+CREATE TABLE PopulationCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    total_population INTEGER NOT NULL,
+    male_population INTEGER,
+    female_population INTEGER,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year)
+);
+
+CREATE INDEX population_country_year ON PopulationCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM PopulationCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO PopulationCacheEntity(country_code, year, total_population, male_population, female_population, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM PopulationCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?;
+
+deleteByCountriesAndYears:
+DELETE FROM PopulationCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?;

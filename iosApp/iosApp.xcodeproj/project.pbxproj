@@ -1,0 +1,6 @@
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// TODO: This file is a placeholder. See iosApp/README.md for instructions
+// on how to regenerate a valid project using Xcode's "Create New Project"
+// wizard, then drag in the existing Swift sources and configure the
+// KMP framework build phase.
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

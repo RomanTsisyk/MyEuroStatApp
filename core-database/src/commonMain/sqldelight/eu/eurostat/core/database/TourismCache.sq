@@ -1,0 +1,28 @@
+CREATE TABLE TourismCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    nights INTEGER NOT NULL,
+    trips INTEGER,
+    residence TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year, residence)
+);
+
+CREATE INDEX tourism_country_year ON TourismCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM TourismCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND residence = ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO TourismCacheEntity(country_code, year, nights, trips, residence, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM TourismCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND residence = ?;
+
+deleteByCountriesAndYears:
+DELETE FROM TourismCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND residence = ?;

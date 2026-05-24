@@ -1,0 +1,1525 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>EU Stats Multiplatform — Technical Reference</title>
+  <meta name="description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 17 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 444 unit tests." />
+  <meta name="theme-color" content="#2F4969" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0E0D0C" media="(prefers-color-scheme: dark)" />
+  <meta name="color-scheme" content="light dark" />
+  <meta property="og:title" content="EU Stats Multiplatform — Technical Reference" />
+  <meta property="og:description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 17 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 444 unit tests." />
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="../gifs/overview.gif" />
+  <meta property="og:url" content="https://romantsisyk.github.io/MyEuroStatApp/technical/" />
+  <meta property="og:locale" content="en_GB" />
+  <link rel="canonical" href="https://romantsisyk.github.io/MyEuroStatApp/technical/" />
+  <link rel="alternate" hreflang="en" href="https://romantsisyk.github.io/MyEuroStatApp/technical/" />
+  <link rel="alternate" hreflang="de" href="https://romantsisyk.github.io/MyEuroStatApp/de/" />
+  <link rel="alternate" hreflang="fr" href="https://romantsisyk.github.io/MyEuroStatApp/fr/" />
+  <link rel="alternate" hreflang="it" href="https://romantsisyk.github.io/MyEuroStatApp/it/" />
+  <link rel="alternate" hreflang="es" href="https://romantsisyk.github.io/MyEuroStatApp/es/" />
+  <link rel="alternate" hreflang="pl" href="https://romantsisyk.github.io/MyEuroStatApp/pl/" />
+  <link rel="alternate" hreflang="nl" href="https://romantsisyk.github.io/MyEuroStatApp/nl/" />
+  <link rel="alternate" hreflang="pt" href="https://romantsisyk.github.io/MyEuroStatApp/pt/" />
+  <link rel="alternate" hreflang="uk" href="https://romantsisyk.github.io/MyEuroStatApp/uk/" />
+  <link rel="alternate" hreflang="x-default" href="https://romantsisyk.github.io/MyEuroStatApp/" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "EU Stats Multiplatform — Architecture & Technical Reference",
+    "description": "Architecture, data flow, and conventions of the EU Stats Multiplatform project. 17 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 444 unit tests.",
+    "author": { "@type": "Person", "name": "Roman Tsisyk" },
+    "dateModified": "2026-05-25",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://romantsisyk.github.io/MyEuroStatApp/technical/" },
+    "url": "https://romantsisyk.github.io/MyEuroStatApp/technical/",
+    "inLanguage": "en",
+    "isPartOf": { "@type": "WebSite", "url": "https://romantsisyk.github.io/MyEuroStatApp/" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
+  <style>
+    /* -------- tokens (light) -------- */
+    :root {
+      --paper: #F4F1EA;
+      --paper-alt: #FFFFFF;
+      --surface-2: #EAE6DD;
+      --ink: #1A1817;
+      --ink-subtle: #3A352E;
+      --muted: #6B6359;
+      --accent: #2F4969;
+      --accent-soft: #C6D0DC;
+      --warn: #C25A35;
+      --border: rgba(0, 0, 0, 0.07);
+      --border-strong: rgba(0, 0, 0, 0.12);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 12px rgba(0, 0, 0, .04);
+
+      /* module accents (light) */
+      --mod-economy: #2F4969;
+      --mod-population: #5E6B58;
+      --mod-environment: #6B8A76;
+      --mod-trade: #7A5C46;
+      --mod-transport: #4A4A55;
+      --mod-tourism: #B06A3A;
+      --mod-social: #7D5E76;
+      --mod-science: #4A6B7A;
+
+      /* spacing scale */
+      --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
+      --s-6: 24px; --s-8: 32px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
+
+      /* radii */
+      --r-card: 12px;
+      --r-hero: 24px;
+      --r-pill: 999px;
+
+      /* type */
+      --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, "IBM Plex Mono", "JetBrains Mono", "SF Mono", Menlo, monospace;
+    }
+
+    /* -------- tokens (dark) -------- */
+    html[data-theme="dark"] {
+      --paper: #0E0D0C;
+      --paper-alt: #1A1816;
+      --surface-2: #252320;
+      --ink: #F5F2EB;
+      --ink-subtle: #E8E2D5;
+      --muted: #9C948A;
+      --accent: #7DA0C9;
+      --accent-soft: #2F4969;
+      --warn: #C25A35;
+      --border: rgba(255, 255, 255, 0.10);
+      --border-strong: rgba(255, 255, 255, 0.18);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .35);
+
+      --mod-economy: #7DA0C9;
+      --mod-population: #9CB394;
+      --mod-environment: #9FC3AC;
+      --mod-trade: #C2967A;
+      --mod-transport: #A8A8B8;
+      --mod-tourism: #E69664;
+      --mod-social: #C599BC;
+      --mod-science: #8FB4C7;
+    }
+
+    /* -------- base -------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.65;
+      font-weight: 400;
+      font-feature-settings: 'ss01', 'cv01', 'cv11';
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color .25s ease, color .25s ease;
+    }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3, h4 {
+      font-family: var(--font-sans);
+      color: var(--ink);
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+      margin: 0;
+      font-weight: 700;
+    }
+    p { margin: 0; color: var(--ink-subtle); }
+    code, .mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--s-6);
+    }
+
+    /* -------- nav -------- */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      background: color-mix(in srgb, var(--paper) 86%, transparent);
+      -webkit-backdrop-filter: saturate(140%) blur(14px);
+      backdrop-filter: saturate(140%) blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .brand { display: flex; align-items: baseline; gap: 10px; }
+    .brand-mark { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+    .brand-sub { font-size: 12px; color: var(--muted); font-family: var(--font-mono); font-weight: 400; }
+    .nav-links { display: flex; align-items: center; gap: var(--s-6); }
+    .nav-links a {
+      color: var(--ink-subtle);
+      font-size: 14px; font-weight: 500;
+      transition: color .15s ease;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.active {
+      color: var(--accent);
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .nav-links .gh {
+      padding: 6px 12px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border-strong);
+      color: var(--ink);
+    }
+    .nav-links .gh:hover { background: var(--surface-2); }
+    .theme-toggle {
+      width: 36px; height: 36px;
+      display: inline-grid; place-items: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--ink-subtle);
+      cursor: pointer;
+      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .theme-toggle:hover { background: var(--surface-2); color: var(--ink); }
+    .theme-toggle svg { width: 16px; height: 16px; }
+    html[data-theme="light"] .icon-moon { display: block; }
+    html[data-theme="light"] .icon-sun  { display: none; }
+    html[data-theme="dark"]  .icon-moon { display: none; }
+    html[data-theme="dark"]  .icon-sun  { display: block; }
+    .lang-switch {
+      appearance: none; -webkit-appearance: none; -moz-appearance: none;
+      height: 36px;
+      padding: 0 28px 0 12px;
+      background:
+        transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%236B6359" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--ink-subtle);
+      font: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .lang-switch:hover { background-color: var(--surface-2); color: var(--ink); }
+    .lang-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    html[data-theme="dark"] .lang-switch {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%239C948A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    }
+    @media (max-width: 720px) {
+      .nav-links a:not(.gh) { display: none; }
+    }
+
+    /* -------- tech-hero -------- */
+    .tech-hero {
+      padding: var(--s-12) 0 var(--s-8);
+      border-bottom: 1px solid var(--border);
+    }
+    .breadcrumb {
+      font-size: 13px; color: var(--muted);
+      margin-bottom: var(--s-4);
+      display: flex; align-items: center; gap: var(--s-2);
+    }
+    .breadcrumb a { color: var(--accent); }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .tech-hero h1 {
+      font-size: clamp(32px, 4.5vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.06;
+      margin-bottom: var(--s-4);
+    }
+    .tech-hero .lede {
+      font-size: clamp(16px, 1.3vw, 18px);
+      color: var(--ink-subtle);
+      max-width: 72ch;
+      line-height: 1.65;
+    }
+
+    /* -------- section common -------- */
+    section { padding: var(--s-16) 0; }
+    @media (max-width: 720px) { section { padding: var(--s-12) 0; } }
+    .section-head { max-width: 720px; margin-bottom: var(--s-8); }
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--s-3);
+    }
+    .section-head h2 {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: var(--s-3);
+    }
+    .section-head p {
+      font-size: 16px; color: var(--ink-subtle); line-height: 1.65;
+    }
+
+    /* -------- card -------- */
+    .card {
+      background: var(--paper-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: var(--s-8);
+      box-shadow: var(--shadow);
+    }
+
+    /* -------- diagram wrapper -------- */
+    .diagram-wrap {
+      max-width: 700px;
+      margin: 0 auto var(--s-4);
+      overflow-x: auto;
+    }
+    .diagram-wrap svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .diagram-caption {
+      font-size: 13.5px;
+      color: var(--muted);
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.55;
+    }
+
+    /* -------- stats strip -------- */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-4);
+    }
+    @media (max-width: 800px) { .stats-strip { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 420px) { .stats-strip { grid-template-columns: 1fr; } }
+    .stat-card {
+      background: var(--paper-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: var(--s-6);
+    }
+    .stat-card .value {
+      font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--ink); line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-card .label {
+      margin-top: 6px; font-size: 13px; color: var(--muted); line-height: 1.45;
+    }
+
+    /* -------- chart gallery -------- */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-4);
+    }
+    @media (max-width: 900px) { .chart-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .chart-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--paper-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      padding: var(--s-4);
+      display: flex; flex-direction: column; gap: var(--s-2);
+    }
+    .chart-card svg { display: block; margin: 0 auto; }
+    .chart-card .chart-name {
+      font-size: 14px; font-weight: 600; color: var(--ink); text-align: center;
+    }
+    .chart-card .chart-module {
+      font-size: 12px; color: var(--muted); font-family: var(--font-mono); text-align: center;
+    }
+
+    /* -------- dataset table -------- */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      box-shadow: var(--shadow);
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 14px; background: var(--paper-alt);
+    }
+    thead th {
+      position: sticky; top: 0;
+      background: var(--surface-2);
+      padding: var(--s-3) var(--s-4);
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border-strong);
+      white-space: nowrap;
+    }
+    tbody tr:not(:last-child) td {
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr:hover { background: var(--surface-2); }
+    td {
+      padding: var(--s-3) var(--s-4);
+      vertical-align: top;
+      color: var(--ink-subtle);
+      line-height: 1.5;
+    }
+    td code {
+      font-size: 12.5px;
+      background: var(--surface-2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .mod-pill {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      padding: 2px 8px;
+      border-radius: var(--r-pill);
+      border: 1px solid currentColor;
+      white-space: nowrap;
+    }
+    td .filters { font-size: 12.5px; font-family: var(--font-mono); color: var(--muted); line-height: 1.7; }
+    td .note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* -------- code block -------- */
+    .code-block {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-card);
+      overflow-x: auto;
+      padding: var(--s-6) var(--s-8);
+    }
+    .code-block pre {
+      margin: 0; font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+    .kw { color: var(--accent); font-weight: 600; }
+    .cm { color: var(--muted); font-style: italic; }
+    .st { color: var(--mod-environment); }
+
+    /* -------- conventions list -------- */
+    .conv-list {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: var(--s-3);
+    }
+    .conv-list li {
+      display: flex; gap: var(--s-3); align-items: baseline;
+      font-size: 15px; color: var(--ink-subtle); line-height: 1.6;
+    }
+    .conv-list li::before {
+      content: "";
+      flex-shrink: 0;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      transform: translateY(5px);
+    }
+
+    /* -------- perf list -------- */
+    .perf-list {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: var(--s-4);
+    }
+    .perf-list li {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--s-4);
+      font-size: 15px;
+      line-height: 1.55;
+      padding-bottom: var(--s-4);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (max-width: 600px) {
+      .perf-list li { grid-template-columns: 1fr; gap: var(--s-1); }
+    }
+    .perf-list li:last-child { border-bottom: none; }
+    .perf-label { font-weight: 600; color: var(--ink); }
+    .perf-val { color: var(--ink-subtle); }
+
+    /* -------- footer -------- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: var(--s-12) 0 var(--s-8);
+      margin-top: var(--s-16);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.4fr;
+      gap: var(--s-8);
+    }
+    @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; } }
+    .footer-grid h4 {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: var(--s-4);
+    }
+    .footer-grid p, .footer-grid a {
+      font-size: 14px; color: var(--ink-subtle); line-height: 1.7;
+    }
+    .footer-grid a { display: block; }
+    .footer-grid a:hover { color: var(--ink); }
+    .credits {
+      margin-top: var(--s-8);
+      padding-top: var(--s-6);
+      border-top: 1px solid var(--border);
+      font-size: 12.5px; color: var(--muted); text-align: center;
+    }
+
+    /* -------- print -------- */
+    @media print {
+      .nav, footer, .theme-toggle { display: none !important; }
+      body { background: #fff; color: #000; }
+      section { padding: 24px 0; page-break-inside: avoid; }
+    }
+
+    /* -------- a11y -------- */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAV ============ -->
+  <nav class="nav" aria-label="Primary">
+    <div class="wrap nav-inner">
+      <a href="../" class="brand" aria-label="EU Stats Multiplatform — home">
+        <span class="brand-mark">EU Stats</span>
+        <span class="brand-sub">· multiplatform</span>
+      </a>
+      <div class="nav-links">
+        <a href="../#features">Features</a>
+        <a href="../#modules">Modules</a>
+        <a href="../#roadmap">Roadmap</a>
+        <a class="active" aria-current="page">Tech</a>
+        <a href="https://github.com/romantsisyk/MyEuroStatApp" class="gh">GitHub</a>
+        <select class="lang-switch" id="langSwitch" aria-label="Choose language" onchange="if(this.value)window.location.href=this.value;">
+          <option value="" selected>EN · Technical</option>
+          <option value="../">EN — English (landing)</option>
+          <option value="../de/">DE — Deutsch</option>
+          <option value="../fr/">FR — Français</option>
+          <option value="../it/">IT — Italiano</option>
+          <option value="../es/">ES — Español</option>
+          <option value="../pl/">PL — Polski</option>
+          <option value="../nl/">NL — Nederlands</option>
+          <option value="../pt/">PT — Português</option>
+          <option value="../uk/">UK — Українська</option>
+        </select>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <header class="tech-hero">
+      <div class="wrap">
+        <div class="breadcrumb">
+          <a href="../">&#8592; Back to landing</a>
+          <span>/</span>
+          <span>Technical Reference</span>
+        </div>
+        <h1>Architecture &amp;<br/>Technical Reference</h1>
+        <p class="lede">How EU Stats Multiplatform is put together &mdash; the contracts, the data flow, the conventions that make 17 Gradle modules ship the same product on Android, iOS, and desktop.</p>
+      </div>
+    </header>
+
+    <!-- ============ MODULE GRAPH ============ -->
+    <section id="module-graph">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Module graph</div>
+          <h2>17 Gradle modules, three tiers</h2>
+          <p>Core modules define reusable contracts. Feature modules own their data flow end-to-end. The app shell wires everything together.</p>
+        </div>
+
+        <div class="diagram-wrap">
+          <!-- Module dependency graph SVG -->
+          <!-- viewBox: 700 wide × 520 tall -->
+          <svg viewBox="0 0 700 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Module dependency graph showing three tiers: core modules at top, feature modules in middle, app shell at bottom" style="max-width:700px;">
+            <defs>
+              <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 Z" fill="var(--accent)" opacity="0.5"/>
+              </marker>
+              <!-- box drop shadow filter -->
+              <filter id="bshadow" x="-5%" y="-10%" width="110%" height="130%">
+                <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(0,0,0,0.07)"/>
+              </filter>
+            </defs>
+
+            <!-- ---- Tier labels ---- -->
+            <text x="8" y="38" font-family="var(--font-mono)" font-size="10" fill="var(--muted)" letter-spacing="0.06em" text-anchor="start">TIER 1 · CORE</text>
+            <text x="8" y="218" font-family="var(--font-mono)" font-size="10" fill="var(--muted)" letter-spacing="0.06em" text-anchor="start">TIER 2 · FEATURES</text>
+            <text x="8" y="418" font-family="var(--font-mono)" font-size="10" fill="var(--muted)" letter-spacing="0.06em" text-anchor="start">TIER 3 · APP SHELL</text>
+
+            <!-- ---- Layer connector arrows (simplified: tier1 → tier2 → tier3) ---- -->
+            <!-- Arrow from core band to feature band -->
+            <line x1="350" y1="148" x2="350" y2="218" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.35" marker-end="url(#arr)"/>
+            <!-- Arrow from feature band to app shell -->
+            <line x1="350" y1="360" x2="350" y2="418" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.35" marker-end="url(#arr)"/>
+
+            <!-- ================= TIER 1: CORE MODULES ================= -->
+            <!-- core-common -->
+            <rect x="14" y="46" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="68" y="61" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-common</text>
+            <text x="68" y="76" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">Result · AppError</text>
+
+            <!-- core-jsonstat -->
+            <rect x="132" y="46" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="186" y="61" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-jsonstat</text>
+            <text x="186" y="76" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">JSON-stat 2.0</text>
+
+            <!-- core-network -->
+            <rect x="250" y="46" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="304" y="61" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-network</text>
+            <text x="304" y="76" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">Ktor HttpClient</text>
+
+            <!-- core-database -->
+            <rect x="368" y="46" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="422" y="61" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-database</text>
+            <text x="422" y="76" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">SQLDelight DAOs</text>
+
+            <!-- core-navigation -->
+            <rect x="486" y="46" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="540" y="61" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-navigation</text>
+            <text x="540" y="76" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">Decompose root</text>
+
+            <!-- core-ui (second row) -->
+            <rect x="132" y="100" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="186" y="115" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-ui</text>
+            <text x="186" y="130" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">20 components</text>
+
+            <!-- core-charts (second row) -->
+            <rect x="368" y="100" width="108" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="422" y="115" font-family="var(--font-mono)" font-size="10" fill="var(--accent)" font-weight="600" text-anchor="middle">core-charts</text>
+            <text x="422" y="130" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">8 Canvas charts</text>
+
+            <!-- ================= TIER 2: FEATURE MODULES ================= -->
+            <!-- feature-population -->
+            <rect x="14" y="228" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-population)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="65" y="243" font-family="var(--font-mono)" font-size="9" fill="var(--mod-population)" font-weight="600" text-anchor="middle">population</text>
+            <text x="65" y="258" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">demo_pjangroup</text>
+
+            <!-- feature-economy -->
+            <rect x="124" y="228" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-economy)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="175" y="243" font-family="var(--font-mono)" font-size="9" fill="var(--mod-economy)" font-weight="600" text-anchor="middle">economy</text>
+            <text x="175" y="258" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">nama · hicp · gov</text>
+
+            <!-- feature-environment -->
+            <rect x="234" y="228" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-environment)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="285" y="243" font-family="var(--font-mono)" font-size="9" fill="var(--mod-environment)" font-weight="600" text-anchor="middle">environment</text>
+            <text x="285" y="258" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">ghg · energy · sdg</text>
+
+            <!-- feature-trade -->
+            <rect x="344" y="228" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-trade)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="395" y="243" font-family="var(--font-mono)" font-size="9" fill="var(--mod-trade)" font-weight="600" text-anchor="middle">trade</text>
+            <text x="395" y="258" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">ext_lt_intratrd</text>
+
+            <!-- feature-transport -->
+            <rect x="454" y="228" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-transport)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="505" y="243" font-family="var(--font-mono)" font-size="9" fill="var(--mod-transport)" font-weight="600" text-anchor="middle">transport</text>
+            <text x="505" y="258" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">road · avia</text>
+
+            <!-- feature-tourism -->
+            <rect x="14" y="278" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-tourism)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="65" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--mod-tourism)" font-weight="600" text-anchor="middle">tourism</text>
+            <text x="65" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">occ · dem</text>
+
+            <!-- feature-social -->
+            <rect x="124" y="278" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-social)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="175" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--mod-social)" font-weight="600" text-anchor="middle">social</text>
+            <text x="175" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">silc · eu-silc</text>
+
+            <!-- feature-science -->
+            <rect x="234" y="278" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--mod-science)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="285" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--mod-science)" font-weight="600" text-anchor="middle">science</text>
+            <text x="285" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">rd · isoc · edat</text>
+
+            <!-- feature-settings (planned) -->
+            <rect x="344" y="278" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3" filter="url(#bshadow)"/>
+            <text x="395" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" font-weight="600" text-anchor="middle">settings</text>
+            <text x="395" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">Phase 5 planned</text>
+
+            <!-- ================= TIER 3: APP SHELL ================= -->
+            <!-- composeApp -->
+            <rect x="170" y="426" width="200" height="44" rx="10" fill="var(--paper-alt)" stroke="var(--accent)" stroke-width="2" filter="url(#bshadow)"/>
+            <text x="270" y="444" font-family="var(--font-mono)" font-size="11" fill="var(--accent)" font-weight="700" text-anchor="middle">composeApp</text>
+            <text x="270" y="461" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">ScrollableTabRow · BottomTabBar</text>
+
+            <!-- iosApp -->
+            <rect x="390" y="426" width="120" height="44" rx="10" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" filter="url(#bshadow)"/>
+            <text x="450" y="444" font-family="var(--font-mono)" font-size="11" fill="var(--muted)" font-weight="600" text-anchor="middle">iosApp</text>
+            <text x="450" y="461" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">Xcode wrapper</text>
+
+            <!-- Legend -->
+            <rect x="530" y="228" width="156" height="88" rx="8" fill="var(--paper-alt)" stroke="var(--border)" stroke-width="1"/>
+            <text x="608" y="245" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle" letter-spacing="0.04em">LEGEND</text>
+            <rect x="540" y="253" width="26" height="14" rx="4" fill="var(--paper-alt)" stroke="var(--accent)" stroke-width="1.5"/>
+            <text x="572" y="264" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">core module</text>
+            <rect x="540" y="273" width="26" height="14" rx="4" fill="var(--paper-alt)" stroke="var(--mod-economy)" stroke-width="1.5"/>
+            <text x="572" y="284" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">feature module</text>
+            <rect x="540" y="293" width="26" height="14" rx="4" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/>
+            <text x="572" y="304" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">planned (Phase 5)</text>
+          </svg>
+        </div>
+        <p class="diagram-caption">Multi-module Clean Architecture. Cores are reusable contracts; feature modules own their data flow end-to-end; <code>composeApp</code> wires them together.</p>
+      </div>
+    </section>
+
+    <!-- ============ DATA FLOW DIAGRAM ============ -->
+    <section id="data-flow" style="background: var(--paper-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Data flow</div>
+          <h2>Stale-while-revalidate, step by step</h2>
+          <p>Every feature module follows the same flow: emit Loading immediately, serve cached data as stale, revalidate in the background, suppress network errors if a stale cache was already emitted.</p>
+        </div>
+
+        <div class="diagram-wrap">
+          <!-- Sequence diagram: vertical lanes -->
+          <svg viewBox="0 0 700 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stale-while-revalidate data flow sequence diagram" style="max-width:700px;">
+            <defs>
+              <marker id="seq-arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,1 L7,4 L0,7 Z" fill="var(--accent)"/>
+              </marker>
+              <marker id="seq-arr-muted" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,1 L7,4 L0,7 Z" fill="var(--muted)"/>
+              </marker>
+            </defs>
+
+            <!-- Lane headers -->
+            <rect x="4"   y="4"  width="92"  height="36" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1"/>
+            <text x="50"  y="17" font-family="var(--font-mono)" font-size="9" fill="var(--ink)" font-weight="600" text-anchor="middle">User / UI</text>
+            <text x="50"  y="31" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Compose Screen</text>
+
+            <rect x="104" y="4"  width="108" height="36" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1"/>
+            <text x="158" y="17" font-family="var(--font-mono)" font-size="9" fill="var(--ink)" font-weight="600" text-anchor="middle">Component</text>
+            <text x="158" y="31" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Decompose</text>
+
+            <rect x="220" y="4"  width="92"  height="36" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1"/>
+            <text x="266" y="17" font-family="var(--font-mono)" font-size="9" fill="var(--ink)" font-weight="600" text-anchor="middle">UseCase</text>
+            <text x="266" y="31" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">domain layer</text>
+
+            <rect x="320" y="4"  width="108" height="36" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1"/>
+            <text x="374" y="17" font-family="var(--font-mono)" font-size="9" fill="var(--ink)" font-weight="600" text-anchor="middle">Repository</text>
+            <text x="374" y="31" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">data layer</text>
+
+            <rect x="436" y="4"  width="86"  height="36" rx="6" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="479" y="17" font-family="var(--font-mono)" font-size="9" fill="var(--ink)" font-weight="600" text-anchor="middle">Cache</text>
+            <text x="479" y="31" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">SQLDelight</text>
+
+            <rect x="530" y="4"  width="166" height="36" rx="6" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="613" y="17" font-family="var(--font-mono)" font-size="9" fill="var(--ink)" font-weight="600" text-anchor="middle">Eurostat API</text>
+            <text x="613" y="31" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Ktor + OkHttp / Darwin</text>
+
+            <!-- Lane lifelines -->
+            <line x1="50"  y1="40" x2="50"  y2="560" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="158" y1="40" x2="158" y2="560" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="266" y1="40" x2="266" y2="560" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="374" y1="40" x2="374" y2="560" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="479" y1="40" x2="479" y2="560" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="613" y1="40" x2="613" y2="560" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 4"/>
+
+            <!-- Step 1: User taps tab -->
+            <text x="50" y="70" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">taps tab</text>
+            <!-- User → Component: init -->
+            <line x1="52" y1="80" x2="154" y2="80" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#seq-arr)"/>
+            <text x="103" y="76" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">init()</text>
+
+            <!-- Component → UseCase: observe -->
+            <line x1="160" y1="100" x2="262" y2="100" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#seq-arr)"/>
+            <text x="211" y="96" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">useCase.observe(query)</text>
+
+            <!-- UseCase → Repository -->
+            <line x1="268" y1="120" x2="370" y2="120" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#seq-arr)"/>
+            <text x="319" y="116" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">repository.observe()</text>
+
+            <!-- Dispatcher boundary annotation -->
+            <rect x="2" y="130" width="696" height="14" rx="3" fill="var(--surface-2)" opacity="0.7"/>
+            <text x="350" y="141" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle" letter-spacing="0.04em">— IO DISPATCHER BOUNDARY (flowOn dispatchers.io) —</text>
+
+            <!-- Repository emits Loading -->
+            <line x1="372" y1="158" x2="162" y2="158" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr-muted)"/>
+            <text x="267" y="154" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">emit Loading</text>
+
+            <!-- Component → UI: Loading state -->
+            <line x1="156" y1="175" x2="54" y2="175" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr-muted)"/>
+            <text x="103" y="171" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">UiState.Loading</text>
+
+            <!-- Repository → Cache: read -->
+            <line x1="376" y1="198" x2="475" y2="198" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#seq-arr)"/>
+            <text x="427" y="194" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">cache.read(key)</text>
+
+            <!-- Cache → Repository: hit -->
+            <line x1="477" y1="216" x2="378" y2="216" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr)"/>
+            <text x="427" y="212" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">CacheHit(data)</text>
+
+            <!-- Repository → UI: Success isStale=true -->
+            <line x1="372" y1="235" x2="162" y2="235" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr-muted)"/>
+            <text x="267" y="231" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">emit Success(data, isStale=true)</text>
+            <line x1="156" y1="248" x2="54" y2="248" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr-muted)"/>
+            <text x="103" y="244" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">StaleBanner shown</text>
+
+            <!-- Repository → API: fetch -->
+            <line x1="376" y1="272" x2="609" y2="272" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#seq-arr)"/>
+            <text x="492" y="268" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">api.fetch(dataset, filters)</text>
+
+            <!-- Branch: API success path -->
+            <text x="610" y="295" font-family="var(--font-mono)" font-size="8" fill="var(--mod-environment)" text-anchor="middle">✓ success</text>
+            <line x1="609" y1="302" x2="378" y2="302" stroke="var(--mod-environment)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr)"/>
+            <text x="492" y="298" font-family="var(--font-mono)" font-size="8" fill="var(--mod-environment)" text-anchor="middle">JsonStatResponse</text>
+
+            <!-- cache.write -->
+            <line x1="376" y1="320" x2="475" y2="320" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#seq-arr)"/>
+            <text x="427" y="316" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">cache.write(key, data)</text>
+
+            <!-- emit Success isStale=false -->
+            <line x1="372" y1="340" x2="162" y2="340" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr)"/>
+            <text x="267" y="336" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">emit Success(data, isStale=false)</text>
+            <line x1="156" y1="353" x2="54" y2="353" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2" marker-end="url(#seq-arr)"/>
+            <text x="103" y="349" font-family="var(--font-mono)" font-size="8" fill="var(--accent)" text-anchor="middle">StaleBanner hidden</text>
+
+            <!-- Branch: API failure path -->
+            <text x="610" y="383" font-family="var(--font-mono)" font-size="8" fill="var(--warn)" text-anchor="middle">✗ failure</text>
+            <!-- if cached: suppress -->
+            <rect x="318" y="390" width="200" height="28" rx="6" fill="color-mix(in srgb, var(--warn) 8%, transparent)" stroke="var(--warn)" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="418" y="402" font-family="var(--font-mono)" font-size="8" fill="var(--warn)" text-anchor="middle">if(cached) suppress silently</text>
+            <text x="418" y="414" font-family="var(--font-mono)" font-size="8" fill="var(--warn)" text-anchor="middle">else emit Error(AppError)</text>
+
+            <!-- Error path to UI -->
+            <line x1="372" y1="425" x2="162" y2="425" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.7" marker-end="url(#seq-arr-muted)"/>
+            <text x="267" y="421" font-family="var(--font-mono)" font-size="8" fill="var(--warn)" text-anchor="middle">emit Error(NetworkError) — only if no cache</text>
+
+            <!-- IO boundary note bottom -->
+            <rect x="2" y="445" width="696" height="14" rx="3" fill="var(--surface-2)" opacity="0.7"/>
+            <text x="350" y="456" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle" letter-spacing="0.04em">— MAIN DISPATCHER BOUNDARY (collect on Main) —</text>
+
+            <!-- CancellationException note -->
+            <text x="350" y="482" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">CancellationException always rethrown — never swallowed</text>
+            <text x="350" y="496" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">No other exception crosses the data/domain boundary</text>
+          </svg>
+        </div>
+        <p class="diagram-caption">Stale-while-revalidate: cached data reaches the UI before the network call completes. The <code>StaleBanner</code> component indicates revalidation in progress and disappears on fresh success.</p>
+      </div>
+    </section>
+
+    <!-- ============ JSON-STAT PARSER FLOW ============ -->
+    <section id="jsonstat">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">JSON-stat parser</div>
+          <h2>One parser. 18 datasets.</h2>
+          <p>The parser lives in <code>core-jsonstat/JsonStatParser.kt</code> and is dataset-agnostic. Feature-specific shaping happens in per-feature <code>CellMapper</code> extensions.</p>
+        </div>
+
+        <div class="diagram-wrap">
+          <!-- JSON-stat flow: horizontal pipeline -->
+          <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JSON-stat parser pipeline from response to typed domain model" style="max-width:700px;">
+            <defs>
+              <marker id="pipe-arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 Z" fill="var(--accent)"/>
+              </marker>
+            </defs>
+
+            <!-- Stage 1: Input -->
+            <rect x="4" y="60" width="118" height="72" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="63" y="82" font-family="var(--font-mono)" font-size="9" fill="var(--accent)" font-weight="600" text-anchor="middle">JsonStatResponse</text>
+            <text x="63" y="96" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">size: List&lt;Int&gt;</text>
+            <text x="63" y="109" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">id: List&lt;String&gt;</text>
+            <text x="63" y="122" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">dimension: Map</text>
+            <text x="63" y="135" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">value: Map/List</text>
+
+            <!-- Arrow -->
+            <line x1="123" y1="96" x2="155" y2="96" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#pipe-arr)"/>
+
+            <!-- Stage 2: Multipliers -->
+            <rect x="157" y="60" width="126" height="72" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="220" y="82" font-family="var(--font-mono)" font-size="9" fill="var(--accent)" font-weight="600" text-anchor="middle">compute multipliers</text>
+            <text x="220" y="96" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">stride per dimension</text>
+            <text x="220" y="109" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">O(d) pre-pass</text>
+            <text x="220" y="122" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">supports any d ≥ 1</text>
+
+            <!-- Arrow -->
+            <line x1="284" y1="96" x2="316" y2="96" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#pipe-arr)"/>
+
+            <!-- Stage 3: Walk values -->
+            <rect x="318" y="60" width="126" height="72" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="381" y="82" font-family="var(--font-mono)" font-size="9" fill="var(--accent)" font-weight="600" text-anchor="middle">walk value-map</text>
+            <text x="381" y="96" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">each entry: index→value</text>
+            <text x="381" y="109" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">decode dim indices</text>
+            <text x="381" y="122" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">null-safe (sparse OK)</text>
+
+            <!-- Arrow -->
+            <line x1="445" y1="96" x2="477" y2="96" stroke="var(--accent)" stroke-width="1.5" marker-end="url(#pipe-arr)"/>
+
+            <!-- Stage 4: Output -->
+            <rect x="479" y="60" width="218" height="72" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="588" y="82" font-family="var(--font-mono)" font-size="9" fill="var(--accent)" font-weight="600" text-anchor="middle">List&lt;JsonStatCell&gt;</text>
+            <text x="588" y="96" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">dimensions: Map&lt;dim, code&gt;</text>
+            <text x="588" y="109" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">dimensionLabels: Map</text>
+            <text x="588" y="122" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">value: Double?</text>
+
+            <!-- Bottom annotation -->
+            <text x="350" y="162" font-family="var(--font-sans)" font-size="11" fill="var(--ink-subtle)" text-anchor="middle">then each feature's <tspan font-family="var(--font-mono)" font-size="10">CellMapper.fromCells()</tspan> shapes cells into typed domain models</text>
+            <text x="350" y="178" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">O(n × d) total · sub-millisecond for typical datasets (10³–10⁵ values, 2–4 dimensions)</text>
+          </svg>
+        </div>
+        <p class="diagram-caption">Generic unpacker &mdash; no feature-specific logic. The 18 Eurostat datasets all flow through this same parser before being shaped into typed domain models by per-feature <code>CellMapper</code> extensions.</p>
+      </div>
+    </section>
+
+    <!-- ============ CHART GALLERY ============ -->
+    <section id="charts" style="background: var(--paper-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Chart library</div>
+          <h2>Eight chart types. Pure Compose Canvas implementation &mdash; no third-party chart libraries. ~1500 LOC total in <code>core-charts/</code>.</h2>
+        </div>
+
+        <div class="chart-grid">
+
+          <!-- Pyramid -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- Pyramid: mirrored horizontal bars -->
+              <rect x="45" y="8"  width="14" height="7" rx="2" fill="var(--mod-population)" opacity="0.9"/>
+              <rect x="61" y="8"  width="14" height="7" rx="2" fill="var(--mod-population)" opacity="0.5"/>
+              <rect x="38" y="18" width="21" height="7" rx="2" fill="var(--mod-population)" opacity="0.9"/>
+              <rect x="61" y="18" width="21" height="7" rx="2" fill="var(--mod-population)" opacity="0.5"/>
+              <rect x="28" y="28" width="31" height="7" rx="2" fill="var(--mod-population)" opacity="0.9"/>
+              <rect x="61" y="28" width="31" height="7" rx="2" fill="var(--mod-population)" opacity="0.5"/>
+              <rect x="18" y="38" width="41" height="7" rx="2" fill="var(--mod-population)" opacity="0.9"/>
+              <rect x="61" y="38" width="41" height="7" rx="2" fill="var(--mod-population)" opacity="0.5"/>
+              <rect x="10" y="48" width="49" height="7" rx="2" fill="var(--mod-population)" opacity="0.9"/>
+              <rect x="61" y="48" width="49" height="7" rx="2" fill="var(--mod-population)" opacity="0.5"/>
+              <line x1="60" y1="4" x2="60" y2="62" stroke="var(--border-strong)" stroke-width="0.8"/>
+              <text x="32" y="73" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Male</text>
+              <text x="88" y="73" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Female</text>
+            </svg>
+            <div class="chart-name">Population Pyramid</div>
+            <div class="chart-module">feature-population</div>
+          </div>
+
+          <!-- Line / Multi-line -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <polyline points="8,60 28,42 48,48 68,22 88,32 108,14" fill="none" stroke="var(--mod-economy)" stroke-width="2" stroke-linejoin="round"/>
+              <polyline points="8,68 28,60 48,55 68,50 88,42 108,38" fill="none" stroke="var(--mod-economy)" stroke-width="1.2" stroke-linejoin="round" opacity="0.45"/>
+              <line x1="8" y1="72" x2="112" y2="72" stroke="var(--border)" stroke-width="0.8"/>
+            </svg>
+            <div class="chart-name">Multi-Line</div>
+            <div class="chart-module">feature-economy · environment</div>
+          </div>
+
+          <!-- Diverging Bar -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <line x1="60" y1="4" x2="60" y2="74" stroke="var(--border-strong)" stroke-width="0.8"/>
+              <rect x="34" y="8"  width="26" height="9" rx="2" fill="var(--mod-trade)" opacity="0.9"/>
+              <rect x="60" y="8"  width="30" height="9" rx="2" fill="var(--mod-trade)" opacity="0.5"/>
+              <rect x="32" y="21" width="28" height="9" rx="2" fill="var(--mod-trade)" opacity="0.9"/>
+              <rect x="60" y="21" width="22" height="9" rx="2" fill="var(--mod-trade)" opacity="0.5"/>
+              <rect x="22" y="34" width="38" height="9" rx="2" fill="var(--mod-trade)" opacity="0.9"/>
+              <rect x="60" y="34" width="34" height="9" rx="2" fill="var(--mod-trade)" opacity="0.5"/>
+              <rect x="28" y="47" width="32" height="9" rx="2" fill="var(--mod-trade)" opacity="0.9"/>
+              <rect x="60" y="47" width="26" height="9" rx="2" fill="var(--mod-trade)" opacity="0.5"/>
+              <text x="40" y="73" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Exp</text>
+              <text x="82" y="73" font-family="var(--font-mono)" font-size="8" fill="var(--muted)" text-anchor="middle">Imp</text>
+            </svg>
+            <div class="chart-name">Diverging Bar</div>
+            <div class="chart-module">feature-trade</div>
+          </div>
+
+          <!-- Small Multiples -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- left panel -->
+              <rect x="6" y="4" width="50" height="48" rx="4" fill="var(--surface-2)" stroke="var(--border)" stroke-width="0.8"/>
+              <polyline points="10,44 20,36 30,30 40,22 50,18" fill="none" stroke="var(--mod-transport)" stroke-width="1.5" stroke-linejoin="round" clip-path="url(#cl)"/>
+              <text x="31" y="60" font-family="var(--font-mono)" font-size="7.5" fill="var(--muted)" text-anchor="middle">Road</text>
+              <!-- right panel -->
+              <rect x="64" y="4" width="50" height="48" rx="4" fill="var(--surface-2)" stroke="var(--border)" stroke-width="0.8"/>
+              <polyline points="68,44 78,38 88,28 98,20 108,26" fill="none" stroke="var(--mod-transport)" stroke-width="1.5" stroke-linejoin="round"/>
+              <text x="89" y="60" font-family="var(--font-mono)" font-size="7.5" fill="var(--muted)" text-anchor="middle">Air</text>
+            </svg>
+            <div class="chart-name">Small Multiples</div>
+            <div class="chart-module">feature-transport</div>
+          </div>
+
+          <!-- Stacked Bar -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="10" y="28" width="14" height="44" rx="2" fill="var(--mod-tourism)" opacity="0.3"/>
+              <rect x="10" y="16" width="14" height="12" rx="2" fill="var(--mod-tourism)" opacity="0.6"/>
+              <rect x="10" y="6"  width="14" height="10" rx="2" fill="var(--mod-tourism)" opacity="0.9"/>
+
+              <rect x="32" y="24" width="14" height="48" rx="2" fill="var(--mod-tourism)" opacity="0.3"/>
+              <rect x="32" y="14" width="14" height="10" rx="2" fill="var(--mod-tourism)" opacity="0.6"/>
+              <rect x="32" y="6"  width="14" height="8"  rx="2" fill="var(--mod-tourism)" opacity="0.9"/>
+
+              <rect x="54" y="20" width="14" height="52" rx="2" fill="var(--mod-tourism)" opacity="0.3"/>
+              <rect x="54" y="10" width="14" height="10" rx="2" fill="var(--mod-tourism)" opacity="0.6"/>
+              <rect x="54" y="4"  width="14" height="6"  rx="2" fill="var(--mod-tourism)" opacity="0.9"/>
+
+              <rect x="76" y="22" width="14" height="50" rx="2" fill="var(--mod-tourism)" opacity="0.3"/>
+              <rect x="76" y="12" width="14" height="10" rx="2" fill="var(--mod-tourism)" opacity="0.6"/>
+              <rect x="76" y="5"  width="14" height="7"  rx="2" fill="var(--mod-tourism)" opacity="0.9"/>
+
+              <rect x="98" y="18" width="14" height="54" rx="2" fill="var(--mod-tourism)" opacity="0.3"/>
+              <rect x="98" y="8"  width="14" height="10" rx="2" fill="var(--mod-tourism)" opacity="0.6"/>
+              <rect x="98" y="3"  width="14" height="5"  rx="2" fill="var(--mod-tourism)" opacity="0.9"/>
+
+              <line x1="6" y1="74" x2="114" y2="74" stroke="var(--border)" stroke-width="0.8"/>
+            </svg>
+            <div class="chart-name">Stacked Bar</div>
+            <div class="chart-module">feature-tourism</div>
+          </div>
+
+          <!-- Heatmap -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- 12 months × 4 years grid -->
+              <g opacity="0.85">
+                <!-- year row 1 -->
+                <rect x="6"  y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.15"/>
+                <rect x="15" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.3"/>
+                <rect x="24" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.55"/>
+                <rect x="33" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.75"/>
+                <rect x="42" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.95"/>
+                <rect x="51" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.95"/>
+                <rect x="60" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.8"/>
+                <rect x="69" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.6"/>
+                <rect x="78" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.35"/>
+                <rect x="87" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.2"/>
+                <rect x="96" y="8"  width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.12"/>
+                <rect x="105" y="8" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.1"/>
+                <!-- year row 2 -->
+                <rect x="6"  y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.18"/>
+                <rect x="15" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.35"/>
+                <rect x="24" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.6"/>
+                <rect x="33" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.78"/>
+                <rect x="42" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.95"/>
+                <rect x="51" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.9"/>
+                <rect x="60" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.72"/>
+                <rect x="69" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.5"/>
+                <rect x="78" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.28"/>
+                <rect x="87" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.14"/>
+                <rect x="96" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.1"/>
+                <rect x="105" y="23" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.08"/>
+                <!-- year row 3 -->
+                <rect x="6"  y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.2"/>
+                <rect x="15" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.38"/>
+                <rect x="24" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.65"/>
+                <rect x="33" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.82"/>
+                <rect x="42" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.95"/>
+                <rect x="51" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.85"/>
+                <rect x="60" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.65"/>
+                <rect x="69" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.42"/>
+                <rect x="78" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.22"/>
+                <rect x="87" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.12"/>
+                <rect x="96" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.08"/>
+                <rect x="105" y="38" width="7" height="12" rx="1" fill="var(--mod-tourism)" opacity="0.06"/>
+              </g>
+              <text x="60" y="65" font-family="var(--font-mono)" font-size="7.5" fill="var(--muted)" text-anchor="middle">month × year</text>
+            </svg>
+            <div class="chart-name">Heatmap</div>
+            <div class="chart-module">feature-tourism (seasonality)</div>
+          </div>
+
+          <!-- Radar -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- Radar: hexagonal grid + two overlapping polygons -->
+              <!-- center: 60,42 -->
+              <polygon points="60,10 90,56 30,56" fill="none" stroke="var(--border)" stroke-width="0.8"/>
+              <polygon points="60,22 80,50 40,50" fill="none" stroke="var(--border)" stroke-width="0.8"/>
+              <line x1="60" y1="10" x2="60" y2="56" stroke="var(--border)" stroke-width="0.5"/>
+              <line x1="90" y1="56" x2="30" y2="56" stroke="var(--border)" stroke-width="0.5"/>
+              <line x1="60" y1="10" x2="30" y2="56" stroke="var(--border)" stroke-width="0.5"/>
+              <line x1="60" y1="10" x2="90" y2="56" stroke="var(--border)" stroke-width="0.5"/>
+              <!-- country 1 -->
+              <polygon points="60,16 84,52 36,52" fill="var(--mod-science)" fill-opacity="0.2" stroke="var(--mod-science)" stroke-width="1.5"/>
+              <!-- country 2 peer -->
+              <polygon points="60,20 76,50 46,50" fill="none" stroke="var(--mod-science)" stroke-width="1" opacity="0.5" stroke-dasharray="3 2"/>
+              <text x="60" y="74" font-family="var(--font-mono)" font-size="7.5" fill="var(--muted)" text-anchor="middle">R&amp;D · Internet · Education</text>
+            </svg>
+            <div class="chart-name">Radar</div>
+            <div class="chart-module">feature-science</div>
+          </div>
+
+          <!-- Multi-Line Highlighted -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- highlighted line -->
+              <polyline points="8,58 28,48 48,52 68,36 88,42 108,28" fill="none" stroke="var(--mod-social)" stroke-width="2.5" stroke-linejoin="round"/>
+              <!-- dimmed lines -->
+              <polyline points="8,64 28,60 48,58 68,54 88,50 108,46" fill="none" stroke="var(--mod-social)" stroke-width="1" stroke-linejoin="round" opacity="0.25"/>
+              <polyline points="8,68 28,65 48,62 68,60 88,56 108,52" fill="none" stroke="var(--mod-social)" stroke-width="1" stroke-linejoin="round" opacity="0.2"/>
+              <!-- active KPI marker dot on highlighted line -->
+              <circle cx="68" cy="36" r="4" fill="var(--mod-social)" stroke="var(--paper-alt)" stroke-width="1.5"/>
+              <line x1="8" y1="73" x2="112" y2="73" stroke="var(--border)" stroke-width="0.8"/>
+            </svg>
+            <div class="chart-name">Multi-Line Highlighted</div>
+            <div class="chart-module">feature-social</div>
+          </div>
+
+          <!-- Sparkline (part of core-charts for Science) -->
+          <div class="chart-card">
+            <svg width="120" height="80" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- 3 small sparklines stacked -->
+              <rect x="6" y="4" width="108" height="22" rx="4" fill="var(--surface-2)" stroke="var(--border)" stroke-width="0.8"/>
+              <polyline points="10,22 30,18 50,16 70,12 90,10 110,8" fill="none" stroke="var(--mod-science)" stroke-width="1.5" stroke-linejoin="round"/>
+
+              <rect x="6" y="30" width="108" height="22" rx="4" fill="var(--surface-2)" stroke="var(--border)" stroke-width="0.8"/>
+              <polyline points="10,48 30,44 50,42 70,38 90,34 110,32" fill="none" stroke="var(--mod-science)" stroke-width="1.5" stroke-linejoin="round"/>
+
+              <rect x="6" y="56" width="108" height="22" rx="4" fill="var(--surface-2)" stroke="var(--border)" stroke-width="0.8"/>
+              <polyline points="10,74 30,70 50,66 70,64 90,62 110,58" fill="none" stroke="var(--mod-science)" stroke-width="1.5" stroke-linejoin="round"/>
+
+              <text x="60" y="84" font-family="var(--font-mono)" font-size="7" fill="transparent" text-anchor="middle">spacer</text>
+            </svg>
+            <div class="chart-name">Sparklines (×3)</div>
+            <div class="chart-module">feature-science</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DATASET TABLE ============ -->
+    <section id="datasets">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Dataset reference</div>
+          <h2>18 Eurostat datasets with canonical filter maps</h2>
+          <p>All codes and filter values verified against the live Eurostat dissemination API. API base: <code>https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/{code}?format=JSON&amp;lang=EN</code></p>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Dataset code</th>
+                <th>Key filters</th>
+                <th>Output / unit</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-population);">population</span></td>
+                <td><code>demo_pjangroup</code></td>
+                <td><div class="filters">sex=T/M/F<br/>age=TOTAL + 18 5-yr cohorts (Y_LT5..Y_GE85)</div></td>
+                <td>persons</td>
+                <td><div class="note">NOT <code>demo_pjan</code> — that is per-year only.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-economy);">economy</span></td>
+                <td><code>nama_10_gdp</code></td>
+                <td><div class="filters">unit=CP_MEUR<br/>na_item=B1GQ</div></td>
+                <td>million EUR (current prices)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-economy);">economy</span></td>
+                <td><code>prc_hicp_aind</code></td>
+                <td><div class="filters">unit=INX_A_AVG<br/>coicop=CP00</div></td>
+                <td>index (2015=100)</td>
+                <td><div class="note">NOT <code>I15</code>.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-economy);">economy</span></td>
+                <td><code>gov_10dd_edpt1</code></td>
+                <td><div class="filters">unit=PC_GDP<br/>na_item=B9<br/>sector=S13</div></td>
+                <td>% of GDP</td>
+                <td><div class="note">Government net lending/borrowing.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-environment);">environment</span></td>
+                <td><code>env_air_gge</code></td>
+                <td><div class="filters">airpol=GHG<br/>src_crf=TOTX4_MEMO / CRF1A3 / CRF1A2<br/>unit=MIO_T</div></td>
+                <td>Mt CO&#x2082;-eq</td>
+                <td><div class="note"><code>TOTX4_MEMO</code> for total GHG (NOT <code>TOTAL</code>).</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-environment);">environment</span></td>
+                <td><code>nrg_bal_c</code></td>
+                <td><div class="filters">siec=TOTAL<br/>nrg_bal=FC_E / FC_TRA_E / FC_IND_E<br/>unit=KTOE</div></td>
+                <td>ktoe</td>
+                <td><div class="note"><code>FC_E</code> for total final consumption (NOT <code>FC</code> or <code>TOTAL</code>).</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-environment);">environment</span></td>
+                <td><code>sdg_13_10</code></td>
+                <td><div class="filters">unit=I90</div></td>
+                <td>index (1990=100)</td>
+                <td><div class="note">NOT <code>I15</code>.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-trade);">trade</span></td>
+                <td><code>ext_lt_intratrd</code></td>
+                <td><div class="filters">indic_et=MIO_EXP_VAL / MIO_IMP_VAL / MIO_BAL_VAL<br/>sitc06=TOTAL</div></td>
+                <td>million EUR</td>
+                <td><div class="note">No <code>unit</code> dim — unit is embedded in <code>indic_et</code>. Without <code>sitc06=TOTAL</code>, API returns 24 rows (one per SITC product) causing last-cell-wins mapping errors.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-transport);">transport</span></td>
+                <td><code>road_pa_buscoa</code></td>
+                <td><div class="filters">unit=THS_PAS<br/>tra_cov=TOTAL</div></td>
+                <td>thousand passengers (×1000 in mapper)</td>
+                <td><div class="note">NO <code>vehicle</code> dim — not defined in this dataset.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-transport);">transport</span></td>
+                <td><code>avia_paoc</code></td>
+                <td><div class="filters">unit=PAS<br/>tra_meas=PAS_CRD<br/>tra_cov=TOTAL<br/>schedule=TOT</div></td>
+                <td>passengers carried</td>
+                <td><div class="note">NO <code>partner</code> dim — not defined in this dataset.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-transport);">transport</span></td>
+                <td><em style="color: var(--muted);">sea: disabled</em></td>
+                <td><div class="filters">mar_pa_aa — port-based dim, not geo</div></td>
+                <td>n/a</td>
+                <td><div class="note">Intentionally excluded; port-keyed dim is incompatible with country-level display.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-tourism);">tourism</span></td>
+                <td><code>tour_occ_ninat</code></td>
+                <td><div class="filters">c_resid=DOM / FOR / TOTAL<br/>unit=NR<br/>nace_r2=I551-I553</div></td>
+                <td>nights</td>
+                <td><div class="note"><code>FOR</code> = foreign/international (NOT <code>INTL</code>).</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-tourism);">tourism</span></td>
+                <td><code>tour_dem_tttot</code></td>
+                <td><div class="filters">unit=NR<br/>purpose=TOTAL<br/>duration=N_GE1<br/>c_dest=WORLD</div></td>
+                <td>trips</td>
+                <td><div class="note">Dim is <code>c_dest</code>, NOT <code>partner</code>. No <code>c_resid</code> dim in this dataset.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-social);">social</span></td>
+                <td><code>ilc_li02</code></td>
+                <td><div class="filters">unit=PC<br/>indic_il=LI_R_MD60<br/>sex=T<br/>age=TOTAL</div></td>
+                <td>% (povertyRate)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-social);">social</span></td>
+                <td><code>ilc_peps01</code></td>
+                <td><div class="filters">unit=PC<br/>sex=T<br/>age=TOTAL</div></td>
+                <td>% (atRiskRate)</td>
+                <td><div class="note">NO <code>indic_il</code> dim — not defined in this dataset.</div></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-social);">social</span></td>
+                <td><code>hlth_silc_01</code></td>
+                <td><div class="filters">levels=VGOOD<br/>sex=T<br/>age=Y_GE16<br/>wstatus=POP</div></td>
+                <td>% (healthSatisfaction)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-science);">science</span></td>
+                <td><code>rd_e_gerdtot</code></td>
+                <td><div class="filters">unit=PC_GDP<br/>sectperf=TOTAL</div></td>
+                <td>% of GDP (R&amp;D expenditure)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-science);">science</span></td>
+                <td><code>isoc_ci_ifp_iu</code></td>
+                <td><div class="filters">unit=PC_IND<br/>ind_type=IND_TOTAL<br/>indic_is=I_IU3</div></td>
+                <td>% individuals (internet usage)</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td><span class="mod-pill" style="color: var(--mod-science);">science</span></td>
+                <td><code>edat_lfse_03</code></td>
+                <td><div class="filters">unit=PC<br/>isced11=ED5-8<br/>sex=T<br/>age=Y25-64</div></td>
+                <td>% (tertiary education 25–64)</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ REPOSITORY CONTRACT ============ -->
+    <section id="contract" style="background: var(--paper-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Core contract</div>
+          <h2>Repository contract</h2>
+          <p>Every feature repository implements the same sealed <code>Result&lt;T&gt;</code> + stale-while-revalidate contract. No exceptions cross the data/domain boundary.</p>
+        </div>
+
+        <div class="code-block" style="margin-bottom: var(--s-6);">
+          <pre><code><span class="cm">// core-common: Result&lt;T&gt; sealed interface</span>
+<span class="kw">sealed interface</span> Result&lt;out T&gt; {
+    <span class="kw">data object</span> Loading : Result&lt;Nothing&gt;
+    <span class="kw">data class</span>  Success&lt;T&gt;(<span class="kw">val</span> data: T, <span class="kw">val</span> isStale: Boolean = <span class="kw">false</span>) : Result&lt;T&gt;
+    <span class="kw">data class</span>  Error(<span class="kw">val</span> error: AppError) : Result&lt;Nothing&gt;
+}
+
+<span class="cm">// core-common: AppError sealed hierarchy</span>
+<span class="kw">sealed interface</span> AppError {
+    <span class="kw">data class</span> NetworkError(<span class="kw">val</span> cause: Throwable?) : AppError
+    <span class="kw">data class</span> ParseError(<span class="kw">val</span> message: String) : AppError
+    <span class="kw">data class</span> CacheError(<span class="kw">val</span> cause: Throwable?) : AppError
+    <span class="kw">data object</span> NotFound : AppError
+    <span class="kw">data object</span> Unknown : AppError
+}
+
+<span class="cm">// feature-xxx: repository interface (domain layer)</span>
+<span class="kw">interface</span> XxxRepository {
+    <span class="kw">fun</span> observe(query: XxxQuery): Flow&lt;Result&lt;List&lt;XxxDataPoint&gt;&gt;&gt;
+}
+
+<span class="cm">// implementation sketch (data layer)</span>
+<span class="kw">override fun</span> observe(query: XxxQuery) = flow {
+    emit(Result.Loading)
+    <span class="kw">val</span> cached = cache.read(query.cacheKey)
+    <span class="kw">if</span> (cached != <span class="kw">null</span>) emit(Result.Success(cached, isStale = <span class="kw">true</span>))
+    <span class="kw">try</span> {
+        <span class="kw">val</span> fresh = api.fetch(query).let(mapper::fromCells)
+        cache.write(query.cacheKey, fresh)
+        emit(Result.Success(fresh, isStale = <span class="kw">false</span>))
+    } <span class="kw">catch</span> (e: CancellationException) { <span class="kw">throw</span> e }   <span class="cm">// always rethrow</span>
+    <span class="kw">catch</span> (e: Exception) {
+        <span class="kw">if</span> (cached == <span class="kw">null</span>) emit(Result.Error(AppError.NetworkError(e)))
+        <span class="cm">// else: stale cache was emitted — swallow silently</span>
+    }
+}.flowOn(dispatchers.io)</code></pre>
+        </div>
+
+        <p style="max-width: 72ch; font-size: 15.5px; line-height: 1.7; color: var(--ink-subtle);">
+          The repository emits <code>Loading</code> immediately, then emits cached <code>Success(isStale=true)</code> if the cache has data, then revalidates via the network. On network success it writes to cache and emits <code>Success(isStale=false)</code>. On network failure it emits <code>Error</code> only if no stale cache was available; otherwise the failure is swallowed silently and the <code>StaleBanner</code> remains visible. <code>CancellationException</code> is always rethrown — never swallowed — so structured concurrency works correctly. No other exception crosses the data/domain boundary; everything surfaces as a typed <code>Result.Error(AppError)</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ TESTING SUMMARY ============ -->
+    <section id="testing">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Testing</div>
+          <h2>444 unit tests. Zero failures.</h2>
+        </div>
+
+        <div class="stats-strip" style="margin-bottom: var(--s-8);">
+          <div class="stat-card">
+            <div class="value num">444</div>
+            <div class="label">unit tests, 0 failures, 0 skipped</div>
+          </div>
+          <div class="stat-card">
+            <div class="value num">100%</div>
+            <div class="label">of feature modules have ApiService + CellMapper + Repository + Component test classes</div>
+          </div>
+          <div class="stat-card">
+            <div class="value num">47</div>
+            <div class="label">JSON-stat parser test cases — sparse arrays, dense arrays, null values, dimension reordering, integer overflow</div>
+          </div>
+          <div class="stat-card">
+            <div class="value">SWR</div>
+            <div class="label">Stale-while-revalidate verified per module: cache hit suppresses error; cache miss surfaces error; cancellation propagates</div>
+          </div>
+        </div>
+
+        <p style="font-size: 14.5px; color: var(--muted); max-width: 80ch; line-height: 1.65;">
+          Tests run on JVM via <code>commonTest</code>. KMP-friendly fakes &mdash; no Mockk (iOS would reject it). Turbine for Flow assertions: <code>flow.test&nbsp;{&nbsp;assertEquals(Loading,&nbsp;awaitItem());&nbsp;...&nbsp;}</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ PERFORMANCE ============ -->
+    <section id="performance" style="background: var(--paper-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Performance characteristics</div>
+          <h2>Measured, not estimated</h2>
+        </div>
+
+        <div class="card" style="max-width: 800px;">
+          <ul class="perf-list">
+            <li>
+              <span class="perf-label">Debug APK size</span>
+              <span class="perf-val">19 MB</span>
+            </li>
+            <li>
+              <span class="perf-label">Compose Desktop UberJar</span>
+              <span class="perf-val">~99 MB (self-contained; includes Skia native libraries for macOS / Linux / Windows)</span>
+            </li>
+            <li>
+              <span class="perf-label">JSON-stat parser complexity</span>
+              <span class="perf-val">O(n &times; d) where n = value count, d = dimension count. Sub-millisecond on device for typical Eurostat datasets (10&sup3;&ndash;10&sup5; values, 2&ndash;4 dimensions).</span>
+            </li>
+            <li>
+              <span class="perf-label">HTTP timeouts</span>
+              <span class="perf-val">30 s request &middot; 10 s connect &middot; 30 s socket. Exponential retry up to 2 attempts on 5xx.</span>
+            </li>
+            <li>
+              <span class="perf-label">Cache TTL</span>
+              <span class="perf-val">12 hours per dataset. Stale-while-revalidate means cached data renders instantly while a background fetch revalidates.</span>
+            </li>
+            <li>
+              <span class="perf-label">APK signing</span>
+              <span class="perf-val">Not yet configured &mdash; Phase 6 task (see roadmap).</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BUILD COMMANDS ============ -->
+    <section id="build">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Build &amp; run</div>
+          <h2>Gradle commands</h2>
+        </div>
+
+        <div class="code-block">
+          <pre><code><span class="cm"># Android</span>
+./gradlew :composeApp:assembleDebug         <span class="cm"># build debug APK</span>
+./gradlew :composeApp:installDebug          <span class="cm"># install to connected device / emulator</span>
+./gradlew testDebugUnitTest                 <span class="cm"># run all unit tests (JVM)</span>
+
+<span class="cm"># Compose Desktop</span>
+./gradlew :composeApp:desktopRun            <span class="cm"># run desktop app on host OS</span>
+./gradlew :composeApp:packageUberJarForCurrentOS  <span class="cm"># build self-contained .jar</span>
+
+<span class="cm"># Per-module tests</span>
+./gradlew :core-jsonstat:jvmTest            <span class="cm"># JSON-stat parser tests</span>
+./gradlew :feature-population:testDebugUnitTest
+./gradlew :feature-economy:testDebugUnitTest
+./gradlew :feature-environment:testDebugUnitTest
+./gradlew :feature-trade:testDebugUnitTest
+./gradlew :feature-transport:testDebugUnitTest
+./gradlew :feature-tourism:testDebugUnitTest
+./gradlew :feature-social:testDebugUnitTest
+./gradlew :feature-science:testDebugUnitTest
+
+<span class="cm"># Code quality</span>
+./gradlew lint                              <span class="cm"># Android Lint across all modules</span>
+./gradlew :composeApp:check                 <span class="cm"># compile + test + lint</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CONVENTIONS ============ -->
+    <section id="conventions" style="background: var(--paper-alt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="section-eyebrow">Conventions</div>
+          <h2>Project-wide coding rules</h2>
+          <p>These rules apply across all 17 modules. They exist to make the codebase predictable for any contributor and cross-compilable on all KMP targets.</p>
+        </div>
+
+        <ul class="conv-list">
+          <li>Package root is <code>eu.eurostat.{module}</code> &mdash; e.g. <code>eu.eurostat.feature.population.domain</code>. One class per file; file name matches public class name.</li>
+          <li>Sealed types as <code>sealed interface</code>, not <code>sealed class</code>, unless state fields are needed.</li>
+          <li>Prefer extension functions over utility classes.</li>
+          <li>No <code>!!</code> operator anywhere &mdash; use <code>requireNotNull</code>, <code>checkNotNull</code>, or sealed <code>Result</code> handling.</li>
+          <li>KDoc on every public type, every interface method, every non-obvious algorithm.</li>
+          <li>Never reference <code>Dispatchers.IO</code> or <code>Dispatchers.Default</code> directly &mdash; inject <code>DispatcherProvider</code> and use <code>dispatchers.io</code>, etc.</li>
+          <li>No exceptions cross the data/domain boundary &mdash; every failure surfaces as <code>Result.Error(AppError)</code>. <code>CancellationException</code> is always rethrown.</li>
+          <li>Unit tests in <code>commonTest</code> whenever possible (run on JVM, fast). Fakes implement the interface directly &mdash; no Mockk (KMP-incompatible on iOS).</li>
+          <li>Navigation via Decompose &mdash; not Voyager, not Compose Navigation. Component interface exposes <code>StateFlow&lt;XxxUiState&gt;</code> and <code>onIntent(XxxIntent)</code>.</li>
+          <li>All UI tokens come from <code>object Euro</code> (colors, typography, spacing, shapes, moduleAccents) &mdash; no hardcoded values in feature screens.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <h4>EU Stats Multiplatform</h4>
+          <p>Open-source client for the public Eurostat API. Released under AGPL-3.0-or-later. Typeset in Inter from Google Fonts.</p>
+        </div>
+        <div>
+          <h4>Project</h4>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp">GitHub repository</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/issues">Issues</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/CONTRIBUTING.md">Contributing</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/LICENSE">License (AGPL-3.0)</a>
+        </div>
+        <div>
+          <h4>Disclaimer</h4>
+          <p>Independent project &middot; not affiliated with Eurostat or the European Commission. Eurostat data is published under the Creative Commons Attribution 4.0 license.</p>
+        </div>
+      </div>
+      <div class="credits">
+        Eurostat data &copy; European Union &middot; App &copy; Roman Tsisyk &middot; Made with Compose Multiplatform
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ---- theme toggle ----
+    (function () {
+      var root = document.documentElement;
+      var KEY = "eu-stats-theme";
+      var stored = null;
+      try { stored = localStorage.getItem(KEY); } catch (e) {}
+      var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var initial = stored || (prefersDark ? "dark" : "light");
+      root.setAttribute("data-theme", initial);
+
+      var btn = document.getElementById("themeToggle");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          try { localStorage.setItem(KEY, next); } catch (e) {}
+        });
+      }
+
+      if (window.matchMedia && !stored) {
+        var mq = window.matchMedia("(prefers-color-scheme: dark)");
+        if (mq.addEventListener) {
+          mq.addEventListener("change", function (e) {
+            if (!localStorage.getItem(KEY)) {
+              root.setAttribute("data-theme", e.matches ? "dark" : "light");
+            }
+          });
+        }
+      }
+    })();
+  </script>
+
+</body>
+</html>

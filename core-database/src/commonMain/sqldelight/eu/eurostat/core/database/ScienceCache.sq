@@ -1,0 +1,28 @@
+CREATE TABLE ScienceCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    rd_spend_pct_gdp REAL,
+    internet_usage_pct REAL,
+    tertiary_educ_pct REAL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year)
+);
+
+CREATE INDEX science_country_year ON ScienceCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM ScienceCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO ScienceCacheEntity(country_code, year, rd_spend_pct_gdp, internet_usage_pct, tertiary_educ_pct, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM ScienceCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?;
+
+deleteByCountriesAndYears:
+DELETE FROM ScienceCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?;

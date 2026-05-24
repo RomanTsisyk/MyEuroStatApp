@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        Edge-to-edge friendly theme. enableEdgeToEdge() in MainActivity
+        handles bar color/icon scrim configuration at runtime; the theme
+        only ensures the system draws system-bar backgrounds (so the
+        runtime tint takes effect) and uses shortEdges cutout mode so
+        content reaches the notch.
+    -->
+    <style name="Theme.Eurostat" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="p">shortEdges</item>
+    </style>
+</resources>

@@ -1,0 +1,29 @@
+CREATE TABLE EnvironmentCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    ghg_emissions REAL,
+    energy_consumption REAL,
+    sdg13_score REAL,
+    sector TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year, sector)
+);
+
+CREATE INDEX environment_country_year ON EnvironmentCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM EnvironmentCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND sector = ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO EnvironmentCacheEntity(country_code, year, ghg_emissions, energy_consumption, sdg13_score, sector, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM EnvironmentCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND sector = ?;
+
+deleteByCountriesAndYears:
+DELETE FROM EnvironmentCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND sector = ?;

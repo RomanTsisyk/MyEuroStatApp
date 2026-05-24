@@ -1,0 +1,57 @@
+# Gradle
+.gradle/
+build/
+**/build/
+out/
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Editors
+.vscode/
+.deepseek/
+.claude/
+
+# Local config (machine-specific)
+local.properties
+*.properties.local
+
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Databases (runtime artifacts — never commit)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# iOS / Xcode
+xcuserdata/
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Signing (never commit)
+*.keystore
+*.jks
+keystore.properties
+
+# Backup directories
+eurostat-kmp\ copy/
+backup/
+
+# Private notes (audits, drafts, internal reports, course material)
+.private/
+
+# Logs
+*.log

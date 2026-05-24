@@ -1,0 +1,28 @@
+CREATE TABLE SocialCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    poverty_rate REAL,
+    at_risk_rate REAL,
+    health_satisfaction REAL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year)
+);
+
+CREATE INDEX social_country_year ON SocialCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM SocialCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO SocialCacheEntity(country_code, year, poverty_rate, at_risk_rate, health_satisfaction, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM SocialCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?;
+
+deleteByCountriesAndYears:
+DELETE FROM SocialCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ?;

@@ -1,0 +1,29 @@
+CREATE TABLE TradeCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    exports_eur INTEGER,
+    imports_eur INTEGER,
+    balance_eur INTEGER,
+    partner TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year, partner)
+);
+
+CREATE INDEX trade_country_year ON TradeCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM TradeCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND partner = ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO TradeCacheEntity(country_code, year, exports_eur, imports_eur, balance_eur, partner, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM TradeCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND partner = ?;
+
+deleteByCountriesAndYears:
+DELETE FROM TradeCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND partner = ?;

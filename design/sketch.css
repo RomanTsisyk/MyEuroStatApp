@@ -1,0 +1,179 @@
+/* ── Eurostat wireframes — sketch tokens & primitives ──────────────── */
+
+:root {
+  --paper: #faf8f3;
+  --paper-2: #f3efe6;
+  --ink: #1f1d1a;
+  --ink-2: #3a352e;
+  --muted: #6b6359;
+  --muted-2: #a39a8d;
+  --line: #1f1d1a;
+  --accent: #2f4969;        /* desaturated navy */
+  --accent-soft: #c6d0dc;
+  --warn: #b06a3a;          /* sienna for stale/alerts */
+  --grid: rgba(31, 29, 26, 0.08);
+
+  --hand: "Patrick Hand", "Comic Sans MS", system-ui, sans-serif;
+  --marker: "Caveat", "Patrick Hand", cursive;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+}
+
+.sk {
+  font-family: var(--hand);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.2px;
+}
+
+/* paper background with very faint grid */
+.sk-paper {
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--paper);
+  background-blend-mode: multiply;
+}
+
+/* dashed sketch box */
+.sk-box {
+  border: 1.5px dashed var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  position: relative;
+}
+.sk-box.solid { border-style: solid; }
+.sk-box.thick { border-width: 2px; }
+.sk-box.tight { border-radius: 8px; }
+.sk-box.round { border-radius: 999px; }
+
+/* tag — small label inside corner */
+.sk-tag {
+  position: absolute;
+  top: -10px; left: 12px;
+  background: var(--paper);
+  padding: 0 6px;
+  font-family: var(--marker);
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* hand-drawn-ish underline using wavy svg */
+.sk-wave {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='6' viewBox='0 0 40 6'%3E%3Cpath d='M0 3 Q 5 0, 10 3 T 20 3 T 30 3 T 40 3' stroke='%231f1d1a' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  padding-bottom: 6px;
+}
+
+/* striped placeholder for images / maps */
+.sk-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(31, 29, 26, 0.08) 0,
+    rgba(31, 29, 26, 0.08) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* hand-drawn fill — radial dot noise */
+.sk-dotted {
+  background-image: radial-gradient(rgba(31, 29, 26, 0.18) 1px, transparent 1.2px);
+  background-size: 6px 6px;
+}
+
+/* accent fill */
+.sk-accent { background: var(--accent); color: var(--paper); }
+.sk-accent-soft { background: var(--accent-soft); color: var(--ink); }
+
+/* number — chart values style */
+.sk-num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.4px;
+}
+
+/* hand-drawn pill */
+.sk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--hand);
+  font-size: 13px;
+  background: var(--paper);
+}
+.sk-pill.solid { background: var(--ink); color: var(--paper); }
+.sk-pill.accent { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+
+/* row separator */
+.sk-rule {
+  border: 0;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 4px, transparent 4px 8px);
+  margin: 0;
+}
+
+/* sketchy button */
+.sk-btn {
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: var(--paper);
+  font-family: var(--hand);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sk-btn.primary { background: var(--ink); color: var(--paper); }
+
+/* squiggly chart helpers (svg paths inline mostly, but a fallback) */
+.sk-chart {
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  position: relative;
+  background:
+    linear-gradient(rgba(31, 29, 26, 0.06) 1px, transparent 1px) 0 0 / 100% 33.33%,
+    var(--paper);
+}
+
+/* nav bar (bottom tab) */
+.sk-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  border-top: 1.5px solid var(--ink);
+  padding: 8px 0 4px;
+}
+.sk-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--hand);
+  font-size: 11px;
+  color: var(--muted);
+}
+.sk-tab.active { color: var(--ink); font-weight: 700; }
+.sk-tab .sk-tab-icon {
+  width: 22px; height: 22px;
+  border: 1.5px solid currentColor;
+  border-radius: 5px;
+}
+.sk-tab.active .sk-tab-icon { background: var(--ink); }
+
+/* margin notes (postit-ish callouts) */
+.sk-note {
+  font-family: var(--marker);
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1.15;
+}
+.sk-note strong { color: var(--ink); font-weight: 400; text-decoration: underline wavy var(--accent) 1.2px; text-underline-offset: 4px; }
+
+/* legend dot */
+.sk-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--ink); vertical-align: middle; }

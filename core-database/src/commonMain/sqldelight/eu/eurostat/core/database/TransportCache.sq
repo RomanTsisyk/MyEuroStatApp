@@ -1,0 +1,29 @@
+CREATE TABLE TransportCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    road_passengers INTEGER,
+    air_passengers INTEGER,
+    sea_passengers INTEGER,
+    mode TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year, mode)
+);
+
+CREATE INDEX transport_country_year ON TransportCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM TransportCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND mode = ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO TransportCacheEntity(country_code, year, road_passengers, air_passengers, sea_passengers, mode, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM TransportCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND mode = ?;
+
+deleteByCountriesAndYears:
+DELETE FROM TransportCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND mode = ?;

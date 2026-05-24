@@ -1,0 +1,29 @@
+CREATE TABLE EconomyCacheEntity (
+    country_code TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    gdp_eur INTEGER,
+    hicp_index REAL,
+    deficit_pct_gdp REAL,
+    unit TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL,
+    PRIMARY KEY (country_code, year, unit)
+);
+
+CREATE INDEX economy_country_year ON EconomyCacheEntity(country_code, year);
+
+queryByCountriesAndYears:
+SELECT * FROM EconomyCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND unit = ?
+ORDER BY country_code, year;
+
+upsert:
+INSERT OR REPLACE INTO EconomyCacheEntity(country_code, year, gdp_eur, hicp_index, deficit_pct_gdp, unit, fetched_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+oldestFetchedAt:
+SELECT MIN(fetched_at_epoch_ms) AS oldest FROM EconomyCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND unit = ?;
+
+deleteByCountriesAndYears:
+DELETE FROM EconomyCacheEntity
+WHERE country_code IN ? AND year BETWEEN ? AND ? AND unit = ?;
