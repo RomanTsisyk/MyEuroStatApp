@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EU Stats</string>
+    <string name="app_tagline">Oficjalne statystyki europejskie na każdym urządzeniu</string>
+
+    <!-- Dolna nawigacja -->
+    <string name="tab_overview">Przegląd</string>
+    <string name="tab_explore">Eksploruj</string>
+    <string name="tab_compare">Porównaj</string>
+    <string name="tab_search">Szukaj</string>
+    <string name="tab_settings">Ustawienia</string>
+
+    <!-- Moduły tematyczne -->
+    <string name="module_economy">Gospodarka</string>
+    <string name="module_population">Ludność</string>
+    <string name="module_environment">Środowisko</string>
+    <string name="module_trade">Handel</string>
+    <string name="module_transport">Transport</string>
+    <string name="module_tourism">Turystyka</string>
+    <string name="module_social">Społeczeństwo</string>
+    <string name="module_science">Nauka</string>
+
+    <!-- Wspólne elementy interfejsu -->
+    <string name="action_refresh">Odśwież</string>
+    <string name="action_back">Wstecz</string>
+    <string name="action_search">Szukaj</string>
+    <string name="action_retry">Spróbuj ponownie</string>
+    <string name="state_loading">Ładowanie…</string>
+    <string name="state_offline">Brak połączenia. Wyświetlane dane z pamięci podręcznej.</string>
+    <string name="state_stale">Dane mogą być nieaktualne.</string>
+    <string name="state_empty">Brak danych dla wybranych filtrów.</string>
+    <string name="state_error">Nie udało się załadować danych.</string>
+
+    <!-- Atrybucja źródła -->
+    <string name="source_eurostat">Źródło: Eurostat (CC-BY 4.0)</string>
+    <string name="disclaimer_independent">Niezależny klient open source firm trzecich. Nie jest powiązany z Eurostatem ani Komisją Europejską.</string>
+</resources>

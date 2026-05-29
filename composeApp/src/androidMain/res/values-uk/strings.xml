@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EU Stats</string>
+    <string name="app_tagline">Офіційна європейська статистика на будь-якому пристрої</string>
+
+    <!-- Нижня навігація -->
+    <string name="tab_overview">Огляд</string>
+    <string name="tab_explore">Перегляд</string>
+    <string name="tab_compare">Порівняння</string>
+    <string name="tab_search">Пошук</string>
+    <string name="tab_settings">Налаштування</string>
+
+    <!-- Тематичні модулі -->
+    <string name="module_economy">Економіка</string>
+    <string name="module_population">Населення</string>
+    <string name="module_environment">Довкілля</string>
+    <string name="module_trade">Торгівля</string>
+    <string name="module_transport">Транспорт</string>
+    <string name="module_tourism">Туризм</string>
+    <string name="module_social">Соціальна сфера</string>
+    <string name="module_science">Наука</string>
+
+    <!-- Спільні елементи інтерфейсу -->
+    <string name="action_refresh">Оновити</string>
+    <string name="action_back">Назад</string>
+    <string name="action_search">Пошук</string>
+    <string name="action_retry">Спробувати ще раз</string>
+    <string name="state_loading">Завантаження…</string>
+    <string name="state_offline">Немає з\'єднання. Показано дані з кешу.</string>
+    <string name="state_stale">Дані можуть бути застарілими.</string>
+    <string name="state_empty">Немає даних за обраними фільтрами.</string>
+    <string name="state_error">Не вдалося завантажити дані.</string>
+
+    <!-- Атрибуція джерела -->
+    <string name="source_eurostat">Джерело: Eurostat (CC-BY 4.0)</string>
+    <string name="disclaimer_independent">Незалежний клієнт із відкритим кодом. Не пов\'язаний із Eurostat або Європейською Комісією.</string>
+</resources>

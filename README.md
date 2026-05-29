@@ -1,14 +1,20 @@
 # EU Stats Multiplatform
 
-Kotlin Multiplatform app (Android · iOS · macOS · Linux · Windows desktop) that visualizes European statistical data from the official Eurostat public API. Eight thematic modules — economy, population, environment, trade, transport, tourism, social, science — each with its own dataset, switcher pattern, and signature chart.
+[![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/RomanTsisyk/MyEuroStatApp?include_prereleases&sort=semver)](https://github.com/RomanTsisyk/MyEuroStatApp/releases)
+[![Build](https://github.com/RomanTsisyk/MyEuroStatApp/actions/workflows/build.yml/badge.svg)](https://github.com/RomanTsisyk/MyEuroStatApp/actions/workflows/build.yml)
+[![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/docs/multiplatform.html)
+[![F-Droid](https://img.shields.io/badge/F--Droid-pending%20submission-1976D2)](docs/FDROID.md)
+
+Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windows) that visualizes European statistical data from the official Eurostat public API. Eight thematic modules — economy, population, environment, trade, transport, tourism, social, science — each with its own dataset, switcher pattern, and signature chart.
 
 > **Disclaimer.** This is an independent, third-party open-source mobile client for the public Eurostat HTTP API. It is **not** affiliated with, endorsed by, or sponsored by Eurostat, the European Statistical Office, or the European Commission. The name "Eurostat" appears throughout this project solely to reference the public data source. The app is published under the AGPL-3.0 license and the underlying data is published by Eurostat under Creative Commons Attribution 4.0.
 
 **Phone · tablet · desktop** — single codebase, three form factors. Android handles phone + tablet via responsive layouts; iOS does iPhone + iPad; the JVM/Compose Desktop target packages a self-contained `.jar` (~99 MB) that runs on macOS/Linux/Windows.
 
-**Status:** Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles · **iOS Xcode wrapper project is currently a placeholder stub** (KMP common code compiles for iOS targets but the wrapper needs to be regenerated — see [NEXT_STEPS.md](NEXT_STEPS.md) P0-2).
+**Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS Xcode wrapper project is currently a placeholder stub** (KMP common code compiles for iOS targets but the wrapper needs to be regenerated locally — see [NEXT_STEPS.md](NEXT_STEPS.md) P0-2).
 
-**Known limitations:** no Android app icon yet (default robot), no release signing config, iOS Xcode wrapper project needs regeneration. See [NEXT_STEPS.md](NEXT_STEPS.md) for the full roadmap.
+**Known limitations:** iOS Xcode wrapper project needs regeneration; the Overview bottom-nav destination is wired but the screen is empty; no tablet master-detail layouts yet. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat dataset/filter table, and [`NEXT_STEPS.md`](NEXT_STEPS.md) for the prioritized roadmap.
 
@@ -102,7 +108,22 @@ For the visual design language (typography, spacing, color tokens, switcher patt
 
 ---
 
-## Quick start
+## Install
+
+| Platform | How |
+|---|---|
+| **Android — F-Droid** | Pending submission to [fdroiddata](https://gitlab.com/fdroid/fdroiddata). The build recipe is already in [`metadata/eu.eurostat.app.yml`](metadata/eu.eurostat.app.yml). See [docs/FDROID.md](docs/FDROID.md) for status. |
+| **Android — GitHub release** | Download `composeApp-release.apk` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), enable "Install from unknown sources" for your browser, open the file. |
+| **Desktop (macOS / Linux / Windows)** | Download `composeApp-{os}-{arch}-0.4.0.jar` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), run `java -jar composeApp-*.jar` (Java 17+). Native `.dmg` / `.msi` / `.deb` installers are on the v1.0 roadmap. |
+| **iOS** | Not yet shipped. The KMP common code compiles for all three iOS targets but the Xcode wrapper project needs regeneration locally (tracked in [NEXT_STEPS.md](NEXT_STEPS.md) P0-2). |
+
+The app needs no account, no permissions beyond `INTERNET`, and ships
+no analytics or tracking. See [SECURITY.md](SECURITY.md) for the
+vulnerability-disclosure policy.
+
+---
+
+## Quick start (build from source)
 
 ```bash
 # Android
@@ -221,6 +242,53 @@ See [`CLAUDE.md`](CLAUDE.md) for the full contract reference and the Eurostat da
 6. Build the Screen using `Euro.*` tokens + a chart from `core-charts/`.
 7. Write tests in `commonTest/` (kotlin.test + Turbine). Fake the repository directly — Mockk doesn't work on iOS.
 8. Register the module in `composeApp/.../EurostatApp.kt` tabs and `core-navigation/.../ChildConfig.kt`.
+
+---
+
+## Sustainability & governance
+
+The project is currently maintained by a single lead developer; this
+section documents how that is intended to evolve over the next 6–12
+months, so contributors, users and downstream packagers (F-Droid,
+Debian, Homebrew) can plan with realistic expectations.
+
+**Funding model.** Development of v1.0 is being submitted to the
+[NLnet NGI Zero Commons Fund](https://nlnet.nl/commonsfund/) as a
+focused four-month effort (€16 000, four milestones). Outside that
+window, the project depends on volunteer time from the lead
+maintainer. There is no commercial entity behind the app, no paid tier,
+and no plan to introduce one.
+
+**Distribution.** F-Droid is the primary distribution target — see
+[`docs/FDROID.md`](docs/FDROID.md). GitHub releases will continue to be
+published in parallel so users on devices without an F-Droid client
+can still install. Submission to the Google Play Store is *not*
+planned; the project's privacy posture (no analytics, no tracking, no
+account) and the cost of the Play Developer Programme make it a poor
+fit.
+
+**Maintainer succession.** Until a second maintainer steps up,
+contributors who have landed at least three substantive PRs will be
+offered triage rights on the issue tracker. If the lead maintainer
+becomes unavailable for more than 90 days, the repository description
+and `README.md` will be updated to mark the project as seeking new
+maintainers, and the F-Droid metadata will be marked
+`Disabled: maintenance` per the F-Droid policy. The AGPL-3.0 license
+guarantees that downstream maintainers can always fork.
+
+**Decision making.** Substantive architectural changes (new top-level
+modules, dependency additions, license changes, API contract changes)
+require a GitHub Discussion thread or an RFC issue with at least a
+72-hour comment window. Day-to-day code review is at the discretion of
+whichever maintainer has triage rights.
+
+**Code of Conduct.** Contributor Covenant 2.1, enforced by the lead
+maintainer. Reports go to the email address in
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+
+**Telemetry policy.** The app sends no analytics, no crash reports
+and no usage data anywhere. This is a hard project invariant: any
+future PR adding a telemetry endpoint will be rejected.
 
 ---
 

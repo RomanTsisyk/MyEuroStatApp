@@ -1,6 +1,25 @@
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: This file is a placeholder. See iosApp/README.md for instructions
-// on how to regenerate a valid project using Xcode's "Create New Project"
-// wizard, then drag in the existing Swift sources and configure the
-// KMP framework build phase.
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// ============================================================================
+//                           PLACEHOLDER pbxproj
+// ============================================================================
+//
+//   This is an intentional placeholder, not a corrupted or unfinished file.
+//
+//   Hand-writing a valid Xcode project file by hand is error-prone — Xcode
+//   regenerates it reliably in seconds. The Swift sources, Info.plist and
+//   Configuration/Config.xcconfig that the wrapper needs are already present
+//   under iosApp/iosApp/ and iosApp/Configuration/. The KMP framework is
+//   built by ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode and
+//   linked in as a Run Script phase.
+//
+//   Regenerating this file (one-time, ~5 minutes):
+//
+//     1. Run iosApp/setup-ios.sh to verify the Xcode CLI is wired up.
+//     2. Follow the seven steps in iosApp/README.md to create a fresh
+//        Xcode project that overwrites this placeholder and links the
+//        existing Swift sources.
+//     3. Open iosApp.xcodeproj in Xcode 15+, pick a simulator target
+//        and ⌘R.
+//
+//   Tracking the upstream regeneration: NEXT_STEPS.md P0-2.
+//
+// ============================================================================
