@@ -107,7 +107,7 @@ class DefaultEnvironmentComponent(
                     val codes = result.data.map { it.countryCode }
                     if (activeCountry !in codes) activeCountry = defaultActiveCountry(codes)
                     val resolved = result.data.firstOrNull { it.countryCode == activeCountry }
-                    val availableYears = resolved?.points?.map { it.year }?.toSortedSet()?.toList() ?: emptyList()
+                    val availableYears = resolved?.points?.map { it.year }?.distinct()?.sorted() ?: emptyList()
                     if (availableYears.isNotEmpty() && activeYear != null && activeYear !in availableYears) {
                         activeYear = null
                     }
@@ -129,7 +129,7 @@ class DefaultEnvironmentComponent(
             // not read from current.availableYears which reflects the previous country.
             val availableYears = current.timeSeries
                 .firstOrNull { it.countryCode == activeCountry }
-                ?.points?.map { it.year }?.toSortedSet()?.toList()
+                ?.points?.map { it.year }?.distinct()?.sorted()
                 .orEmpty()
             val resolvedYear = if (availableYears.isEmpty()) {
                 current.selectedYear
@@ -178,8 +178,8 @@ private fun Result<List<EnvironmentTimeSeries>>.toUiState(
         val activeSeries = data.firstOrNull { it.countryCode == resolvedActive }
         val availableYears = activeSeries?.points
             ?.map { it.year }
-            ?.toSortedSet()
-            ?.toList()
+            ?.distinct()
+            ?.sorted()
             ?: emptyList()
         val resolvedYear = if (availableYears.isEmpty()) {
             0
