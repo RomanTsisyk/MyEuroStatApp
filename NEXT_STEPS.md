@@ -44,27 +44,24 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 
 ---
 
-## P0 · Wire `BottomTabDestination.Overview` to a real screen
+## P0 · Add an Overview / landing dashboard screen
 
-**Why:** the bottom-nav Overview tab is clickable but `defaultConfigFor(Overview)` returns null — does nothing. Per the design brief Overview IS the landing screen (hero stat + module tiles).
+**Why:** the app currently opens on `HomeScreen` — a responsive 8-card module grid (`composeApp/src/nativeAppMain/.../home/HomeScreen.kt`), launched via `ChildConfig.Home` (the initial config in `RootComponent`). There is **no** `Overview` destination, `feature-overview` module, or `BottomTabDestination.Overview` member — the design brief's Overview (hero stat + per-module teaser metrics) is not built yet. The HomeScreen grid is a functional landing but not the data-rich dashboard the brief describes.
 
 **Steps:**
-1. Add `ChildConfig.Overview` to `core-navigation/.../ChildConfig.kt`.
-2. Create `feature-overview/` module (copy `feature-population/` structure but with no data layer — Overview is an aggregator).
-3. Implement `OverviewScreen` matching `design/screens-overview.jsx` `ScreenOverviewA` (hero metric + 2-column module tile grid). For each tile, show a teaser metric pulled from the respective feature repository (or just a static label + icon if cross-module wiring is too coupled — pick the cleaner of the two).
-4. Add to `composeApp/.../EurostatApp.kt` tabs and the `Children` dispatcher.
-5. Update `defaultConfigFor(Overview) = ChildConfig.Overview` in `EurostatApp.kt`.
-6. Mark Overview as initial in `RootComponent`.
+1. Decide: enrich `HomeScreen` into the dashboard, OR add a dedicated `ChildConfig.Overview` + `feature-overview` aggregator module (copy `feature-population/` without a data layer). Pick the cleaner of the two.
+2. Implement the dashboard matching `design/screens-overview.jsx` `ScreenOverviewA` (hero metric + 2-column module tile grid). For each tile, show a teaser metric from the respective feature repository, or a static label + icon if cross-module wiring is too coupled.
+3. If a new destination: add it to `ChildConfig.kt`, the `RootComponentFactory`, and `composeApp/.../EurostatApp.kt`'s `Children` dispatcher; set it (or keep `Home`) as the initial config.
 
-**Files involved:** `core-navigation/src/commonMain/kotlin/.../ChildConfig.kt`, `core-navigation/.../RootComponent.kt`, new `feature-overview/` module + Koin module, `composeApp/.../EurostatApp.kt`, `composeApp/.../di/AppModule.kt`, `settings.gradle.kts`.
+**Files involved:** `composeApp/src/nativeAppMain/.../home/HomeScreen.kt`, `core-navigation/.../ChildConfig.kt`, `core-navigation/.../RootComponent.kt`, `composeApp/.../EurostatApp.kt`, optional new `feature-overview/` module + `settings.gradle.kts`.
 
-**Acceptance:** Overview tab opens a real screen, not a no-op. Default landing on app launch.
+**Acceptance:** the landing screen shows a hero stat + per-module teaser metrics, not just a static grid.
 
 ---
 
-## P1 · Rewrite Environment commonTest (deleted during refactor)
+## ✅ DONE (v0.4.0) · Environment commonTest restored
 
-**Why:** the data-layer expansion deleted 8 test files in `feature-environment/src/commonTest/` because the model shape changed incompatibly. Coverage is gone for the most-complex data layer (3 datasets × sector breakdown).
+**Status:** ✅ Done. `feature-environment/src/commonTest/` has 4 test classes — `EnvironmentApiServiceImplTest`, `EnvironmentCellMapperTest`, `EnvironmentRepositoryImplTest`, `EnvironmentComponentTest` — plus fakes, all green in the 444-test suite. Original task notes kept below for reference.
 
 **Steps:**
 1. List the 8 deleted files from `git show HEAD -- feature-environment/src/commonTest/` (they were in `initial` commit before the refactor; if not committed, recreate from the patterns in `feature-population/src/commonTest/` and `feature-tourism/src/commonTest/`).
@@ -81,9 +78,9 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 
 ---
 
-## P1 · Tourism seasonality heatmap — fetch real `tour_occ_nim`
+## ✅ DONE (v0.4.0) · Tourism seasonality heatmap — real `tour_occ_nim`
 
-**Why:** Tourism Screen's secondary heatmap still uses `mockHeatmapCells()`. Per `CLAUDE.md` add the Eurostat monthly dataset `tour_occ_nim` (nights × month × year).
+**Status:** ✅ Done. `TourismApiServiceImpl.fetchSeasonality()` fetches real `tour_occ_nim` monthly nights (`c_resid=TOTAL`, `unit=NR`, `nace_r2=I551/I552/I553`); the heatmap renders them. `placeholderHeatmapCells()` is a loading-only fallback — there is no `mockHeatmapCells()`. Original notes kept below for reference.
 
 **Steps:**
 1. Add `tour_occ_nim` row to the dataset table in `CLAUDE.md` (filter: `c_resid=DOM/FOR/TOTAL`, `unit=NR`, `nace_r2=I551-I553`, `time=monthly` format `YYYY-MM`).

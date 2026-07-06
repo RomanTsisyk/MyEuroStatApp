@@ -6,7 +6,7 @@
 ## What this is
 
 Kotlin Multiplatform app (Android · iOS · macOS · Linux · Windows desktop) that visualizes public European statistical data.
-Multi-module Clean Architecture. Currently in **Phase 4 complete** — all 8 feature modules ship real public-API data through the new design-system UI. Phase 5 (overview/picker/compare/settings + polish) and Phase 6 (release) ahead. See `NEXT_STEPS.md`.
+Multi-module Clean Architecture. **Phase 4 complete; Phase 5 in progress** — all 8 feature modules ship real public-API data through the design-system UI. Already landed from the Phase 5 list: the searchable country picker (`CountryPickerSheet`) and Unicode flag rendering, bundled Inter + IBM Plex Mono fonts, a wired (placeholder) `feature-settings` screen, and Android PL/UK string resources. Still ahead: Overview/landing screen, comparison mode, search, settings persistence, KMP-level (Compose Resources) localization + locale-aware number formatting, and the iOS toolchain. See `NEXT_STEPS.md`.
 
 ## Architecture
 
@@ -17,12 +17,12 @@ core-network     → Shared Ktor HttpClient + EurostatApiClient
 core-database    → SQLDelight schemas + DAOs
 core-ui          → Compose Multiplatform design system
                    - theme/  → EurostatTheme + object Euro (colors, typography, spacing, shapes, moduleAccents)
-                   - component/  → EuroCard, ModuleAppBar, CountryChip(sRow), YearScrubber,
-                                  MetricHeadline, StatTile, SourceFooter, StaleBanner,
-                                  SegmentedControl, ChipRow, UnderlineTabs, PillToggle,
-                                  MetricDropdown, KpiTileSelector, BottomTabBar
-                   - component/states/  → LoadingShimmer, EmptyState, OfflineBanner,
-                                          ErrorState, FirstLaunchWelcome
+                   - component/  → EuroCard, ModuleAppBar, CountryChip(sRow), CountryPickerSheet,
+                                  YearScrubber, YearDropdown, MetricHeadline, StatTile, SourceFooter,
+                                  StaleBanner, SegmentedControl, ChipRow, UnderlineTabs, PillToggle,
+                                  MetricDropdown, KpiTileSelector, BottomTabBar (preserved, not rendered)
+                   - component/states/  → LoadingShimmer, EmptyState, ErrorState
+                   - layout/  → AdaptiveScaffold (WindowSizeClass-driven shell)
 core-charts      → Pure Compose Canvas chart library (Koalaplot dropped)
                    - line, stacked-bar, pyramid, heatmap, diverging-bar,
                      radar, small-multiples, multi-line-highlighted
@@ -38,9 +38,13 @@ feature-transport, feature-tourism, feature-social, feature-science
   → each follows the same data/domain/ui layering as feature-population.
   → Screens consume Euro.* tokens from core-ui and chart types from core-charts.
   → All 8 modules ship real Eurostat data with no hardcoded mocks.
+feature-settings  → placeholder Settings screen wired into navigation
+                   (ChildConfig.Settings); no preference persistence yet (Phase 5).
 
-composeApp        → app shell: ScrollableTabRow (top module switcher) +
-                   active feature screen + BottomTabBar (5-tab nav per brief).
+composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
+                   Landing is HomeScreen (responsive 8-card module grid; initial
+                   config ChildConfig.Home); tapping a card pushes the feature
+                   screen. BottomTabBar exists but is not currently rendered.
 ```
 
 ## Tech stack
@@ -99,9 +103,9 @@ composeApp        → app shell: ScrollableTabRow (top module switcher) +
 - [x] Phase 0 — JSON-stat parser + skeleton contracts
 - [x] Phase 0 — Gradle setup (build-logic, version catalog, settings.gradle.kts)
 - [x] Phase 1 — core-common, core-network, core-database, core-navigation
-- [x] Phase 1 — **core-ui** (full design system: tokens + 20 components + 5 states + EurostatTheme with `object Euro` accessor)
+- [x] Phase 1 — **core-ui** (full design system: tokens + 18 components + 3 state composables + AdaptiveScaffold + EurostatTheme with `object Euro` accessor)
 - [x] Phase 1 — **core-charts** (8 chart types on Compose Canvas; Koalaplot removed)
-- [x] Phase 2 — **feature-population** end-to-end (real `demo_pjan` with 18 age cohorts + M/F → pyramid hero)
+- [x] Phase 2 — **feature-population** end-to-end (real `demo_pjangroup` with 18 age cohorts + M/F → pyramid hero)
 - [x] Phase 3 — **feature-economy** (3 parallel datasets: GDP/HICP/deficit)
 - [x] Phase 3 — **feature-environment** (3 parallel datasets with sector breakdown; cache + commonTest restored)
 - [x] Phase 4 — **feature-trade** (`ext_lt_intratrd` exp/imp/balance → diverging bars)
@@ -109,14 +113,15 @@ composeApp        → app shell: ScrollableTabRow (top module switcher) +
 - [x] Phase 4 — **feature-tourism** (DOM/FOR/TOTAL nights → stacked bars; seasonality heatmap driven by real `tour_occ_nim`)
 - [x] Phase 4 — **feature-social** (3 parallel % datasets → KPI-tile-driven highlight line chart)
 - [x] Phase 4 — **feature-science** (3 parallel % datasets → radar + 3 sparklines)
-- [x] Phase 4 — **composeApp** wired to new `EurostatTheme`, 5-tab `BottomTabBar`. APK assembles (19 MB).
-- [ ] **Phase 5** — Overview dashboard screen (BottomTabDestination.Overview is dead clickable)
-- [ ] **Phase 5** — Country picker (searchable list + tap-the-map variants)
+- [x] Phase 4 — **composeApp** wired to new `EurostatTheme`; HomeScreen 8-card grid + Decompose stack (BottomTabBar preserved but not rendered). APK assembles (19 MB).
+- [ ] **Phase 5** — Overview dashboard / landing screen (no Overview destination exists yet; current landing is the HomeScreen 8-card grid)
+- [~] **Phase 5** — Country picker (searchable `CountryPickerSheet` ships inline on feature screens; tap-the-map variant deferred)
 - [ ] **Phase 5** — Comparison mode (multi-country overlay)
-- [ ] **Phase 5** — Search & Settings screens
+- [~] **Phase 5** — Search & Settings screens (Settings wired as a placeholder, no persistence yet; Search not started)
 - [ ] **Phase 5** — Cache strategy convergence (JSON-blob column for multi-dim models)
-- [ ] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (currently FontFamily.SansSerif/Monospace fallback)
-- [ ] **Phase 5** — Real flag rendering; locale-aware number formatting; PL/UK translations
+- [x] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (loaded from `composeResources/font/`)
+- [x] **Phase 5** — Real flag rendering (`flagFor()` Unicode emoji in core-common) + Android PL/UK string resources
+- [ ] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting
 - [ ] **Phase 5** — Fix iOS toolchain (`xcrun xcodebuild` exits 72); verify iosApp builds + runs in simulator
 - [ ] **Phase 6** — Verified on Android device + iOS simulator; CI; release config; signing
 
@@ -141,8 +146,9 @@ All codes + filter values verified against live Eurostat API. Do not edit withou
 | transport   | (sea: disabled)    | `mar_pa_aa` uses port-based dim, not `geo` — not called              |
 | tourism     | `tour_occ_ninat`   | `c_resid=DOM/FOR/TOTAL`, `unit=NR`, `nace_r2=I551-I553`              |
 | tourism     | `tour_dem_tttot`   | `unit=NR`, `purpose=TOTAL`, `duration=N_GE1`, `c_dest=WORLD` (NOT `partner`; dim is named `c_dest`) (NO `c_resid` dim) |
-| social      | `ilc_li02`         | `unit=PC, indic_il=LI_R_MD60, sex=T, age=TOTAL` → `povertyRate`     |
-| social      | `ilc_peps01`       | `unit=PC, sex=T, age=TOTAL` (NO `indic_il` — dim not defined) → `atRiskRate` |
+| tourism     | `tour_occ_nim`     | `c_resid=TOTAL`, `unit=NR`, `nace_r2=I551/I552/I553`, monthly `time=YYYY-MM` (monthly nights → seasonality heatmap) |
+| social      | `ilc_li02`         | `unit=PC, statinfo=MED_EI, rskpovth=B_60, sex=T, age=TOTAL` → `povertyRate`  *(NOT `indic_il` — removed upstream)* |
+| social      | `ilc_peps01n`      | `unit=PC, sex=T, age=TOTAL` (NO `indic_il` — dim not defined) → `atRiskRate`  *(NOT `ilc_peps01` — frozen @2020)* |
 | social      | `hlth_silc_01`     | `levels=VGOOD`, `sex=T`, `age=Y_GE16`, `wstatus=POP` → `healthSatisfaction` |
 | science     | `rd_e_gerdtot`     | `unit=PC_GDP`, `sectperf=TOTAL`                                      |
 | science     | `isoc_ci_ifp_iu`   | `unit=PC_IND`, `ind_type=IND_TOTAL`, `indic_is=I_IU3`                |
@@ -155,6 +161,9 @@ Residence/sector code gotchas:
 - `sitc06=TOTAL` is required for `ext_lt_intratrd`: without it the API returns 24 rows (one per SITC product category) instead of 3, causing last-cell-wins mapping errors
 - `nrg_bal=FC_E` is the working total final consumption (NOT `FC` or `TOTAL`)
 - `tour_dem_tttot` uses `c_dest` for destination (NOT `partner` — `partner` is for trade datasets)
+- `ilc_li02` no longer has an `indic_il` dimension (Eurostat restructure; pinning `indic_il=LI_R_MD60` now returns HTTP 400). The at-risk-of-poverty rate is sliced as `statinfo=MED_EI` (median equivalised income) + `rskpovth=B_60` (below 60% of the median). Pin both — `statinfo` has 2 categories and `rskpovth` has 8 — or the mapper last-cell-wins.
+- `ilc_peps01` is frozen at 2020 (old AROPE methodology, empty `value{}` for later years) — use `ilc_peps01n` (new AROPE definition, data from ~2015, actively updated). Same `unit=PC, sex=T, age=TOTAL` filters; still no `indic_il` dimension.
+- `ext_lt_intratrd` has a `partner` dimension (`EU27_2020` / `EXT_EU27_2020` / `WORLD`) — the code pins `partner=EU27_2020` via `TradeQuery.partner`. Leaving it unpinned returns 3 rows per period → last-cell-wins in `TradeCellMapper` (which groups by geo+time only).
 
 API base: `https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/{dataset_code}?format=JSON&lang=EN`
 

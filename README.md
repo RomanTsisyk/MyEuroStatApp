@@ -14,7 +14,7 @@ Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windo
 
 **Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS Xcode wrapper project is currently a placeholder stub** (KMP common code compiles for iOS targets but the wrapper needs to be regenerated locally — see [NEXT_STEPS.md](NEXT_STEPS.md) P0-2).
 
-**Known limitations:** iOS Xcode wrapper project needs regeneration; the Overview bottom-nav destination is wired but the screen is empty; no tablet master-detail layouts yet. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
+**Known limitations:** iOS Xcode wrapper project needs regeneration; there is no Overview/landing dashboard yet (the app opens on the HomeScreen module grid); the Settings screen is a wired placeholder without persistence; no tablet master-detail layouts yet. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat dataset/filter table, and [`NEXT_STEPS.md`](NEXT_STEPS.md) for the prioritized roadmap.
 
@@ -68,7 +68,7 @@ Accommodation overnight stays from `tour_occ_ninat` — domestic, foreign, and t
 
 ![Social](docs/gifs/social.gif)
 
-Three welfare percentage indicators drawn from EU-SILC surveys: at-risk-of-poverty rate (`ilc_li02`), at-risk-of-poverty-or-social-exclusion rate (`ilc_peps01`), and share of population reporting very-good self-perceived health (`hlth_silc_01`). All three are plotted together as a multi-line highlighted chart; tapping a KPI tile (poverty / at-risk / health) shifts the emphasis to that series and updates the headline value. A year scrubber trims the chart's x-range; a separate year dropdown picks the year used by the headline and KPI tiles. Country chips and a picker switch the active country.
+Three welfare percentage indicators drawn from EU-SILC surveys: at-risk-of-poverty rate (`ilc_li02`), at-risk-of-poverty-or-social-exclusion rate (`ilc_peps01n`), and share of population reporting very-good self-perceived health (`hlth_silc_01`). All three are plotted together as a multi-line highlighted chart; tapping a KPI tile (poverty / at-risk / health) shifts the emphasis to that series and updates the headline value. A year scrubber trims the chart's x-range; a separate year dropdown picks the year used by the headline and KPI tiles. Country chips and a picker switch the active country.
 
 ### Science
 
@@ -84,7 +84,7 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 |---|---|---|
 | Real Eurostat data — all 8 modules | done | `feature-*/src/.../data/` — live API calls, no hardcoded mocks (tourism seasonality heatmap uses live `tour_occ_nim` data) |
 | Stale-while-revalidate caching | done | `core-database/` + repository contract in `CLAUDE.md` |
-| Offline support (cached data survives no-network) | done | `StaleBanner` + `OfflineBanner` in `core-ui/component/states/` |
+| Offline support (cached data survives no-network) | done | `StaleBanner` in `core-ui/component/` + stale-while-revalidate in every repository |
 | Country chips row — switch active country without re-fetch | done | `CountryChipsRow` in `core-ui/component/` |
 | Searchable country picker — add countries to session | done | `CountryPickerSheet` in `core-ui/component/` |
 | Year scrubber / slider — trim or scrub time range | done | `YearScrubber` (range) + `Slider` (Population) in `core-ui/` |
@@ -92,7 +92,7 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 | 8 chart types on pure Compose Canvas | done | `core-charts/` — line, stacked-bar, pyramid, heatmap, diverging-bar, radar, small-multiples, multi-line-highlighted |
 | Responsive layout — phone, tablet, desktop | partial | Compact / Medium / Expanded breakpoints in `core-ui/layout/`; explicit tablet master-detail layouts planned — see `NEXT_STEPS.md` |
 | Multi-country comparison overlay | planned | `NEXT_STEPS.md` Phase 5 |
-| Overview dashboard screen | planned | `NEXT_STEPS.md` Phase 5 — `BottomTabDestination.Overview` wired but screen empty |
+| Overview dashboard screen | planned | `NEXT_STEPS.md` Phase 5 — no Overview destination yet; the app opens on the HomeScreen module grid |
 | Search & Settings screens | planned | `NEXT_STEPS.md` Phase 5 |
 | Real flag rendering | planned | `NEXT_STEPS.md` Phase 5 |
 | iOS builds verified on simulator | planned | `NEXT_STEPS.md` P0-2 — xcrun exits 72; KMP common code compiles for iOS targets |
@@ -139,7 +139,7 @@ iOS: the `iosApp/iosApp.xcodeproj` is currently a placeholder. To enable iOS bui
 ```bash
 # Desktop (macOS / Linux / Windows)
 ./gradlew :composeApp:packageUberJarForCurrentOS
-# → composeApp/build/compose/jars/composeApp-{os}-{arch}-1.0.0.jar (self-contained, ~99 MB)
+# → composeApp/build/compose/jars/composeApp-{os}-{arch}-0.4.0.jar (self-contained, ~99 MB)
 java -jar composeApp/build/compose/jars/composeApp-*.jar
 
 # OR run in dev mode
@@ -158,7 +158,7 @@ Tests:
 
 ## Architecture
 
-Multi-module Clean Architecture. 13 modules; each feature follows the same `data/ → domain/ → ui/` layering.
+Multi-module Clean Architecture. 17 Gradle modules (1 app + 7 core + 9 feature); each feature follows the same `data/ → domain/ → ui/` layering.
 
 ```
 core-common      Result<T>, AppError, DispatcherProvider
@@ -173,9 +173,11 @@ feature-{population, economy, environment, trade,
          transport, tourism, social, science}
                  Each module owns: ApiService → CellMapper → Cache → Repository
                                    → Component (Decompose) → UiState → Screen
+feature-settings Placeholder Settings screen (wired into navigation; no persistence yet)
 
-composeApp       App shell: top module switcher + active screen + 5-tab bottom nav
-iosApp           Xcode wrapper around ComposeUIViewController
+composeApp       App shell: AdaptiveScaffold + Decompose stack; HomeScreen module
+                 grid is the landing screen (BottomTabBar exists but is not rendered)
+iosApp           Xcode wrapper around ComposeUIViewController (placeholder stub; not a Gradle module)
 ```
 
 **Tech stack:** Compose Multiplatform · Decompose · Coroutines + Flow + StateFlow · Ktor (Darwin/OkHttp) · kotlinx.serialization · SQLDelight · Koin · pure Compose Canvas charts.
