@@ -71,6 +71,7 @@ kotlin {
                 implementation(projects.featureSocial)
                 implementation(projects.featureScience)
                 implementation(projects.featureSettings)
+                implementation(projects.featureOverview)
                 implementation(libs.koin.core)
                 implementation(libs.decompose.core)
                 implementation(libs.decompose.extensions.compose)
