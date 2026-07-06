@@ -22,6 +22,12 @@ kotlin {
         }
     }
     applyDefaultHierarchyTemplate()
+
+    // See eurostat.kmp.library: exclude macOS AppleDouble (._*) files so the
+    // Kotlin compiler never tries to parse them as source on exFAT/FAT volumes.
+    sourceSets.all {
+        kotlin.exclude("**/._*")
+    }
 }
 
 android {

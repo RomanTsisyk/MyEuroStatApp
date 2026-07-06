@@ -9,6 +9,7 @@ import eu.eurostat.feature.environment.di.featureEnvironmentModule
 import eu.eurostat.feature.population.di.featurePopulationModule
 import eu.eurostat.feature.science.di.featureScienceModule
 import eu.eurostat.feature.settings.di.featureSettingsModule
+import eu.eurostat.feature.overview.di.featureOverviewModule
 import eu.eurostat.feature.social.di.featureSocialModule
 import eu.eurostat.feature.tourism.di.featureTourismModule
 import eu.eurostat.feature.trade.di.featureTradeModule
@@ -29,4 +30,5 @@ fun appModules(): List<Module> = listOf(
     featureSocialModule(),
     featureScienceModule(),
     featureSettingsModule(),
+    featureOverviewModule(),
 )

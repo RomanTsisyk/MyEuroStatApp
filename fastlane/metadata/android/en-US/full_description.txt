@@ -1,0 +1,24 @@
+EU Stats Multiplatform is an independent third-party open-source client for the public Eurostat dissemination API. It turns the dense JSON-stat 2.0 responses that the European statistical office publishes into calm, readable charts.
+
+Eight thematic modules cover the data citizens and journalists ask about most:
+
+• Economy — GDP, harmonised inflation (HICP) and government net lending as % of GDP
+• Population — demographic pyramids across 18 five-year cohorts
+• Environment — greenhouse gas emissions, final energy consumption and the SDG-13 climate index
+• Trade — intra-EU goods exports, imports and trade balance
+• Transport — road and air passenger volumes side by side
+• Tourism — domestic, foreign and total overnight stays with a monthly seasonality heatmap
+• Social — at-risk-of-poverty rate, social-exclusion rate and self-perceived health
+• Science — R&D as % of GDP, internet use rate and tertiary education attainment
+
+What makes EU Stats different:
+
+• No accounts, no analytics, no tracking, no advertising
+• Works offline — your last view stays available without a network
+• Open data, open source — published under AGPL-3.0
+• Single codebase, three form factors — phone, tablet and desktop
+• Designed for editorial calm — typography and color tuned for long reading sessions
+
+The app is not affiliated with, endorsed by or sponsored by Eurostat or the European Commission. The Eurostat name is used solely to reference the public data source. The underlying datasets are republished as Eurostat publishes them under Creative Commons Attribution 4.0.
+
+Source code, issue tracker and roadmap: https://github.com/RomanTsisyk/MyEuroStatApp

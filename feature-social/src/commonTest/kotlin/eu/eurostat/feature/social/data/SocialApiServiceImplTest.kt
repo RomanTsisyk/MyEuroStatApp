@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 
 class SocialApiServiceImplTest {
 
-    private val datasetCodes = listOf("ilc_li02", "ilc_peps01", "hlth_silc_01")
+    private val datasetCodes = listOf("ilc_li02", "ilc_peps01n", "hlth_silc_01")
 
     private fun oneCell(geo: String = "PL", year: String = "2020", value: Double = 15.0) = """
         {
@@ -161,7 +161,7 @@ class SocialApiServiceImplTest {
         var callCount = 0
         val engine = MockEngine { request ->
             callCount++
-            if (request.url.toString().contains("ilc_peps01")) {
+            if (request.url.toString().contains("ilc_peps01n")) {
                 respond(
                     content = ByteReadChannel("Internal Server Error"),
                     status = HttpStatusCode.InternalServerError,
@@ -223,21 +223,21 @@ class SocialApiServiceImplTest {
     }
 
     // ---------------------------------------------------------------------------
-    // F3 regression: ilc_peps01 slice filters must be present to avoid last-cell-wins
-    // Without indic_il/sex/age the dataset returns ~16 cells per (country, year)
+    // F3 regression: ilc_peps01n slice filters must be present to avoid last-cell-wins
+    // Without sex/age the dataset returns many cells per (country, year)
     // and the mapper picks the last one arbitrarily (random sub-population).
     // ---------------------------------------------------------------------------
 
     @Test
     fun fetch_atRisk_url_does_not_contain_indic_il_dim() = runTest {
-        // Eurostat ilc_peps01 does not expose an `indic_il` dimension —
+        // Eurostat ilc_peps01n does not expose an `indic_il` dimension —
         // pinning it returns HTTP 400 INVALID_QUERY_DIMENSION. Verified
         // against the live API; see CLAUDE.md.
         val urls = mutableListOf<String>()
         val service = buildService(urls)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
-        val url = urls.first { it.contains("ilc_peps01") }
-        assertTrue(!url.contains("indic_il="), "ilc_peps01 must NOT send indic_il dim: $url")
+        val url = urls.first { it.contains("ilc_peps01n") }
+        assertTrue(!url.contains("indic_il="), "ilc_peps01n must NOT send indic_il dim: $url")
     }
 
     @Test
@@ -245,8 +245,8 @@ class SocialApiServiceImplTest {
         val urls = mutableListOf<String>()
         val service = buildService(urls)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
-        val url = urls.first { it.contains("ilc_peps01") }
-        assertTrue(url.contains("sex=T"), "ilc_peps01 must pin sex=T (total population) to avoid last-cell-wins: $url")
+        val url = urls.first { it.contains("ilc_peps01n") }
+        assertTrue(url.contains("sex=T"), "ilc_peps01n must pin sex=T (total population) to avoid last-cell-wins: $url")
     }
 
     @Test
@@ -254,8 +254,45 @@ class SocialApiServiceImplTest {
         val urls = mutableListOf<String>()
         val service = buildService(urls)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
-        val url = urls.first { it.contains("ilc_peps01") }
-        assertTrue(url.contains("age=TOTAL"), "ilc_peps01 must pin age=TOTAL to avoid last-cell-wins: $url")
+        val url = urls.first { it.contains("ilc_peps01n") }
+        assertTrue(url.contains("age=TOTAL"), "ilc_peps01n must pin age=TOTAL to avoid last-cell-wins: $url")
+    }
+
+    // ---------------------------------------------------------------------------
+    // ilc_li02 (poverty rate) dimension pins — regression guard
+    // Eurostat removed the `indic_il` dimension; pinning indic_il=LI_R_MD60 now
+    // returns HTTP 400. The at-risk-of-poverty rate is sliced as
+    // statinfo=MED_EI (median income) + rskpovth=B_60 (below 60% of median).
+    // Both must be present, and indic_il must NOT reappear.
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun fetch_poverty_url_contains_statinfo_MED_EI() = runTest {
+        val urls = mutableListOf<String>()
+        val service = buildService(urls)
+        service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val url = urls.first { it.contains("ilc_li02") }
+        assertTrue(url.contains("statinfo=MED_EI"), "ilc_li02 must pin statinfo=MED_EI: $url")
+    }
+
+    @Test
+    fun fetch_poverty_url_contains_rskpovth_B_60() = runTest {
+        val urls = mutableListOf<String>()
+        val service = buildService(urls)
+        service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val url = urls.first { it.contains("ilc_li02") }
+        assertTrue(url.contains("rskpovth=B_60"), "ilc_li02 must pin rskpovth=B_60 (below 60% median): $url")
+    }
+
+    @Test
+    fun fetch_poverty_url_does_not_contain_indic_il_dim() = runTest {
+        // indic_il was removed from ilc_li02 upstream; sending it returns
+        // HTTP 400 INVALID_QUERY_DIMENSION. Verified against the live API.
+        val urls = mutableListOf<String>()
+        val service = buildService(urls)
+        service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val url = urls.first { it.contains("ilc_li02") }
+        assertTrue(!url.contains("indic_il="), "ilc_li02 must NOT send indic_il dim: $url")
     }
 
     // ---------------------------------------------------------------------------
@@ -320,7 +357,7 @@ class SocialApiServiceImplTest {
         """.trimIndent()
         val engine = MockEngine { request ->
             val url = request.url.toString()
-            val body = if (url.contains("ilc_peps01")) atRiskBody else emptyBody
+            val body = if (url.contains("ilc_peps01n")) atRiskBody else emptyBody
             respond(
                 content = ByteReadChannel(body),
                 status = HttpStatusCode.OK,

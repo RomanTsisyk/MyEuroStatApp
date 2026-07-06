@@ -1,0 +1,53 @@
+# F-Droid build recipe for EU Stats Multiplatform.
+#
+# This file is the source of truth for the merge request submitted to
+# https://gitlab.com/fdroid/fdroiddata once the upstream tag is cut.
+# F-Droid will copy it into `metadata/eu.eurostat.app.yml` in that repo
+# and build the APK on its own infrastructure.
+#
+# Spec reference: https://f-droid.org/docs/Build_Metadata_Reference/
+
+Categories:
+  - Science & Education
+
+License: AGPL-3.0-or-later
+AuthorName: Roman Tsisyk
+AuthorEmail: ROMAN.TSISYK1@gmail.com
+WebSite: https://romantsisyk.github.io/MyEuroStatApp/
+SourceCode: https://github.com/RomanTsisyk/MyEuroStatApp
+IssueTracker: https://github.com/RomanTsisyk/MyEuroStatApp/issues
+Changelog: https://github.com/RomanTsisyk/MyEuroStatApp/blob/master/CHANGELOG.md
+
+Summary: Official European statistics on every device
+Description: |
+    EU Stats Multiplatform is an independent third-party open-source client
+    for the public Eurostat dissemination API. It turns the dense JSON-stat
+    2.0 responses Eurostat publishes into calm, readable charts across eight
+    thematic modules: economy, population, environment, trade, transport,
+    tourism, social and science.
+
+    No accounts, no analytics, no tracking, no advertising. The app caches
+    every response locally with stale-while-revalidate semantics, so the
+    last view stays available without a network connection.
+
+    The app is not affiliated with, endorsed by or sponsored by Eurostat or
+    the European Commission. The Eurostat name is used solely to reference
+    the public data source. The underlying datasets are republished as
+    Eurostat publishes them under Creative Commons Attribution 4.0.
+
+RepoType: git
+Repo: https://github.com/RomanTsisyk/MyEuroStatApp.git
+
+Builds:
+  - versionName: 0.4.0
+    versionCode: 40
+    commit: v0.4.0
+    subdir: composeApp
+    gradle:
+      - yes
+    output: build/outputs/apk/release/composeApp-release.apk
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 0.4.0
+CurrentVersionCode: 40

@@ -10,8 +10,9 @@ import org.koin.mp.KoinPlatform.getKoin
 
 fun createRootComponent(componentContext: ComponentContext): RootComponent {
     val koin = getKoin()
-    // ChildConfig.Home has no component (renders pure UI); omit it from the factory map.
+    // ChildConfig.Home resolves to the Overview dashboard component (feature-overview).
     val factories: Map<String, ComponentFactory<Any>> = listOf(
+        ChildConfig.Home::class,
         ChildConfig.Population::class,
         ChildConfig.Economy::class,
         ChildConfig.Environment::class,

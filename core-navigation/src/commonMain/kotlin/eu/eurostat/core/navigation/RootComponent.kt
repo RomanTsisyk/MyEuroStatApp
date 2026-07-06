@@ -31,13 +31,8 @@ class DefaultRootComponent(
 
     private fun createChild(config: ChildConfig, ctx: ComponentContext): Any {
         val key = config::class.qualifiedName ?: error("config without qualified name")
-        return when (config) {
-            is ChildConfig.Home -> Unit // Home has no component; rendered directly in the UI layer
-            else -> {
-                val factory = factories[key] ?: error("no ComponentFactory registered for $key")
-                factory.create(ctx)
-            }
-        }
+        val factory = factories[key] ?: error("no ComponentFactory registered for $key")
+        return factory.create(ctx)
     }
 
     override fun onTabSelected(config: ChildConfig) {

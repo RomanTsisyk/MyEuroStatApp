@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import eu.eurostat.app.home.HomeScreen
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.core.navigation.RootComponent
 import eu.eurostat.feature.economy.ui.EconomyComponent
@@ -16,6 +15,8 @@ import eu.eurostat.feature.population.ui.PopulationComponent
 import eu.eurostat.feature.population.ui.PopulationScreen
 import eu.eurostat.feature.science.ui.ScienceComponent
 import eu.eurostat.feature.science.ui.ScienceScreen
+import eu.eurostat.feature.overview.ui.OverviewComponent
+import eu.eurostat.feature.overview.ui.OverviewScreen
 import eu.eurostat.feature.social.ui.SocialComponent
 import eu.eurostat.feature.social.ui.SocialScreen
 import eu.eurostat.feature.tourism.ui.TourismComponent
@@ -49,8 +50,9 @@ fun EurostatApp(root: RootComponent) {
                     .background(Euro.colors.paper),
             ) { child ->
                 when (val c = child.instance) {
-                    // Home is a pure UI screen — no component instance needed
-                    is Unit -> HomeScreen(
+                    // Home resolves to the Overview dashboard aggregator component.
+                    is OverviewComponent -> OverviewScreen(
+                        component = c,
                         onModuleSelected = { config -> root.onTabSelected(config) },
                         modifier = Modifier.fillMaxSize(),
                     )

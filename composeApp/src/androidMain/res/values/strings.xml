@@ -1,3 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">EU Stats</string>
+    <string name="app_tagline">Official European statistics on every device</string>
+
+    <!-- Bottom navigation tabs -->
+    <string name="tab_overview">Overview</string>
+    <string name="tab_explore">Explore</string>
+    <string name="tab_compare">Compare</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Feature modules -->
+    <string name="module_economy">Economy</string>
+    <string name="module_population">Population</string>
+    <string name="module_environment">Environment</string>
+    <string name="module_trade">Trade</string>
+    <string name="module_transport">Transport</string>
+    <string name="module_tourism">Tourism</string>
+    <string name="module_social">Social</string>
+    <string name="module_science">Science</string>
+
+    <!-- Common UI -->
+    <string name="action_refresh">Refresh</string>
+    <string name="action_back">Back</string>
+    <string name="action_search">Search</string>
+    <string name="action_retry">Try again</string>
+    <string name="state_loading">Loading…</string>
+    <string name="state_offline">You are offline. Showing cached data.</string>
+    <string name="state_stale">Data may be out of date.</string>
+    <string name="state_empty">No data available for the selected filters.</string>
+    <string name="state_error">Could not load data.</string>
+
+    <!-- Source attribution -->
+    <string name="source_eurostat">Source: Eurostat (CC-BY 4.0)</string>
+    <string name="disclaimer_independent">Independent third-party open-source client. Not affiliated with Eurostat or the European Commission.</string>
 </resources>

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("eurostat.android.application")
 }
@@ -5,10 +7,27 @@ plugins {
 android {
     namespace = "eu.eurostat.app"
     defaultConfig {
-        applicationId = "eu.eustats.app"
-        versionCode = 1
-        versionName = "0.1.0"
+        applicationId = "eu.eurostat.app"
+        versionCode = 40
+        versionName = "0.4.0"
+        resourceConfigurations += listOf("en", "pl", "uk")
     }
+
+    // Release signing: read from keystore.properties when present, fall back
+    // to the debug keystore so contributors and the F-Droid build server can
+    // assemble installable APKs without manual ceremony. The real signing
+    // identity lives outside the repo (see docs/RELEASING.md).
+    val keystorePropsFile = rootProject.file("keystore.properties")
+    val releaseSigning = if (keystorePropsFile.exists()) {
+        val props = Properties().apply { keystorePropsFile.inputStream().use { load(it) } }
+        signingConfigs.create("release") {
+            storeFile = rootProject.file(props.getProperty("storeFile"))
+            storePassword = props.getProperty("storePassword")
+            keyAlias = props.getProperty("keyAlias")
+            keyPassword = props.getProperty("keyPassword")
+        }
+    } else null
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
@@ -16,6 +35,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = releaseSigning ?: signingConfigs.getByName("debug")
         }
     }
 }
@@ -51,6 +71,7 @@ kotlin {
                 implementation(projects.featureSocial)
                 implementation(projects.featureScience)
                 implementation(projects.featureSettings)
+                implementation(projects.featureOverview)
                 implementation(libs.koin.core)
                 implementation(libs.decompose.core)
                 implementation(libs.decompose.extensions.compose)
