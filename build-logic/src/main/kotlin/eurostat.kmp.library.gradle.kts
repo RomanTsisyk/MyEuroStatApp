@@ -20,6 +20,14 @@ kotlin {
 
     applyDefaultHierarchyTemplate()
 
+    // macOS creates AppleDouble metadata files (._*) on exFAT/FAT/SMB volumes.
+    // Gradle would otherwise feed them to the Kotlin compiler as source and the
+    // build fails with thousands of parse errors. Excluding them is a no-op on
+    // filesystems that never create such files.
+    sourceSets.all {
+        kotlin.exclude("**/._*")
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)

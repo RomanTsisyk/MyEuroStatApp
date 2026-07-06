@@ -24,6 +24,13 @@ local.properties
 .DS_Store
 **/.DS_Store
 Thumbs.db
+# macOS AppleDouble metadata (created on exFAT/FAT/network volumes)
+._*
+**/._*
+.AppleDouble/
+.Spotlight-V100
+.Trashes
+.fseventsd
 
 # Databases (runtime artifacts — never commit)
 *.db
