@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>EU Stats Multiplatform — Technical Reference</title>
-  <meta name="description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 17 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 444 unit tests." />
+  <meta name="description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 18 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 499 unit tests." />
   <meta name="theme-color" content="#2F4969" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0E0D0C" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta property="og:title" content="EU Stats Multiplatform — Technical Reference" />
-  <meta property="og:description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 17 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 444 unit tests." />
+  <meta property="og:description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 18 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 499 unit tests." />
   <meta property="og:type" content="article" />
   <meta property="og:image" content="../gifs/overview.gif" />
   <meta property="og:url" content="https://romantsisyk.github.io/MyEuroStatApp/technical/" />
@@ -30,7 +30,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "EU Stats Multiplatform — Architecture & Technical Reference",
-    "description": "Architecture, data flow, and conventions of the EU Stats Multiplatform project. 17 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 444 unit tests.",
+    "description": "Architecture, data flow, and conventions of the EU Stats Multiplatform project. 18 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 499 unit tests.",
     "author": { "@type": "Person", "name": "Roman Tsisyk" },
     "dateModified": "2026-05-25",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://romantsisyk.github.io/MyEuroStatApp/technical/" },
@@ -548,7 +548,7 @@
           <span>Technical Reference</span>
         </div>
         <h1>Architecture &amp;<br/>Technical Reference</h1>
-        <p class="lede">How EU Stats Multiplatform is put together &mdash; the contracts, the data flow, the conventions that make 17 Gradle modules ship the same product on Android, iOS, and desktop.</p>
+        <p class="lede">How EU Stats Multiplatform is put together &mdash; the contracts, the data flow, the conventions that make 18 Gradle modules ship the same product on Android, iOS, and desktop.</p>
       </div>
     </header>
 
@@ -557,7 +557,7 @@
       <div class="wrap">
         <div class="section-head">
           <div class="section-eyebrow">Module graph</div>
-          <h2>17 Gradle modules, three tiers</h2>
+          <h2>18 Gradle modules, three tiers</h2>
           <p>Core modules define reusable contracts. Feature modules own their data flow end-to-end. The app shell wires everything together.</p>
         </div>
 
@@ -836,7 +836,7 @@
       <div class="wrap">
         <div class="section-head">
           <div class="section-eyebrow">JSON-stat parser</div>
-          <h2>One parser. 18 datasets.</h2>
+          <h2>One parser. 19 datasets.</h2>
           <p>The parser lives in <code>core-jsonstat/JsonStatParser.kt</code> and is dataset-agnostic. Feature-specific shaping happens in per-feature <code>CellMapper</code> extensions.</p>
         </div>
 
@@ -892,7 +892,7 @@
             <text x="350" y="178" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" text-anchor="middle">O(n × d) total · sub-millisecond for typical datasets (10³–10⁵ values, 2–4 dimensions)</text>
           </svg>
         </div>
-        <p class="diagram-caption">Generic unpacker &mdash; no feature-specific logic. The 18 Eurostat datasets all flow through this same parser before being shaped into typed domain models by per-feature <code>CellMapper</code> extensions.</p>
+        <p class="diagram-caption">Generic unpacker &mdash; no feature-specific logic. The 19 Eurostat datasets all flow through this same parser before being shaped into typed domain models by per-feature <code>CellMapper</code> extensions.</p>
       </div>
     </section>
 
@@ -1119,7 +1119,7 @@
       <div class="wrap">
         <div class="section-head">
           <div class="section-eyebrow">Dataset reference</div>
-          <h2>18 Eurostat datasets with canonical filter maps</h2>
+          <h2>19 Eurostat datasets with canonical filter maps</h2>
           <p>All codes and filter values verified against the live Eurostat dissemination API. API base: <code>https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/{code}?format=JSON&amp;lang=EN</code></p>
         </div>
 
@@ -1333,12 +1333,12 @@
       <div class="wrap">
         <div class="section-head">
           <div class="section-eyebrow">Testing</div>
-          <h2>444 unit tests. Zero failures.</h2>
+          <h2>499 unit tests. Zero failures.</h2>
         </div>
 
         <div class="stats-strip" style="margin-bottom: var(--s-8);">
           <div class="stat-card">
-            <div class="value num">444</div>
+            <div class="value num">499</div>
             <div class="label">unit tests, 0 failures, 0 skipped</div>
           </div>
           <div class="stat-card">
@@ -1442,7 +1442,7 @@
         <div class="section-head">
           <div class="section-eyebrow">Conventions</div>
           <h2>Project-wide coding rules</h2>
-          <p>These rules apply across all 17 modules. They exist to make the codebase predictable for any contributor and cross-compilable on all KMP targets.</p>
+          <p>These rules apply across all 18 modules. They exist to make the codebase predictable for any contributor and cross-compilable on all KMP targets.</p>
         </div>
 
         <ul class="conv-list">

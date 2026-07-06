@@ -72,7 +72,7 @@ Original task notes kept below for reference.
 
 ## ✅ DONE (v0.4.0) · Environment commonTest restored
 
-**Status:** ✅ Done. `feature-environment/src/commonTest/` has 4 test classes — `EnvironmentApiServiceImplTest`, `EnvironmentCellMapperTest`, `EnvironmentRepositoryImplTest`, `EnvironmentComponentTest` — plus fakes, all green in the 444-test suite. Original task notes kept below for reference.
+**Status:** ✅ Done. `feature-environment/src/commonTest/` has 4 test classes — `EnvironmentApiServiceImplTest`, `EnvironmentCellMapperTest`, `EnvironmentRepositoryImplTest`, `EnvironmentComponentTest` — plus fakes, all green in the 499-test suite. Original task notes kept below for reference.
 
 **Steps:**
 1. List the 8 deleted files from `git show HEAD -- feature-environment/src/commonTest/` (they were in `initial` commit before the refactor; if not committed, recreate from the patterns in `feature-population/src/commonTest/` and `feature-tourism/src/commonTest/`).
