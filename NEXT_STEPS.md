@@ -44,7 +44,16 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 
 ---
 
-## P0 · Add an Overview / landing dashboard screen
+## ✅ DONE · Add an Overview / landing dashboard screen
+
+**Status:** ✅ Done (code + unit tests; on-device visual check still pending). Shipped
+as the `feature-overview` module: `DefaultOverviewComponent` observes all 8 feature
+repositories concurrently (Koin singletons) and `combine()`s them into `OverviewUiState`
+— one live teaser metric per module for the default country, each degrading
+independently. `OverviewScreen` renders a hero GDP headline + a responsive per-module
+teaser grid and is bound to `ChildConfig.Home` (the old static `HomeScreen` grid was
+removed). `OverviewComponentTest` covers the aggregation with 8 fake repositories.
+Original task notes kept below for reference.
 
 **Why:** the app currently opens on `HomeScreen` — a responsive 8-card module grid (`composeApp/src/nativeAppMain/.../home/HomeScreen.kt`), launched via `ChildConfig.Home` (the initial config in `RootComponent`). There is **no** `Overview` destination, `feature-overview` module, or `BottomTabDestination.Overview` member — the design brief's Overview (hero stat + per-module teaser metrics) is not built yet. The HomeScreen grid is a functional landing but not the data-rich dashboard the brief describes.
 

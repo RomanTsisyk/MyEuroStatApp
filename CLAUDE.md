@@ -40,11 +40,16 @@ feature-transport, feature-tourism, feature-social, feature-science
   → All 8 modules ship real Eurostat data with no hardcoded mocks.
 feature-settings  → placeholder Settings screen wired into navigation
                    (ChildConfig.Settings); no preference persistence yet (Phase 5).
+feature-overview  → Overview dashboard (the landing screen). DefaultOverviewComponent
+                   aggregates one live teaser metric per feature by observing all 8
+                   repositories concurrently (Koin singletons) and combine()-ing them
+                   into OverviewUiState; each teaser degrades independently. Depends on
+                   all 8 feature domain layers. Bound to ChildConfig.Home.
 
 composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
-                   Landing is HomeScreen (responsive 8-card module grid; initial
-                   config ChildConfig.Home); tapping a card pushes the feature
-                   screen. BottomTabBar exists but is not currently rendered.
+                   Landing is the Overview dashboard (ChildConfig.Home → OverviewScreen:
+                   hero GDP metric + responsive per-module teaser grid); tapping a tile
+                   pushes the feature screen. BottomTabBar exists but is not rendered.
 ```
 
 ## Tech stack
@@ -114,7 +119,7 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - [x] Phase 4 — **feature-social** (3 parallel % datasets → KPI-tile-driven highlight line chart)
 - [x] Phase 4 — **feature-science** (3 parallel % datasets → radar + 3 sparklines)
 - [x] Phase 4 — **composeApp** wired to new `EurostatTheme`; HomeScreen 8-card grid + Decompose stack (BottomTabBar preserved but not rendered). APK assembles (19 MB).
-- [ ] **Phase 5** — Overview dashboard / landing screen (no Overview destination exists yet; current landing is the HomeScreen 8-card grid)
+- [x] **Phase 5** — Overview dashboard / landing screen (`feature-overview`: `DefaultOverviewComponent` aggregates 8 live per-module teaser metrics → `OverviewScreen` hero + tile grid, bound to `ChildConfig.Home`; unit-tested. On-device visual check pending.)
 - [~] **Phase 5** — Country picker (searchable `CountryPickerSheet` ships inline on feature screens; tap-the-map variant deferred)
 - [ ] **Phase 5** — Comparison mode (multi-country overlay)
 - [~] **Phase 5** — Search & Settings screens (Settings wired as a placeholder, no persistence yet; Search not started)

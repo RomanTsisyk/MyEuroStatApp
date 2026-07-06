@@ -14,7 +14,7 @@ Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windo
 
 **Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS Xcode wrapper project is currently a placeholder stub** (KMP common code compiles for iOS targets but the wrapper needs to be regenerated locally — see [NEXT_STEPS.md](NEXT_STEPS.md) P0-2).
 
-**Known limitations:** iOS Xcode wrapper project needs regeneration; there is no Overview/landing dashboard yet (the app opens on the HomeScreen module grid); the Settings screen is a wired placeholder without persistence; no tablet master-detail layouts yet. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
+**Known limitations:** iOS Xcode wrapper project needs regeneration; the Settings screen is a wired placeholder without persistence; no tablet master-detail layouts yet. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat dataset/filter table, and [`NEXT_STEPS.md`](NEXT_STEPS.md) for the prioritized roadmap.
 
@@ -92,7 +92,7 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 | 8 chart types on pure Compose Canvas | done | `core-charts/` — line, stacked-bar, pyramid, heatmap, diverging-bar, radar, small-multiples, multi-line-highlighted |
 | Responsive layout — phone, tablet, desktop | partial | Compact / Medium / Expanded breakpoints in `core-ui/layout/`; explicit tablet master-detail layouts planned — see `NEXT_STEPS.md` |
 | Multi-country comparison overlay | planned | `NEXT_STEPS.md` Phase 5 |
-| Overview dashboard screen | planned | `NEXT_STEPS.md` Phase 5 — no Overview destination yet; the app opens on the HomeScreen module grid |
+| Overview dashboard screen | done | `feature-overview` — landing screen aggregating one live teaser metric per module (`OverviewScreen` hero + tile grid); on-device visual check pending |
 | Search & Settings screens | planned | `NEXT_STEPS.md` Phase 5 |
 | Real flag rendering | planned | `NEXT_STEPS.md` Phase 5 |
 | iOS builds verified on simulator | planned | `NEXT_STEPS.md` P0-2 — xcrun exits 72; KMP common code compiles for iOS targets |
@@ -158,7 +158,7 @@ Tests:
 
 ## Architecture
 
-Multi-module Clean Architecture. 17 Gradle modules (1 app + 7 core + 9 feature); each feature follows the same `data/ → domain/ → ui/` layering.
+Multi-module Clean Architecture. 18 Gradle modules (1 app + 7 core + 10 feature); each feature follows the same `data/ → domain/ → ui/` layering.
 
 ```
 core-common      Result<T>, AppError, DispatcherProvider
@@ -174,6 +174,8 @@ feature-{population, economy, environment, trade,
                  Each module owns: ApiService → CellMapper → Cache → Repository
                                    → Component (Decompose) → UiState → Screen
 feature-settings Placeholder Settings screen (wired into navigation; no persistence yet)
+feature-overview Overview dashboard landing screen; aggregates one live teaser
+                 metric per feature into a hero + tile grid (bound to ChildConfig.Home)
 
 composeApp       App shell: AdaptiveScaffold + Decompose stack; HomeScreen module
                  grid is the landing screen (BottomTabBar exists but is not rendered)
