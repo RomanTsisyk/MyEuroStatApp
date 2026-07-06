@@ -30,6 +30,8 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 
 **Why:** `xcrun xcodebuild -version` returns exit 72 — Xcode CLI not properly configured. Every agent's `:build` failed at `linkDebugTestIosX64`. iOS half of "Kotlin Multiplatform" is unverified.
 
+**Update:** the KMP common code now *compiles* for iOS Native — `./gradlew :composeApp:compileKotlinIosSimulatorArm64` is green after removing a JVM-only `toSortedSet` in `feature-environment` (commit `282acb5`). The remaining blockers are the Xcode toolchain (`xcrun` exit 72) and the `linkDebug*Ios*` / `iosApp.xcodeproj` wrapper — not the Kotlin sources.
+
 **Steps:**
 1. Run `xcode-select -p` — confirm path points to a real Xcode.app, not just Command Line Tools.
 2. If pointing to CLT: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
