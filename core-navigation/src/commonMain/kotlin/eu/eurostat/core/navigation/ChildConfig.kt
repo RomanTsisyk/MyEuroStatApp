@@ -14,4 +14,5 @@ sealed interface ChildConfig {
     @Serializable data object Social : ChildConfig
     @Serializable data object Science : ChildConfig
     @Serializable data object Settings : ChildConfig
+    @Serializable data object Search : ChildConfig
 }

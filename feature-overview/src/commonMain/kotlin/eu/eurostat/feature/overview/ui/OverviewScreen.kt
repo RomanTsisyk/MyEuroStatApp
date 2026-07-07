@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +70,10 @@ fun OverviewScreen(
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
-            HeaderBar(onSettings = { onModuleSelected(ChildConfig.Settings) })
+            HeaderBar(
+                onSearch = { onModuleSelected(ChildConfig.Search) },
+                onSettings = { onModuleSelected(ChildConfig.Settings) },
+            )
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
@@ -101,7 +106,7 @@ fun OverviewScreen(
 }
 
 @Composable
-private fun HeaderBar(onSettings: () -> Unit) {
+private fun HeaderBar(onSearch: () -> Unit, onSettings: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,17 +130,31 @@ private fun HeaderBar(onSettings: () -> Unit) {
                 letterSpacing = 0.25.sp,
             )
         }
-        SettingsPill(onClick = onSettings)
+        HeaderIconPill(
+            icon = Icons.Default.Search,
+            description = "Search",
+            onClick = onSearch,
+        )
+        HeaderIconPill(
+            icon = Icons.Default.Settings,
+            description = "Settings",
+            onClick = onSettings,
+        )
     }
 }
 
 /**
- * Circular settings affordance on the header's ink band — mirrors the 36dp
+ * Circular icon affordance on the header's ink band — mirrors the 36dp
  * icon pill inside a 48dp tap target used by ModuleAppBar, tinted for the
- * dark band. Navigates to the Settings screen via ChildConfig.Settings.
+ * dark band. Used for the Search (ChildConfig.Search) and Settings
+ * (ChildConfig.Settings) entry points.
  */
 @Composable
-private fun SettingsPill(onClick: () -> Unit) {
+private fun HeaderIconPill(
+    icon: ImageVector,
+    description: String,
+    onClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .size(48.dp)
@@ -151,8 +170,8 @@ private fun SettingsPill(onClick: () -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
+                imageVector = icon,
+                contentDescription = description,
                 tint = Euro.colors.paper,
                 modifier = Modifier.size(18.dp),
             )

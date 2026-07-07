@@ -29,6 +29,8 @@ import eu.eurostat.feature.tourism.ui.TourismComponent
 import eu.eurostat.feature.tourism.ui.TourismScreen
 import eu.eurostat.feature.trade.ui.TradeComponent
 import eu.eurostat.feature.trade.ui.TradeScreen
+import eu.eurostat.feature.search.ui.SearchComponent
+import eu.eurostat.feature.search.ui.SearchScreen
 import eu.eurostat.feature.settings.ui.SettingsComponent
 import eu.eurostat.feature.settings.ui.SettingsScreen
 import eu.eurostat.feature.transport.ui.TransportComponent
@@ -110,6 +112,10 @@ fun EurostatApp(root: RootComponent) {
                         onBack = { root.onBack() },
                     )
                     is SettingsComponent    -> SettingsScreen(
+                        component = c,
+                        onBack = { root.onBack() },
+                    )
+                    is SearchComponent      -> SearchScreen(
                         component = c,
                         onBack = { root.onBack() },
                     )
