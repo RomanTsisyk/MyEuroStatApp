@@ -48,6 +48,7 @@ import eu.eurostat.ui.component.YearScrubber
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
@@ -381,17 +382,8 @@ private fun buildChartSeries(
     )
 }
 
-/**
- * Format a percentage value as "15.0", or "—" when the value is absent.
- * Multiplatform-friendly: avoids `String.format` which is JVM-only.
- */
+/** Format a percentage value as "15.0", or "—" when the value is absent. */
 private fun Double?.formatPct(): String {
     val v = this ?: return "—"
-    val rounded = kotlin.math.round(v * 10.0) / 10.0
-    val whole = rounded.toLong()
-    val frac = kotlin.math.round((rounded - whole) * 10.0).toLong().let {
-        if (it < 0L) -it else it
-    }
-    val sign = if (rounded < 0.0 && whole == 0L) "-" else ""
-    return "$sign$whole.$frac"
+    return formatDecimal(v, decimals = 1)
 }

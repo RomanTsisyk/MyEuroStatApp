@@ -353,8 +353,8 @@ private fun LegendItem(label: String, dot: Color) {
 
 /**
  * Format a millions-of-EUR value as a signed billions string with a leading
- * sign character (e.g. `+89`, `-12`). Uses integer billions, dropping fractional
- * digits for headline compactness.
+ * ASCII sign character (e.g. `+89`, `-12`). Uses truncating integer billions
+ * (not rounded), dropping fractional digits for headline compactness.
  */
 private fun formatSignedBillions(valueMEur: Long): String {
     val billions = valueMEur / 1000L

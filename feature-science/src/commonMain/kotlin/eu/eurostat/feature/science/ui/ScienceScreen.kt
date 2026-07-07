@@ -51,6 +51,7 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.theme.Euro
 
 /**
@@ -449,12 +450,5 @@ private fun LegendDot(color: Color, label: String) {
     }
 }
 
-/** Format a percentage-like Double with two decimals when small, one otherwise. */
-private fun Double.formatPct(): String {
-    val rounded = (this * 100.0).toLong() / 100.0
-    val whole = rounded.toLong()
-    val frac = ((rounded - whole) * 100).toLong()
-    val absFrac = if (frac < 0) -frac else frac
-    val fracStr = absFrac.toString().padStart(2, '0')
-    return "$whole.$fracStr"
-}
+/** Format a percentage-like Double with two decimal digits, e.g. `"15.68"`. */
+private fun Double.formatPct(): String = formatDecimal(this, decimals = 2)

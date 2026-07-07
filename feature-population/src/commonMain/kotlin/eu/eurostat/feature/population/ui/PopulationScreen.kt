@@ -45,6 +45,9 @@ import eu.eurostat.ui.component.StaleBanner
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatLargeNumber
+import eu.eurostat.ui.format.formatLargeNumberParts
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
@@ -154,7 +157,7 @@ private fun PopulationContent(
         ?: state.timeSeries.firstOrNull { it.countryCode == state.selectedCountry }?.countryName
         ?: state.selectedCountry
     val headlineYoY = computeYoY(state, snapshot)
-    val (headlineValue, headlineUnit) = formatHeadline(snapshot?.total ?: fallbackTotal(state))
+    val (headlineValue, headlineUnit) = headlineParts(snapshot?.total ?: fallbackTotal(state))
 
     val windowWidth = LocalEuroWindowWidth.current
     val pyramidHeight = adaptiveChartHeight(compact = 220.dp, medium = 320.dp, expanded = 420.dp)
@@ -428,7 +431,12 @@ private fun fallbackTotal(state: PopulationUiState.Content): Long {
     return point?.totalPopulation ?: 0L
 }
 
-/** Year-over-year percent change for the selected (country, year), or null when not computable. */
+/**
+ * Year-over-year percent change for the selected (country, year), or null
+ * when not computable. Uses an ASCII `+`/`-` sign (not the Unicode minus
+ * used elsewhere) to match this screen's existing subtitle typography;
+ * magnitude rounding delegates to the shared [formatDecimal].
+ */
 private fun computeYoY(
     state: PopulationUiState.Content,
     snapshot: PopulationSnapshot?,
@@ -442,45 +450,16 @@ private fun computeYoY(
     if (previous == 0L) return null
     val pct = (current - previous).toDouble() / previous.toDouble() * 100.0
     val sign = if (pct >= 0) "+" else "-"
-    val absPct = abs(pct)
-    val whole = absPct.toInt()
-    val tenths = ((absPct - whole) * 10).toInt()
-    return "${sign}${whole}.${tenths}% YoY"
+    return "${sign}${formatDecimal(abs(pct), 1)}% YoY"
 }
 
 /**
  * Splits a population count into a (value, unit) pair for [MetricHeadline].
- * 83_200_000 -> "83.2" + "M". 1_500_000_000 -> "1.5" + "B".
+ * 83_200_000 -> "83.2" + "M". 1_500_000_000 -> "1.5" + "B". Delegates to the
+ * shared [formatLargeNumberParts], preserving this screen's "non-positive
+ * total = no data" convention.
  */
-private fun formatHeadline(value: Long): Pair<String, String> {
+private fun headlineParts(value: Long): Pair<String, String> {
     if (value <= 0L) return "—" to ""
-    return when {
-        value >= 1_000_000_000L -> {
-            val v = value / 1_000_000_000.0
-            formatOneDecimal(v) to "B"
-        }
-        value >= 1_000_000L -> {
-            val v = value / 1_000_000.0
-            formatOneDecimal(v) to "M"
-        }
-        value >= 1_000L -> {
-            val v = value / 1_000.0
-            formatOneDecimal(v) to "K"
-        }
-        else -> value.toString() to ""
-    }
-}
-
-/** Compact human-readable count for legends: "40.9 M", "1.2 B", "873". */
-private fun formatLargeNumber(value: Long): String {
-    if (value <= 0L) return "—"
-    val (v, u) = formatHeadline(value)
-    return if (u.isEmpty()) v else "$v $u"
-}
-
-/** Round to 1 decimal without relying on platform-specific number formatting. */
-private fun formatOneDecimal(v: Double): String {
-    val whole = v.toInt()
-    val tenths = ((v - whole) * 10).toInt()
-    return "${whole}.${tenths}"
+    return formatLargeNumberParts(value)
 }

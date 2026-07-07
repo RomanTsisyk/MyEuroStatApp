@@ -50,6 +50,8 @@ import eu.eurostat.ui.component.YearScrubber
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatGrouped
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
@@ -58,7 +60,7 @@ import kotlin.math.abs
 private val SeriesFr: Color = Color(0xFF7A5C46)
 private val SeriesPl: Color = Color(0xFF5E6B58)
 
-private const val M_TO_B: Double = 1_000.0
+private const val M_TO_B: Long = 1_000L
 private const val PERCENT: Double = 100.0
 
 /**
@@ -485,53 +487,43 @@ private fun yoyDeltaText(
     }
 }
 
-/** Million-EUR → billion-EUR, formatted with non-breaking thin spaces (e.g. `3 451`). */
-private fun formatBillions(millionEur: Long): String {
-    val billions = millionEur / M_TO_B
-    return formatThousands(billions.toLong())
-}
+/**
+ * Million-EUR → billion-EUR, with locale-aware thousands grouping (e.g.
+ * `"3,451"` in en, `"3.451"` in de). Uses truncating integer billions (not
+ * rounded), matching this tile's original compactness convention.
+ */
+private fun formatBillions(millionEur: Long): String =
+    formatGrouped(millionEur / M_TO_B)
 
-private fun formatThousands(n: Long): String {
-    val raw = abs(n).toString()
-    val parts = mutableListOf<String>()
-    var i = raw.length
-    while (i > 0) {
-        val start = maxOf(0, i - 3)
-        parts.add(0, raw.substring(start, i))
-        i = start
-    }
-    val joined = parts.joinToString(" ")
-    return if (n < 0) "-$joined" else joined
-}
-
-private fun formatDecimal(v: Double, digits: Int): String {
-    val factor = pow10(digits)
-    val rounded = kotlin.math.round(v * factor) / factor
-    val whole = rounded.toLong()
-    val frac = abs((rounded - whole) * factor).toLong()
-    return if (digits == 0) whole.toString() else "$whole.${frac.toString().padStart(digits, '0')}"
-}
-
+/**
+ * Signed percent-point delta, e.g. `"+6.2%"`, `"−0.4%"`. Exact zero renders
+ * as bare `"0.0%"` with no sign character — this screen's original
+ * convention, distinct from the `"+0.0"` used elsewhere (e.g. Population's
+ * YoY badge).
+ */
 private fun formatSignedPercent(v: Double): String {
     val formatted = formatDecimal(abs(v), 1)
     return when {
         v > 0 -> "+$formatted%"
         v < 0 -> "−$formatted%"
-        else -> "0.0%"
+        // Route zero through formatDecimal too, so the separator stays
+        // locale-consistent with the non-zero branches.
+        else -> "${formatDecimal(0.0, 1)}%"
     }
 }
 
+/**
+ * Signed decimal delta with no unit suffix, e.g. `"+1.2"`, `"−0.4"`. Exact
+ * zero renders as bare `"0.0"` — see [formatSignedPercent] for why this
+ * screen special-cases zero rather than always showing a sign.
+ */
 private fun signed(v: Double): String {
     val formatted = formatDecimal(abs(v), 1)
     return when {
         v > 0 -> "+$formatted"
         v < 0 -> "−$formatted"
-        else -> "0.0"
+        // Route zero through formatDecimal too, so the separator stays
+        // locale-consistent with the non-zero branches.
+        else -> formatDecimal(0.0, 1)
     }
-}
-
-private fun pow10(n: Int): Double {
-    var r = 1.0
-    repeat(n) { r *= 10.0 }
-    return r
 }

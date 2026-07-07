@@ -53,10 +53,10 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
-import kotlin.math.roundToLong
 
 /**
  * Environment screen. Renders the standard module chrome around a
@@ -435,9 +435,9 @@ private fun latestHeadline(
 
 /** Format a metric value for compact display in the headline / tiles. */
 private fun formatValue(value: Double, metric: EnvMetric): String = when (metric) {
-    EnvMetric.Ghg -> value.roundToLong().toString()
-    EnvMetric.Energy -> value.roundToLong().toString()
-    EnvMetric.Sdg -> ((value * 10.0).roundToLong() / 10.0).toString()
+    EnvMetric.Ghg -> formatDecimal(value, decimals = 0)
+    EnvMetric.Energy -> formatDecimal(value, decimals = 0)
+    EnvMetric.Sdg -> formatDecimal(value, decimals = 1)
 }
 
 private data class TilePair(val first: TileValue, val second: TileValue)

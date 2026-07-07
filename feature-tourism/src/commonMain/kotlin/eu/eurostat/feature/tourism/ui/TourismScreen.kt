@@ -52,6 +52,7 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatLargeNumberParts
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
 
@@ -329,25 +330,12 @@ private fun headlineSubtitleFor(residence: TourismResidence): String = when (res
 
 /**
  * Format a raw nights count as a short value+unit pair, e.g. 31_700_000 -> "31.7" + "M".
- * Returns ("—", "") for null.
+ * Returns ("—", "") for null. Delegates the magnitude bucketing + rounding to
+ * the shared [formatLargeNumberParts].
  */
 private fun formatNights(value: Long?): Pair<String, String> {
     if (value == null) return "—" to ""
-    val abs = kotlin.math.abs(value)
-    return when {
-        abs >= 1_000_000_000L -> oneDecimal(value, 1_000_000_000.0) to "B"
-        abs >= 1_000_000L -> oneDecimal(value, 1_000_000.0) to "M"
-        abs >= 1_000L -> oneDecimal(value, 1_000.0) to "K"
-        else -> value.toString() to ""
-    }
-}
-
-private fun oneDecimal(value: Long, divisor: Double): String {
-    val scaled = value / divisor
-    val rounded = (scaled * 10).toLong()
-    val whole = rounded / 10
-    val frac = abs(rounded % 10)
-    return "$whole.$frac"
+    return formatLargeNumberParts(value)
 }
 
 /**

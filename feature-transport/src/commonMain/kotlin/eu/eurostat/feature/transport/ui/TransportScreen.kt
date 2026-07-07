@@ -49,12 +49,12 @@ import eu.eurostat.ui.component.StatTile
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.ln
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
 
 /**
  * Transport feature screen — wired to live Eurostat data.
@@ -438,22 +438,19 @@ private fun transform(value: Double, log: Boolean): Double =
 /** Format an absolute count into the StatTile string e.g. `"4.1 bn"` or `"57.8 M"`. */
 private fun formatBillions(value: Long): String = "${formatBillionsValue(value)} bn"
 
-private fun formatBillionsValue(value: Long): String {
-    val v = value.toDouble() / 1_000_000_000.0
-    val tenths = (v * 10.0).roundToLong()
-    val whole = tenths / 10
-    val frac = tenths % 10
-    return "$whole.$frac"
-}
+private fun formatBillionsValue(value: Long): String =
+    formatDecimal(value.toDouble() / 1_000_000_000.0, decimals = 1)
 
+/**
+ * Millions count with 1 decimal, e.g. `"57.8 M"` — but once the magnitude
+ * reaches 100 M or more, drops the decimal to a whole number (e.g. `"142 M"`)
+ * to keep the StatTile compact.
+ */
 private fun formatMillions(value: Long): String {
     val v = value.toDouble() / 1_000_000.0
     return if (v >= 100.0) {
         "${v.roundToInt()} M"
     } else {
-        val tenths = (v * 10.0).roundToLong()
-        val whole = tenths / 10
-        val frac = tenths % 10
-        "$whole.$frac M"
+        "${formatDecimal(v, decimals = 1)} M"
     }
 }
