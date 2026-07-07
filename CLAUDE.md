@@ -6,7 +6,7 @@
 ## What this is
 
 Kotlin Multiplatform app (Android · iOS · macOS · Linux · Windows desktop) that visualizes public European statistical data.
-Multi-module Clean Architecture. **Phase 4 complete; Phase 5 in progress** — all 8 feature modules ship real public-API data through the design-system UI. Already landed from the Phase 5 list: the searchable country picker (`CountryPickerSheet`) and Unicode flag rendering, bundled Inter + IBM Plex Mono fonts, a wired (placeholder) `feature-settings` screen, and Android PL/UK string resources. Still ahead: Overview/landing screen, comparison mode, search, settings persistence, KMP-level (Compose Resources) localization + locale-aware number formatting, and the iOS toolchain. See `NEXT_STEPS.md`.
+Multi-module Clean Architecture. **Phase 4 complete; Phase 5 nearly done** — all 8 feature modules ship real public-API data through the design-system UI. Landed from the Phase 5 list: Overview/landing dashboard, searchable country picker (`CountryPickerSheet`) + Unicode flags, bundled Inter + IBM Plex Mono fonts, Android PL/UK string resources, cache-strategy convergence (JSON-blob `MultiDimCache` + SQLDelight migrations, schema v3), Settings persistence (theme applied app-wide), comparison mode (economy: `SeriesPalette` + Indexed-100 normalization toggle), shared locale-aware number formatting (`eu.eurostat.ui.format`), pull-to-refresh on all 8 screens, shared `AppError.toUserMessage()`. Still ahead: Search screen, KMP-level (Compose Resources) PL/UK localization, applying the stored language + default-country preferences, simulator/device verification. iOS builds work via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when `xcode-select` points at CommandLineTools (permanent fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`). See `NEXT_STEPS.md`.
 
 ## Architecture
 
@@ -14,7 +14,12 @@ Multi-module Clean Architecture. **Phase 4 complete; Phase 5 in progress** — a
 core-common      → Result<T>, AppError, DispatcherProvider
 core-jsonstat    → JSON-stat 2.0 parser (fully implemented + tested)
 core-network     → Shared Ktor HttpClient + EurostatApiClient
-core-database    → SQLDelight schemas + DAOs
+core-database    → SQLDelight schemas + DAOs + migrations (.sqm, schema v3)
+                   - per-feature cache tables, MultiDimCache (JSON-blob),
+                     PreferenceEntity (settings key/value)
+                   - SqlDelightBlobCacheStore / SqlDelightAppPreferences /
+                     SqlDelightCacheMaintenance bound in Koin
+                   - adding a table = .sq file + N.sqm migration + SchemaMigrationTest
 core-ui          → Compose Multiplatform design system
                    - theme/  → EurostatTheme + object Euro (colors, typography, spacing, shapes, moduleAccents)
                    - component/  → EuroCard, ModuleAppBar, CountryChip(sRow), CountryPickerSheet,
@@ -22,11 +27,16 @@ core-ui          → Compose Multiplatform design system
                                   StaleBanner, SegmentedControl, ChipRow, UnderlineTabs, PillToggle,
                                   MetricDropdown, KpiTileSelector, BottomTabBar (preserved, not rendered)
                    - component/states/  → LoadingShimmer, EmptyState, ErrorState
+                   - format/  → shared locale-aware number formatting
+                     (formatDecimal/formatSignedPercent/formatLargeNumber/…;
+                     expect/actual separators per platform). Screens keep only
+                     thin wrappers that add domain suffixes.
                    - layout/  → AdaptiveScaffold (WindowSizeClass-driven shell)
 core-charts      → Pure Compose Canvas chart library (Koalaplot dropped)
                    - line, stacked-bar, pyramid, heatmap, diverging-bar,
                      radar, small-multiples, multi-line-highlighted
-                   - model/  → ChartPoint, ChartSeries, ChartAxis, ColorScale
+                   - model/  → ChartPoint, ChartSeries, ChartAxis, ColorScale,
+                     SeriesPalette (index-stable multi-country series colors)
                    - Note: area, donut, sankey, choropleth, bar were
                      scaffolded earlier but removed in the pre-release
                      pass (zero call sites). Add back when a feature
@@ -38,8 +48,12 @@ feature-transport, feature-tourism, feature-social, feature-science
   → each follows the same data/domain/ui layering as feature-population.
   → Screens consume Euro.* tokens from core-ui and chart types from core-charts.
   → All 8 modules ship real Eurostat data with no hardcoded mocks.
-feature-settings  → placeholder Settings screen wired into navigation
-                   (ChildConfig.Settings); no preference persistence yet (Phase 5).
+feature-settings  → real Settings screen (theme / language / default country /
+                   clear cache / about) persisting via AppPreferences
+                   (core-common contract; SQLDelight-backed impl in
+                   core-database). Theme drives EurostatTheme app-wide; the
+                   Overview header gear navigates here. Language and
+                   default-country are persisted but not yet applied (Phase 5).
 feature-overview  → Overview dashboard (the landing screen). DefaultOverviewComponent
                    aggregates one live teaser metric per feature by observing all 8
                    repositories concurrently (Koin singletons) and combine()-ing them
@@ -121,13 +135,13 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - [x] Phase 4 — **composeApp** wired to new `EurostatTheme`; HomeScreen 8-card grid + Decompose stack (BottomTabBar preserved but not rendered). APK assembles (19 MB).
 - [x] **Phase 5** — Overview dashboard / landing screen (`feature-overview`: `DefaultOverviewComponent` aggregates 8 live per-module teaser metrics → `OverviewScreen` hero + tile grid, bound to `ChildConfig.Home`; unit-tested. On-device visual check pending.)
 - [~] **Phase 5** — Country picker (searchable `CountryPickerSheet` ships inline on feature screens; tap-the-map variant deferred)
-- [ ] **Phase 5** — Comparison mode (multi-country overlay)
-- [~] **Phase 5** — Search & Settings screens (Settings wired as a placeholder, no persistence yet; Search not started)
-- [ ] **Phase 5** — Cache strategy convergence (JSON-blob column for multi-dim models)
+- [x] **Phase 5** — Comparison mode (economy multi-country overlay: `SeriesPalette` index-stable colors + "Absolute / Indexed 100" rebasing toggle, pure tested `rebaseToIndex()`)
+- [~] **Phase 5** — Search & Settings screens (Settings DONE: SQLDelight-persisted theme/language/default-country + functional clear-cache, theme applied app-wide, gear entry on Overview; Search not started)
+- [x] **Phase 5** — Cache strategy convergence (`MultiDimCache` JSON-blob table + `JsonBlobCache<T>` in core-common + `.sqm` migrations; population cohorts cached, tourism off the sentinel table; desktop driver schema-managed)
 - [x] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (loaded from `composeResources/font/`)
 - [x] **Phase 5** — Real flag rendering (`flagFor()` Unicode emoji in core-common) + Android PL/UK string resources
-- [ ] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting
-- [ ] **Phase 5** — Fix iOS toolchain (`xcrun xcodebuild` exits 72); verify iosApp builds + runs in simulator
+- [~] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting (formatting DONE in `eu.eurostat.ui.format`; Compose-Resources strings + applying the language preference still ahead)
+- [~] **Phase 5** — iOS toolchain (root cause: `xcode-select` → CommandLineTools; builds green via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` incl. `iosApp.xcodeproj` simulator build; permanent fix needs `sudo xcode-select -s`; run-in-simulator verification pending)
 - [ ] **Phase 6** — Verified on Android device + iOS simulator; CI; release config; signing
 
 See `NEXT_STEPS.md` for the prioritized punch list with file refs and acceptance criteria.

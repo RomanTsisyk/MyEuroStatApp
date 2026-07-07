@@ -32,6 +32,11 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 
 **Update:** the KMP common code now *compiles* for iOS Native — `./gradlew :composeApp:compileKotlinIosSimulatorArm64` is green after removing a JVM-only `toSortedSet` in `feature-environment` (commit `282acb5`). The remaining blockers are the Xcode toolchain (`xcrun` exit 72) and the `linkDebug*Ios*` / `iosApp.xcodeproj` wrapper — not the Kotlin sources.
 
+**Update 2 (v0.4.0 release prep, RESOLVED except simulator run):** root cause found — `xcode-select -p` points at `/Library/Developer/CommandLineTools` while a full Xcode 26.2 sits in `/Applications/Xcode.app`. Without touching system state, `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` makes everything green:
+- `./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64` — BUILD SUCCESSFUL
+- `xcrun xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` — succeeds (exit 0)
+The permanent machine fix (needs admin password, run once): `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`. Remaining: boot a simulator, install + launch the app, walk the 8 tabs (steps 5–6 below).
+
 **Steps:**
 1. Run `xcode-select -p` — confirm path points to a real Xcode.app, not just Command Line Tools.
 2. If pointing to CLT: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
@@ -106,7 +111,9 @@ Original task notes kept below for reference.
 
 ---
 
-## P1 · Cache strategy convergence
+## ✅ DONE · Cache strategy convergence
+
+**Status:** ✅ Done. `MultiDimCacheEntity` (JSON-blob, `core-database`) + `BlobCacheStore`/`JsonBlobCache<T>` (`core-common`, corrupted JSON degrades to a miss) + `SqlDelightBlobCacheStore` bound in Koin. Population cohort frames are cached (pyramid works offline; flat totals table kept as fallback tier); tourism moved off the residence-tall table and its `-1` sentinel to one blob per query (points + labels + seasonality heatmap). SQLDelight migrations infrastructure added (`migrations/1.sqm`, `2.sqm` → schema v3, `SchemaMigrationTest`); the desktop driver is schema-managed (fixes an unconditional-`Schema.create()` crash on second launch). Blob reads/writes are `safeFetch`-guarded so storage failures degrade to misses instead of escaping the flow; empty-points blobs revalidate instead of acting as 12h negative cache. Environment keeps its working sector-tall cache (already standard). Original notes below.
 
 **Why:** modules inconsistently handle cache for multi-dimensional data:
 - Environment: full bypass (no DAO).
@@ -132,7 +139,9 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P1 · Remove dead code
+## ✅ DONE · Remove dead code
+
+**Status:** ✅ Done (pre-release pass). `rg "Sketch|Wireframe"` returns no Kotlin hits; the legacy `eu.eurostat.core.ui.*` package and `WireframeApp.kt` are gone. Original notes below.
 
 **Why:** keeps the legacy `eu.eurostat.core.ui.*` package and `WireframeApp.kt` alive in `composeApp`. Confusing for new contributors; potential drift target.
 
@@ -149,7 +158,9 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P1 · Country picker screen + real flag rendering
+## ✅ DONE · Country picker screen + real flag rendering
+
+**Status:** ✅ Done. `CountryPickerSheet` (searchable multi-select) ships in core-ui and every feature screen wires the "+ add" chip to it; selection re-issues the query via `SelectCountries` intents. Flags render as Unicode emoji via `flagFor()` in core-common. Tap-the-map variant deferred (choropleth was removed with zero call sites). Original notes below.
 
 **Why:** `CountryChipsRow` has an "+ add" CTA that does nothing. There's no picker. Flag swatches are 14×10 dp placeholder rects.
 
@@ -168,7 +179,9 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P1 · Locale-aware number formatting + extract shared formatters
+## ✅ DONE · Locale-aware number formatting + extract shared formatters
+
+**Status:** ✅ Done. `core-ui/.../format/NumberFormat.kt` (`eu.eurostat.ui.format`): formatDecimal / formatSignedDecimal / formatPercent / formatSignedPercent / formatLargeNumber(Parts) / formatBillionsFromMillions / formatGrouped. Decimal + grouping separators come from the platform locale via expect/actual (java.text on Android/desktop, NSNumberFormatter on iOS); ties round away from zero; magnitude buckets promote on rounding rollover (999_972 → "1.0 M"). All 8 screens migrated — only thin domain-suffix wrappers remain. 29-case commonTest. Original notes below.
 
 **Why:** every Screen has its own inline `formatLargeNumber()` / `formatPercent()` / etc. Inconsistent rounding, no locale awareness (PL uses `,` decimal, EN uses `.`). Per `CLAUDE.md` localization is a requirement.
 
@@ -230,7 +243,9 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Comparison mode screen
+## ✅ DONE · Comparison mode screen
+
+**Status:** ✅ Done (in-module variant). The economy hero chart overlays every picked country (CountryPickerSheet) with index-stable `SeriesPalette` colors + legend, and gains an "Absolute / Indexed 100" normalization toggle — each series rebased to 100 at its first point inside the visible year range (pure `rebaseToIndex()`, 9 tests; zero/missing-first series dropped, gaps preserved). Acceptance met: DE/FR/PL GDP on one chart with distinct colors and legend. A dedicated cross-module compare screen remains a possible v0.5 enhancement. Original notes below.
 
 **Why:** wireframes (`design/screens-compare.jsx`) define an overlay-lines or small-multiples view for comparing 2-3 countries on the same indicator. Currently the in-module screens only show one country at a time. Comparison is a flagship feature per the brief.
 
@@ -247,7 +262,11 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Search & Settings screens
+## P2 · Search & Settings screens — Settings ✅ DONE, Search open
+
+**Status:** Settings is done: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; language (System/EN/PL/UK) and default-country persisted (applying them to components is the follow-up below); functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header. Search has not started.
+
+**Follow-ups:** wire `AppPreferences.defaultCountry` into the 8 feature components' initial queries + Overview; apply the language preference once KMP string resources exist.
 
 **Why:** wireframes (`design/screens-system.jsx`) define both. Settings exposes theme/language/default-country preferences; Search lets users find indicators across all 8 modules. Both are referenced in `ModuleAppBar` (search icon dispatches nowhere).
 
@@ -266,7 +285,9 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Bundle Inter + IBM Plex Mono fonts
+## ✅ DONE · Bundle Inter + IBM Plex Mono fonts
+
+**Status:** ✅ Done. Inter (Regular/Medium/SemiBold) + IBM Plex Mono (Regular/Medium) live in `core-ui/src/commonMain/composeResources/font/` and `EurostatTypography` loads them via Compose Resources. Original notes below.
 
 **Why:** `EurostatTypography.kt` falls back to `FontFamily.SansSerif` / `Monospace`. Looks acceptable but not on-brand.
 
@@ -311,35 +332,21 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P3 · Pull-to-refresh
+## ✅ DONE · Pull-to-refresh
 
-**Why:** users expect it on mobile data screens. Currently only the refresh icon in `ModuleAppBar` works.
-
-**Steps:**
-1. Wrap each Screen content in Material3 `PullToRefreshBox`.
-2. Dispatch `XxxIntent.Refresh` on release.
-3. Show indicator until state returns to `Content`.
+**Status:** ✅ Done. Material3 `PullToRefreshBox` wraps the state-branch content on all 8 feature screens, dispatching the existing `Refresh` intents; the indicator follows the `Loading` state.
 
 ---
 
-## P3 · Better error messages
+## ✅ DONE · Better error messages
 
-**Why:** `ErrorState` currently shows generic message. `AppError` is a sealed class — UI should map each subtype to a specific localized message.
-
-**Steps:**
-1. Add `@Composable fun AppError.localizedMessage(): String` extension somewhere in `core-ui`.
-2. `NoNetwork` → "Check your connection"; `Http5xx` → "Eurostat servers are temporarily unavailable"; `Parse` → "Got unexpected data format"; etc.
+**Status:** ✅ Done. One shared `AppError.toUserMessage()` in core-common (plain string — localization comes with KMP string resources later) with per-subtype copy (NoNetwork / 5xx vs other HTTP / Parse / CacheEmpty / Unknown), used by all 8 feature components (six of which previously surfaced raw `cause.toString()`); mapping unit-tested.
 
 ---
 
-## P3 · Performance: `remember` heavy chart computations
+## ✅ DONE · Performance: `remember` heavy chart computations
 
-**Why:** `EurostatChoropleth` parses 23 SVG paths on every recomposition. `EurostatRadarChart` recomputes axis angles. `EurostatPyramidChart` rebuilds rects.
-
-**Steps:**
-1. Wrap heavy precomputations in `remember(inputs) { ... }`.
-2. For Choropleth, `remember { parseAllCountryPaths() }` — paths are static.
-3. Profile with Layout Inspector.
+**Status:** ✅ Done. Pyramid/diverging max sides, stacked-bar max, radar axis angles, and line/multi-line axis bounds + ticks are hoisted into `remember(inputs)`; heatmap/small-multiples reviewed, no win. (Choropleth no longer exists — removed pre-release.) Layout-Inspector profiling deferred to on-device verification.
 
 ---
 
@@ -371,16 +378,16 @@ This is a maintenance landmine. Pick one convergent approach.
 **Definition of "100% working" for this app:**
 
 1. ✅ Android APK installs and launches on a fresh device.
-2. ⏳ iOS app builds and launches in simulator.
-3. ⏳ All 8 feature tabs render real Eurostat data on first open.
-4. ⏳ Refresh button + pull-to-refresh both work.
-5. ⏳ Offline state shows cached data with clear stale indicator.
-6. ⏳ Error states recover via retry button.
-7. ⏳ Bottom-nav Overview opens a real landing screen.
-8. ⏳ Country picker opens from `+ add` chip; selection adds country to comparison.
-9. ⏳ Settings screen persists preferences across restart.
-10. ⏳ All `allTests` pass.
-11. ⏳ No `mock*()` calls remain in any feature Screen.
-12. ⏳ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives).
+2. 🟡 iOS app **builds** for the simulator (`xcodebuild` green via `DEVELOPER_DIR`); launch-in-simulator walk-through pending.
+3. ⏳ All 8 feature tabs render real Eurostat data on first open (needs the on-device smoke run).
+4. ✅ Refresh button + pull-to-refresh both work (pull-to-refresh on all 8 screens).
+5. ✅ Offline state shows cached data with stale indicator (incl. cohort pyramid + tourism heatmap via the blob cache).
+6. ✅ Error states recover via retry button, with per-subtype messages (`AppError.toUserMessage()`).
+7. ✅ Landing is the Overview dashboard (hero + live per-module teasers).
+8. ✅ Country picker opens from `+ add`; multi-selection overlays the economy chart (distinct `SeriesPalette` colors + Indexed-100 toggle).
+9. ✅ Settings persist across restart (SQLDelight `PreferenceEntity`; theme applied app-wide).
+10. ✅ Unit suite green (`testDebugUnitTest` + desktop tests; 600+ tests incl. migrations).
+11. ✅ No `mock*()` calls remain in any feature Screen.
+12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 1/12. Target: 12/12.
+Currently 10/12 (+1 partial). Remaining: the Android on-device + iOS in-simulator verification runs.

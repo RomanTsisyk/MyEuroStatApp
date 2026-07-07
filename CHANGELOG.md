@@ -6,14 +6,47 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Convergent JSON-blob cache (`MultiDimCacheEntity` + `JsonBlobCache<T>`):
+  population age-cohort frames now cached (pyramid works offline) and
+  tourism switched off the residence-tall table with its `-1` sentinel;
+  SQLDelight migrations infrastructure (`1.sqm`, `2.sqm`, schema v3) so
+  existing installs upgrade in place
+- Settings persistence: theme (system/light/dark, applied app-wide),
+  language and default-country preferences stored in SQLDelight;
+  functional Clear-cache; settings gear on the Overview header
+- Comparison mode on the economy chart: index-stable `SeriesPalette`
+  colors for any number of countries + "Absolute / Indexed 100"
+  normalization toggle (each series rebased to 100 at the first visible
+  year)
+- Shared locale-aware number formatting in `core-ui`
+  (`eu.eurostat.ui.format`): platform decimal/grouping separators via
+  expect/actual, one rounding convention, magnitude buckets with
+  rollover promotion; all eight screens migrated off inline formatters
+- Pull-to-refresh on all eight feature screens (Material3
+  `PullToRefreshBox`)
+- One shared `AppError.toUserMessage()` mapping with clearer human copy
+- Chart recomposition wins: heavy pure derivations hoisted into
+  `remember(inputs)` across six chart types
+
+### Fixed
+
+- Desktop database driver crashed on the second launch (unconditional
+  `Schema.create()`); now schema-managed with migrations
+- iOS toolchain: builds work with `DEVELOPER_DIR=/Applications/Xcode.app/
+  Contents/Developer` when `xcode-select` points at CommandLineTools
+  (permanent fix: `sudo xcode-select -s`); `iosApp.xcodeproj` builds for
+  the iOS simulator
+
 ### Planned for v0.5 / v1.0
 
-- Overview dashboard screen wired to `BottomTabDestination.Overview`
-- Searchable country picker (list + map variants) and multi-country comparison overlay
-- Search & Settings screens
+- Search screen (indicator index across the 8 modules)
+- KMP-level (Compose Resources) PL/UK localization driven by the stored
+  language preference; wire default-country preference into the feature
+  components
 - Tablet master-detail layouts at the `Expanded` breakpoint
-- Real flag rendering and locale-aware number formatting
-- iOS Xcode wrapper regeneration; verified launch on iPhone + iPad simulator
+- Verified launch on iPhone + iPad simulator; on-device Android smoke run
 - Native Windows / macOS installers (`.msi`, `.dmg`) from Compose Desktop
 - F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
 - GitHub Actions release workflow with reproducible signed APK
