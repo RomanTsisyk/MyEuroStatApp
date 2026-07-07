@@ -18,9 +18,3 @@ kotlin {
     }
 }
 
-// core-common has no JVM/desktop variant — exclude it from desktop configurations so
-// desktopTest compilation and runtime work without it.
-configurations.matching { it.name.startsWith("desktop") }.configureEach {
-    exclude(module = "core-common")
-}
-

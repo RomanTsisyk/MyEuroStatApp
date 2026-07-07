@@ -1,4 +1,7 @@
-plugins { id("eurostat.kmp.compose") }
+plugins {
+    id("eurostat.kmp.compose")
+    alias(libs.plugins.kotlin.serialization)
+}
 
 android.namespace = "eu.eurostat.feature.population"
 
@@ -14,6 +17,7 @@ kotlin {
             implementation(projects.coreCharts)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
             implementation(libs.decompose.core)
             implementation(libs.essenty.lifecycle.coroutines)
             implementation(libs.koin.core)
