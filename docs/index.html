@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>EU Stats Multiplatform — Eurostat data, on every screen.</title>
   <meta name="description" content="An independent, open-source mobile and desktop client for the public Eurostat API. Eight thematic modules — economy, population, environment, trade, transport, tourism, social, science — on a single Kotlin Multiplatform codebase." />
-  <meta name="theme-color" content="#2F4969" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0E0D0C" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#003399" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B101C" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta property="og:title" content="EU Stats Multiplatform" />
   <meta property="og:description" content="Eurostat data, on every screen. Open-source client for the public Eurostat API, built with Kotlin Multiplatform." />
@@ -69,86 +69,112 @@
     ]
   }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
   <style>
+    /* ============================================================
+       EU STATS MULTIPLATFORM — "Institutional Modern"
+       EU blue band · white content · gold accents · grid discipline
+       Self-hosted: system grotesque stack, no external requests.
+       ============================================================ */
+
     /* -------- tokens (light) -------- */
     :root {
-      --paper: #F4F1EA;
-      --paper-alt: #FFFFFF;
-      --surface-2: #EAE6DD;
-      --ink: #1A1817;
-      --ink-subtle: #3A352E;
-      --muted: #6B6359;
-      --accent: #2F4969;
-      --accent-soft: #C6D0DC;
-      --warn: #C25A35;
-      --border: rgba(0, 0, 0, 0.07);
-      --border-strong: rgba(0, 0, 0, 0.12);
-      --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 12px rgba(0, 0, 0, .04);
+      --bg: #FFFFFF;
+      --surface: #FFFFFF;
+      --surface-2: #F2F5FA;
+      --ink: #131C2B;
+      --ink-subtle: #39445A;
+      --muted: #5A6478;
+      --blue: #003399;          /* EU corporate blue */
+      --blue-deep: #002266;
+      --band: #003399;          /* header band */
+      --band-deep: #001F5C;     /* footer band */
+      --gold: #FFCC00;          /* star gold — decorative + CTAs only */
+      --gold-hover: #FFD633;
+      --blue-tint: #EDF2FB;
+      --blue-line: #C7D6F0;
+      --border: #DFE4EE;
+      --border-strong: #C3CCDC;
+      --ok: #1A7F37;
+      --focus: #003399;
+      --btn-primary-bg: #003399;
+      --btn-primary-ink: #FFFFFF;
+      --gridline: rgba(0, 51, 153, .08);
+      --paper: #FAF7F0;          /* warm paper band behind #modules */
+      --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px rgba(16, 24, 40, .06);
 
       /* module accents (light) */
-      --mod-economy: #2F4969;
-      --mod-population: #5E6B58;
-      --mod-environment: #6B8A76;
-      --mod-trade: #7A5C46;
-      --mod-transport: #4A4A55;
-      --mod-tourism: #B06A3A;
-      --mod-social: #7D5E76;
-      --mod-science: #4A6B7A;
+      --mod-economy: #003399;
+      --mod-population: #0F766E;
+      --mod-environment: #2E7D32;
+      --mod-trade: #8C5A16;
+      --mod-transport: #4A5568;
+      --mod-tourism: #C2410C;
+      --mod-social: #6D4E9C;
+      --mod-science: #1E6091;
 
-      /* spacing scale */
+      /* spacing scale (inline styles in markup reference these) */
       --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
       --s-6: 24px; --s-8: 32px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
 
-      /* radii */
-      --r-card: 12px;
-      --r-hero: 24px;
-      --r-pill: 999px;
+      /* radii — deliberately crisp */
+      --r-card: 6px;
+      --r-hero: 10px;
+      --r-pill: 4px;
 
-      /* type */
-      --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+      /* type — clean grotesque, self-hosted/system only */
+      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
     }
 
     /* -------- tokens (dark) -------- */
     html[data-theme="dark"] {
-      --paper: #0E0D0C;
-      --paper-alt: #1A1816;
-      --surface-2: #252320;
-      --ink: #F5F2EB;
-      --ink-subtle: #E8E2D5;
-      --muted: #9C948A;
-      --accent: #7DA0C9;
-      --accent-soft: #2F4969;
-      --warn: #C25A35;
-      --border: rgba(255, 255, 255, 0.10);
-      --border-strong: rgba(255, 255, 255, 0.18);
-      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .35);
+      --bg: #0B101C;
+      --surface: #111828;
+      --surface-2: #1A2336;
+      --ink: #EBF0F9;
+      --ink-subtle: #C6CEDF;
+      --muted: #96A1B9;
+      --blue: #8FB2F2;
+      --blue-deep: #B3CBF7;
+      --band: #0E1E48;
+      --band-deep: #0A1530;
+      --gold: #FFCC00;
+      --gold-hover: #FFD633;
+      --blue-tint: #15203A;
+      --blue-line: #2B3D66;
+      --border: rgba(255, 255, 255, .10);
+      --border-strong: rgba(255, 255, 255, .20);
+      --ok: #69C983;
+      --focus: #FFCC00;
+      --btn-primary-bg: #3E68CF;
+      --btn-primary-ink: #FFFFFF;
+      --gridline: rgba(143, 178, 242, .10);
+      --paper: #191A17;          /* dark equivalent of the warm paper band */
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .4);
 
-      --mod-economy: #7DA0C9;
-      --mod-population: #9CB394;
-      --mod-environment: #9FC3AC;
-      --mod-trade: #C2967A;
-      --mod-transport: #A8A8B8;
-      --mod-tourism: #E69664;
-      --mod-social: #C599BC;
-      --mod-science: #8FB4C7;
+      --mod-economy: #8FB2F2;
+      --mod-population: #45B8AC;
+      --mod-environment: #7BC47F;
+      --mod-trade: #D9A441;
+      --mod-transport: #A9B4CC;
+      --mod-tourism: #EF9464;
+      --mod-social: #C09FE0;
+      --mod-science: #6FB1DC;
     }
 
     /* -------- base -------- */
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    html, body { overflow-x: clip; }
     body {
       margin: 0;
-      background: var(--paper);
+      background: var(--bg);
       color: var(--ink);
       font-family: var(--font-sans);
       font-size: 16px;
       line-height: 1.65;
       font-weight: 400;
-      font-feature-settings: 'ss01', 'cv01', 'cv11';
+      counter-reset: sec;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       transition: background-color .25s ease, color .25s ease;
@@ -158,130 +184,189 @@
       font-family: var(--font-sans);
       color: var(--ink);
       letter-spacing: -0.015em;
-      line-height: 1.15;
+      line-height: 1.12;
       margin: 0;
       font-weight: 700;
     }
     p { margin: 0; color: var(--ink-subtle); }
     code, .mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
+    code {
+      font-size: 13px;
+      color: var(--ink);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
     .num { font-variant-numeric: tabular-nums; }
 
     .wrap {
-      max-width: 1200px;
+      max-width: 1160px;
       margin: 0 auto;
-      padding: 0 var(--s-6);
+      /* horizontal-only longhands: section/.hero own their vertical
+         padding, and mobile gutters (24px) can never be zeroed by a
+         later shorthand. */
+      padding-left: var(--s-6);
+      padding-right: var(--s-6);
     }
 
-    /* -------- nav -------- */
+    /* -------- a11y -------- */
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+    .nav :focus-visible,
+    .nlnet :focus-visible,
+    footer :focus-visible { outline-color: var(--gold); }
+    .skip {
+      position: absolute; left: -9999px; top: 0; z-index: 100;
+      background: var(--gold); color: #002266;
+      padding: 10px 16px; font-weight: 600; font-size: 14px;
+    }
+    .skip:focus-visible { left: 8px; top: 8px; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+
+    /* -------- nav: flat EU blue band, gold keyline -------- */
     .nav {
       position: sticky; top: 0; z-index: 50;
-      background: color-mix(in srgb, var(--paper) 86%, transparent);
-      -webkit-backdrop-filter: saturate(140%) blur(14px);
-      backdrop-filter: saturate(140%) blur(14px);
-      border-bottom: 1px solid var(--border);
+      background: var(--band);
+      border-bottom: 3px solid var(--gold);
     }
     .nav-inner {
       display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
+      height: 62px;
     }
-    .brand { display: flex; align-items: baseline; gap: 10px; }
+    .brand { display: flex; align-items: baseline; gap: 9px; }
+    .brand::before {
+      content: "★" / "";
+      color: var(--gold);
+      font-size: 14px;
+      align-self: center;
+      transform: translateY(-1px);
+    }
     .brand-mark {
-      font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+      font-size: 17px; font-weight: 700; letter-spacing: 0;
+      color: #FFFFFF;
     }
     .brand-sub {
-      font-size: 12px; color: var(--muted);
+      font-size: 12px; color: rgba(255, 255, 255, .68);
       font-family: var(--font-mono); font-weight: 400;
     }
-    .nav-links { display: flex; align-items: center; gap: var(--s-6); }
+    .nav-links { display: flex; align-items: center; gap: var(--s-4); }
     .nav-links a {
-      color: var(--ink-subtle);
+      color: rgba(255, 255, 255, .88);
       font-size: 14px;
       font-weight: 500;
-      transition: color .15s ease;
+      padding: 4px 2px;
+      border-bottom: 2px solid transparent;
+      transition: color .15s ease, border-color .15s ease;
     }
-    .nav-links a:hover { color: var(--ink); }
+    .nav-links a:hover { color: #FFFFFF; border-bottom-color: var(--gold); }
     .nav-links .gh {
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: var(--r-pill);
-      border: 1px solid var(--border-strong);
-      color: var(--ink);
+      border: 1px solid rgba(255, 255, 255, .55);
+      color: #FFFFFF;
     }
-    .nav-links .gh:hover { background: var(--surface-2); }
+    .nav-links .gh:hover { background: rgba(255, 255, 255, .12); border-color: #FFFFFF; }
     .theme-toggle {
       width: 36px; height: 36px;
       display: inline-grid; place-items: center;
       background: transparent;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255, 255, 255, .45);
       border-radius: var(--r-pill);
-      color: var(--ink-subtle);
+      color: rgba(255, 255, 255, .9);
       cursor: pointer;
       transition: background-color .15s ease, color .15s ease, border-color .15s ease;
     }
-    .theme-toggle:hover { background: var(--surface-2); color: var(--ink); }
+    .theme-toggle:hover { background: rgba(255, 255, 255, .12); color: #FFFFFF; }
     .theme-toggle svg { width: 16px; height: 16px; }
     html[data-theme="light"] .icon-moon { display: block; }
     html[data-theme="light"] .icon-sun  { display: none; }
     html[data-theme="dark"]  .icon-moon { display: none; }
     html[data-theme="dark"]  .icon-sun  { display: block; }
-    /* Language switcher — minimal native <select> styled as a pill */
+    /* Language switcher — native <select> styled for the blue band */
     .lang-switch {
       appearance: none; -webkit-appearance: none; -moz-appearance: none;
       height: 36px;
       padding: 0 28px 0 12px;
       background:
-        transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%236B6359" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
-      border: 1px solid var(--border);
+        transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%23FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
+      border: 1px solid rgba(255, 255, 255, .45);
       border-radius: var(--r-pill);
-      color: var(--ink-subtle);
+      color: #FFFFFF;
       font: inherit; font-size: 13px; font-weight: 500;
       cursor: pointer;
-      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+      transition: background-color .15s ease, border-color .15s ease;
     }
-    .lang-switch:hover { background-color: var(--surface-2); color: var(--ink); }
-    .lang-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    html[data-theme="dark"] .lang-switch {
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%239C948A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-    }
+    .lang-switch:hover { background-color: rgba(255, 255, 255, .12); border-color: #FFFFFF; }
+    .lang-switch option { color: #131C2B; background: #FFFFFF; }
     @media (max-width: 720px) {
       .nav-links a:not(.gh) { display: none; }
+    }
+    @media (max-width: 460px) {
+      .nav-links { gap: var(--s-2); }
+      .brand-sub { display: none; }
     }
 
     /* -------- hero -------- */
     .hero {
-      min-height: calc(100vh - 64px);
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.05fr 0.95fr;
       gap: var(--s-12);
       align-items: center;
-      padding: var(--s-16) 0;
+      /* vertical longhands only — .wrap supplies the horizontal gutters */
+      padding-top: var(--s-16);
+      padding-bottom: var(--s-12);
     }
     @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; padding: var(--s-12) 0; gap: var(--s-8); }
+      .hero { grid-template-columns: 1fr; padding-top: var(--s-12); padding-bottom: var(--s-12); gap: var(--s-8); }
     }
     .eyebrow {
       display: inline-flex; align-items: center; gap: var(--s-2);
       padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
+      border: 1px solid var(--blue-line);
+      border-radius: 3px;
+      font-family: var(--font-mono);
       font-size: 12px;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: var(--muted);
-      background: var(--paper-alt);
+      color: var(--blue);
+      background: var(--blue-tint);
       margin-bottom: var(--s-6);
     }
     .eyebrow .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent);
+      width: 8px; height: 8px; border-radius: 1px;
+      background: var(--gold);
       display: inline-block;
     }
     .hero h1 {
-      font-size: clamp(40px, 6.4vw, 72px);
+      font-size: clamp(38px, 5.8vw, 64px);
       font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.04;
+      letter-spacing: -0.025em;
+      line-height: 1.05;
+      color: var(--blue);
       margin-bottom: var(--s-6);
     }
+    /* star-gold highlighter swipe across the lower third of the second
+       headline line. Painted behind the glyphs; deep blue on gold is
+       ~8.3:1 in light mode, and dark mode uses translucent gold so the
+       light-blue glyphs keep >3:1 (large-text AA). */
+    .hero h1 .hl-swipe {
+      background-image: linear-gradient(180deg,
+        transparent 64%,
+        var(--swipe-gold, var(--gold)) 64%,
+        var(--swipe-gold, var(--gold)) 92%,
+        transparent 92%);
+    }
+    html[data-theme="dark"] .hero h1 .hl-swipe { --swipe-gold: rgba(255, 204, 0, .30); }
     .hero .lede {
       font-size: clamp(17px, 1.4vw, 19px);
       color: var(--ink-subtle);
@@ -295,108 +380,135 @@
     }
     .btn {
       display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 12px 20px;
+      padding: 12px 22px;
       border-radius: var(--r-pill);
-      font-size: 15px; font-weight: 500;
-      transition: transform .12s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
+      font-size: 15px; font-weight: 600;
+      transition: background-color .15s ease, border-color .15s ease, color .15s ease;
       cursor: pointer; border: 1px solid transparent;
     }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--ink); color: var(--paper); }
-    .btn-primary:hover { background: color-mix(in srgb, var(--ink) 88%, var(--accent)); }
+    .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-ink); }
+    .btn-primary:hover { background: var(--blue-deep); }
+    html[data-theme="dark"] .btn-primary:hover { background: #4E77DB; }
     .btn-secondary {
       background: transparent;
-      color: var(--ink);
-      border-color: var(--border-strong);
+      color: var(--blue);
+      border-color: var(--blue);
     }
-    .btn-secondary:hover { background: var(--surface-2); }
+    .btn-secondary:hover { background: var(--blue-tint); }
+    html[data-theme="dark"] .btn-secondary { border-color: var(--blue); }
     .btn svg { width: 16px; height: 16px; }
+
+    /* disclaimer — styled as an official-notice box, kept prominent */
     .disclaimer {
-      font-size: 13px; line-height: 1.55;
-      color: var(--muted);
-      max-width: 52ch;
+      display: flex; align-items: flex-start; gap: 4px;
+      font-size: 13.5px; line-height: 1.55;
+      color: var(--ink-subtle);
+      max-width: 56ch;
+      background: var(--blue-tint);
+      border: 1px solid var(--blue-line);
+      border-left: 4px solid var(--blue);
+      border-radius: 3px;
+      padding: 10px 14px;
     }
     .disclaimer .flag { margin-right: 6px; }
 
-    /* hero placeholder */
-    .hero-frame {
+    /* hero visual + 12-star motif watermark */
+    .hero-visual {
       position: relative;
-      aspect-ratio: 16 / 11;
-      border-radius: var(--r-hero);
-      border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
-      background:
-        repeating-linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--accent) 8%, transparent) 0px,
-          color-mix(in srgb, var(--accent) 8%, transparent) 1px,
-          transparent 1px,
-          transparent 14px
-        ),
-        var(--paper-alt);
-      display: grid; place-items: center;
-      overflow: hidden;
+      display: grid;
+      place-items: center;
+      min-height: 300px;
     }
-    .placeholder-label {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--muted);
-      padding: var(--s-4) var(--s-6);
-      text-align: center;
-      max-width: 80%;
+    .stars {
+      pointer-events: none;
+      user-select: none;
     }
-    .placeholder-label .play { color: var(--accent); margin-right: 6px; }
-    .placeholder-tag {
-      position: absolute; top: var(--s-3); right: var(--s-3);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      background: color-mix(in srgb, var(--paper) 70%, transparent);
-      border: 1px solid var(--border);
-      padding: 4px 10px;
-      border-radius: var(--r-pill);
+    .stars-hero {
+      position: absolute;
+      width: min(540px, 100%);
+      height: auto;
+      color: var(--blue);
+      opacity: .09;
+      z-index: 0;
+    }
+    html[data-theme="dark"] .stars-hero { opacity: .16; }
+    img.hero-frame, img.module-frame {
+      position: relative;
+      z-index: 1;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 540px;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 0;
+    }
+    img.hero-frame { max-height: 600px; }
+    @media (max-width: 880px) {
+      img.hero-frame, img.module-frame { max-height: 480px; }
     }
 
-    /* -------- at-a-glance -------- */
+    /* -------- at-a-glance: statistical-table strip -------- */
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: var(--s-6);
-      padding: var(--s-12) 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      border-top: 3px solid var(--ink);
+      border-bottom: 1px solid var(--border-strong);
     }
     @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 420px) { .stats { grid-template-columns: 1fr; } }
     .stat .value {
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
+      display: inline-block;
+      white-space: nowrap; /* "AGPL-3.0" must never break across lines */
+      font-size: 34px;
+      font-weight: 750;
+      letter-spacing: -0.02em;
       font-variant-numeric: tabular-nums;
-      color: var(--ink);
+      color: var(--blue);
       line-height: 1.1;
+      border-bottom: 3px solid var(--gold);
+      padding-bottom: 5px;
     }
     .stat .label {
-      margin-top: 6px;
-      font-size: 13px;
+      margin-top: 8px;
+      font-size: 12.5px;
       color: var(--muted);
-      letter-spacing: 0.01em;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
 
     /* -------- section common -------- */
-    section { padding: var(--s-24) 0; }
-    @media (max-width: 720px) { section { padding: var(--s-16) 0; } }
+    section { padding-top: var(--s-24); padding-bottom: var(--s-24); }
+    @media (max-width: 720px) { section { padding-top: var(--s-16); padding-bottom: var(--s-16); } }
     .section-head { max-width: 720px; margin-bottom: var(--s-12); }
     .section-eyebrow {
       font-family: var(--font-mono);
-      font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: var(--s-3);
+      font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: var(--s-4);
+    }
+    .section-eyebrow::before {
+      counter-increment: sec;
+      content: counter(sec, decimal-leading-zero) " — ";
+      color: var(--muted);
     }
     .section-head h2 {
-      font-size: clamp(28px, 3.6vw, 42px);
-      font-weight: 700;
-      letter-spacing: -0.025em;
+      font-size: clamp(26px, 3.4vw, 40px);
+      font-weight: 750;
+      letter-spacing: -0.022em;
+      margin-bottom: var(--s-4);
+    }
+    .section-head h2::before {
+      content: "";
+      display: block;
+      width: 48px; height: 4px;
+      background: var(--gold);
       margin-bottom: var(--s-4);
     }
     .section-head p {
@@ -414,27 +526,31 @@
     @media (max-width: 1000px) { .features { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
     .feature-card {
-      background: var(--paper-alt);
+      background: var(--surface);
       border: 1px solid var(--border);
+      border-top: 3px solid var(--border-strong);
       border-radius: var(--r-card);
       padding: var(--s-6);
-      transition: transform .15s ease, border-color .15s ease;
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
     .feature-card:hover {
       border-color: var(--border-strong);
+      border-top-color: var(--blue);
+      box-shadow: var(--shadow);
     }
     .feature-card .icon {
-      width: 36px; height: 36px;
+      width: 38px; height: 38px;
       display: grid; place-items: center;
-      border-radius: 10px;
-      background: var(--surface-2);
-      color: var(--accent);
+      border-radius: 4px;
+      background: var(--blue-tint);
+      border: 1px solid var(--blue-line);
+      color: var(--blue);
       margin-bottom: var(--s-4);
     }
     .feature-card .icon svg { width: 18px; height: 18px; stroke-width: 1.7; }
     .feature-card h3 {
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 17px;
+      font-weight: 650;
       margin-bottom: 6px;
     }
     .feature-card p {
@@ -444,53 +560,84 @@
     }
 
     /* -------- modules -------- */
-    .modules { display: flex; flex-direction: column; gap: var(--s-24); }
+    /* full-bleed warm paper band: the shadow spreads the tint to the
+       viewport edges, the clip-path trims it back to the section's own
+       top/bottom edges. Breaks up the long white stretch. */
+    #modules {
+      background: var(--paper);
+      box-shadow: 0 0 0 100vmax var(--paper);
+      clip-path: inset(0 -100vmax);
+    }
+    .modules {
+      display: flex; flex-direction: column; gap: var(--s-24);
+      counter-reset: mod;
+    }
     .module-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: var(--s-12);
       align-items: center;
+      counter-increment: mod;
     }
     .module-row.reverse .module-frame { order: 2; }
     @media (max-width: 880px) {
       .module-row, .module-row.reverse { grid-template-columns: 1fr; gap: var(--s-6); }
       .module-row.reverse .module-frame { order: 0; }
     }
-    .module-frame {
+    .module-copy {
       position: relative;
-      aspect-ratio: 16 / 9;
-      border-radius: var(--r-card);
-      border: 1.5px dashed var(--mod-accent, var(--accent));
-      background:
-        repeating-linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--mod-accent, var(--accent)) 10%, transparent) 0px,
-          color-mix(in srgb, var(--mod-accent, var(--accent)) 10%, transparent) 1px,
-          transparent 1px,
-          transparent 12px
-        ),
-        var(--paper-alt);
-      display: grid; place-items: center;
-      overflow: hidden;
+      z-index: 0; /* stacking context so .ghost-num (z-index:-1) stays above the band bg but below the text */
+      border-left: 3px solid var(--mod-accent, var(--blue));
+      padding-left: clamp(var(--s-4), 3vw, var(--s-8));
     }
-    .module-frame .placeholder-label .play { color: var(--mod-accent, var(--accent)); }
-    .module-copy { border-left: 2px solid var(--mod-accent, var(--accent)); padding-left: var(--s-6); }
+    /* giant ghost numerals 01–08: pure scan anchors, out of flow,
+       invisible to AT, hidden on small screens */
+    .ghost-num {
+      position: absolute;
+      z-index: -1;
+      top: -0.16em;
+      right: 0;
+      font-family: var(--font-mono);
+      font-size: clamp(96px, 13vw, 168px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.06em;
+      color: var(--mod-accent, var(--blue));
+      opacity: .08;
+      pointer-events: none;
+      user-select: none;
+    }
+    html[data-theme="dark"] .ghost-num { opacity: .13; }
+    @media (max-width: 720px) { .ghost-num { display: none; } }
+    .module-copy::before {
+      content: "Module " counter(mod, decimal-leading-zero) " / 08";
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: var(--s-2);
+    }
     .module-copy h3 {
       font-size: clamp(26px, 3vw, 34px);
-      font-weight: 700;
+      font-weight: 750;
       letter-spacing: -0.02em;
-      color: var(--mod-accent, var(--accent));
-      margin-bottom: var(--s-2);
+      color: var(--mod-accent, var(--blue));
+      margin-bottom: var(--s-3);
     }
     .module-copy .datasets {
       font-family: var(--font-mono);
       font-size: 12.5px;
       color: var(--muted);
       letter-spacing: 0.02em;
+      padding: 7px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       margin-bottom: var(--s-4);
     }
     .module-copy p {
-      font-size: 16px;
+      font-size: 15.5px;
       color: var(--ink-subtle);
       line-height: 1.7;
       margin-bottom: var(--s-4);
@@ -503,13 +650,13 @@
       font-size: 11.5px;
       color: var(--muted);
       padding: 4px 10px;
-      border-radius: var(--r-pill);
+      border-radius: 3px;
       background: var(--surface-2);
       border: 1px solid var(--border);
       letter-spacing: 0.02em;
     }
 
-    /* -------- tech 3-col -------- */
+    /* -------- tech 3-col spec sheets -------- */
     .tech-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -517,41 +664,43 @@
     }
     @media (max-width: 880px) { .tech-grid { grid-template-columns: 1fr; } }
     .tech-card {
-      background: var(--paper-alt);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--r-card);
       padding: var(--s-8);
     }
     .tech-card h3 {
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 17px;
+      font-weight: 650;
+      padding-bottom: var(--s-3);
+      border-bottom: 2px solid var(--blue);
       margin-bottom: var(--s-4);
     }
     .tech-card ul {
       list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-2);
+      display: flex; flex-direction: column; gap: var(--s-3);
     }
     .tech-card li {
+      /* block + absolute bullet (not flex): <code> chips flow inline and
+         wrap at spaces, so unbreakable tokens can't force the card wider
+         than the viewport at 375px. */
       font-size: 14.5px;
       color: var(--ink-subtle);
-      display: flex; gap: 10px; align-items: baseline;
+      display: block;
+      position: relative;
+      padding-left: 16px;
+      min-width: 0;
       line-height: 1.5;
     }
     .tech-card li::before {
       content: "";
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
-      transform: translateY(-2px);
+      position: absolute;
+      left: 0; top: 8px;
+      width: 6px; height: 6px;
+      background: var(--gold);
+      outline: 1px solid var(--border-strong);
     }
-    .tech-card code {
-      font-size: 13px;
-      color: var(--ink);
-      background: var(--surface-2);
-      padding: 1px 6px;
-      border-radius: 4px;
-    }
+    .tech-card li code { overflow-wrap: anywhere; }
 
     /* -------- multi-platform -------- */
     .devices {
@@ -566,18 +715,16 @@
       font-family: var(--font-mono);
       font-size: 12px;
       color: var(--muted);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
     }
-
-    /* phone (android) */
     .device-android {
       width: 100%;
-      max-width: 220px;
+      max-width: 210px;
       aspect-ratio: 9 / 18.5;
-      border-radius: 32px;
+      border-radius: 30px;
       border: 8px solid var(--ink);
-      background: var(--paper-alt);
+      background: var(--surface);
       position: relative;
       box-shadow: var(--shadow);
       overflow: hidden;
@@ -588,18 +735,17 @@
       top: 10px; left: 50%;
       width: 8px; height: 8px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--paper) 60%, transparent);
+      background: var(--border-strong);
       transform: translateX(-50%);
       z-index: 2;
     }
-    /* phone (iPhone) */
     .device-ios {
       width: 100%;
-      max-width: 220px;
+      max-width: 210px;
       aspect-ratio: 9 / 19.5;
-      border-radius: 38px;
+      border-radius: 36px;
       border: 9px solid var(--ink);
-      background: var(--paper-alt);
+      background: var(--surface);
       position: relative;
       box-shadow: var(--shadow);
       overflow: hidden;
@@ -614,14 +760,13 @@
       transform: translateX(-50%);
       z-index: 2;
     }
-    /* desktop */
     .device-desktop {
       width: 100%;
       max-width: 480px;
       aspect-ratio: 16 / 10;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border-strong);
-      background: var(--paper-alt);
+      background: var(--surface);
       box-shadow: var(--shadow);
       overflow: hidden;
       display: flex; flex-direction: column;
@@ -636,7 +781,7 @@
     }
     .desktop-bar span {
       width: 11px; height: 11px; border-radius: 50%;
-      background: color-mix(in srgb, var(--muted) 50%, transparent);
+      background: var(--border-strong);
     }
     .desktop-bar span:nth-child(1) { background: #FF5F57; }
     .desktop-bar span:nth-child(2) { background: #FEBC2E; }
@@ -644,12 +789,8 @@
     .device-screen {
       flex: 1;
       background:
-        repeating-linear-gradient(135deg,
-          color-mix(in srgb, var(--accent) 6%, transparent) 0px,
-          color-mix(in srgb, var(--accent) 6%, transparent) 1px,
-          transparent 1px,
-          transparent 12px
-        );
+        repeating-linear-gradient(0deg, var(--gridline) 0 1px, transparent 1px 14px),
+        repeating-linear-gradient(90deg, var(--gridline) 0 1px, transparent 1px 14px);
       display: grid; place-items: center;
       position: relative;
     }
@@ -661,8 +802,8 @@
       text-transform: uppercase;
       padding: 4px 10px;
       border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      background: var(--paper-alt);
+      border-radius: 3px;
+      background: var(--surface);
     }
     .devices-caption {
       margin-top: var(--s-8);
@@ -679,14 +820,15 @@
     }
     @media (max-width: 960px) { .roadmap-cols { grid-template-columns: 1fr; } }
     .roadmap-col {
-      background: var(--paper-alt);
+      background: var(--surface);
       border: 1px solid var(--border);
+      border-top: 3px solid var(--blue);
       border-radius: var(--r-card);
       padding: var(--s-8);
     }
     .roadmap-col h3 {
       font-size: 16px;
-      font-weight: 600;
+      font-weight: 650;
       letter-spacing: -0.01em;
       margin-bottom: 4px;
     }
@@ -694,8 +836,11 @@
       font-family: var(--font-mono);
       font-size: 12px;
       color: var(--muted);
+      padding-bottom: var(--s-4);
+      border-bottom: 1px solid var(--border);
       margin-bottom: var(--s-6);
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
     .roadmap-col ul {
       list-style: none; padding: 0; margin: 0;
@@ -710,19 +855,27 @@
       color: var(--ink-subtle);
     }
     .roadmap-col li svg { width: 16px; height: 16px; margin-top: 3px; }
-    .roadmap-col li.done svg { color: var(--mod-environment); }
+    .roadmap-col li.done svg { color: var(--ok); }
     .roadmap-col li.wait svg { color: var(--muted); }
 
-    /* -------- nlnet -------- */
+    /* -------- nlnet: the one blue panel, gold CTA, star watermark -------- */
     .nlnet {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      background: var(--band);
+      border: none;
       border-radius: var(--r-hero);
       padding: clamp(var(--s-8), 5vw, var(--s-16));
       text-align: center;
+      color: #FFFFFF;
     }
+    html[data-theme="dark"] .nlnet { border: 1px solid var(--blue-line); }
+    .nlnet .section-eyebrow { color: var(--gold); }
+    .nlnet .section-eyebrow::before { color: rgba(255, 255, 255, .65); }
     .nlnet h2 {
+      color: #FFFFFF;
       font-size: clamp(26px, 3vw, 36px);
+      letter-spacing: -0.02em;
       max-width: 22ch;
       margin: 0 auto var(--s-4);
     }
@@ -731,14 +884,34 @@
       margin: 0 auto var(--s-8);
       font-size: 17px;
       line-height: 1.65;
-      color: var(--ink-subtle);
+      color: rgba(255, 255, 255, .88);
     }
+    .nlnet .btn-secondary {
+      position: relative; z-index: 1;
+      background: var(--gold);
+      color: #002266;
+      border-color: transparent;
+      font-weight: 650;
+    }
+    .nlnet .btn-secondary:hover { background: var(--gold-hover); }
+    .stars-nlnet {
+      position: absolute;
+      right: -90px; top: 50%;
+      width: 380px; height: 380px;
+      transform: translateY(-50%);
+      color: var(--gold);
+      opacity: .2;
+      z-index: 0;
+    }
+    @media (max-width: 720px) { .stars-nlnet { width: 260px; height: 260px; right: -100px; } }
 
-    /* -------- footer -------- */
+    /* -------- footer: deep blue band, gold keyline -------- */
     footer {
-      border-top: 1px solid var(--border);
+      background: var(--band-deep);
+      border-top: 3px solid var(--gold);
       padding: var(--s-12) 0 var(--s-8);
       margin-top: var(--s-16);
+      color: rgba(255, 255, 255, .82);
     }
     .footer-grid {
       display: grid;
@@ -747,75 +920,40 @@
     }
     @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; } }
     .footer-grid h4 {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      font-size: 12.5px;
+      font-weight: 650;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: rgba(255, 255, 255, .66);
       margin-bottom: var(--s-4);
     }
     .footer-grid p, .footer-grid a {
       font-size: 14px;
-      color: var(--ink-subtle);
+      color: rgba(255, 255, 255, .82);
       line-height: 1.7;
     }
     .footer-grid a { display: block; }
-    .footer-grid a:hover { color: var(--ink); }
+    .footer-grid a:hover { color: var(--gold-hover); }
     .credits {
       margin-top: var(--s-8);
       padding-top: var(--s-6);
-      border-top: 1px solid var(--border);
+      border-top: 1px solid rgba(255, 255, 255, .18);
       font-size: 12.5px;
-      color: var(--muted);
+      color: rgba(255, 255, 255, .66);
       text-align: center;
     }
 
     /* -------- print -------- */
     @media print {
-      .nav, footer, .theme-toggle { display: none !important; }
+      .nav, footer, .theme-toggle, .stars { display: none !important; }
       body { background: #fff; color: #000; }
       section { padding: 24px 0; page-break-inside: avoid; }
-      .hero { min-height: auto; }
     }
-
-    /* -------- a11y -------- */
-    :focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 3px;
-      border-radius: 4px;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-      html { scroll-behavior: auto; }
-    }
-  
-    /* GIF override — phone-shaped images instead of 16/9 placeholder */
-    img.hero-frame, img.module-frame {
-      aspect-ratio: auto !important;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: 540px;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 12px 32px rgba(0,0,0,.08);
-      padding: 0;
-    }
-    img.hero-frame { max-height: 600px; }
-    @media (max-width: 880px) {
-      img.hero-frame, img.module-frame { max-height: 480px; }
-    }
-  
   </style>
 </head>
 <body>
+
+  <a class="skip" href="#top">Skip to content</a>
 
   <!-- ============ NAV ============ -->
   <nav class="nav" aria-label="Primary">
@@ -860,7 +998,7 @@
     <header class="wrap hero">
       <div>
         <span class="eyebrow"><span class="dot"></span> Phase 4 · 8 modules shipping real data</span>
-        <h1>Eurostat data,<br/>on every screen.</h1>
+        <h1>Eurostat data,<br/><span class="hl-swipe">on every screen.</span></h1>
         <p class="lede">An open-source mobile and desktop client for the public Eurostat API. Eight thematic modules &mdash; economy, population, environment, trade, transport, tourism, social, science &mdash; all running on a single Kotlin Multiplatform codebase.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="https://github.com/romantsisyk/MyEuroStatApp">
@@ -877,7 +1015,28 @@
         </p>
       </div>
 
-      <img class="hero-frame" src="gifs/overview.gif" alt="Overview of all eight modules in the EU Stats app" loading="lazy" />
+      <div class="hero-visual">
+        <svg class="stars stars-hero" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
+          <defs>
+            <path id="star12" d="M0,-6 L1.35,-1.85 L5.71,-1.85 L2.18,0.71 L3.53,4.85 L0,2.29 L-3.53,4.85 L-2.18,0.71 L-5.71,-1.85 L-1.35,-1.85 Z"/>
+          </defs>
+          <g fill="currentColor">
+            <use href="#star12" transform="translate(0,-38)"/>
+            <use href="#star12" transform="rotate(30) translate(0,-38) rotate(-30)"/>
+            <use href="#star12" transform="rotate(60) translate(0,-38) rotate(-60)"/>
+            <use href="#star12" transform="rotate(90) translate(0,-38) rotate(-90)"/>
+            <use href="#star12" transform="rotate(120) translate(0,-38) rotate(-120)"/>
+            <use href="#star12" transform="rotate(150) translate(0,-38) rotate(-150)"/>
+            <use href="#star12" transform="rotate(180) translate(0,-38) rotate(-180)"/>
+            <use href="#star12" transform="rotate(210) translate(0,-38) rotate(-210)"/>
+            <use href="#star12" transform="rotate(240) translate(0,-38) rotate(-240)"/>
+            <use href="#star12" transform="rotate(270) translate(0,-38) rotate(-270)"/>
+            <use href="#star12" transform="rotate(300) translate(0,-38) rotate(-300)"/>
+            <use href="#star12" transform="rotate(330) translate(0,-38) rotate(-330)"/>
+          </g>
+        </svg>
+        <img class="hero-frame" src="gifs/overview.gif" alt="Overview of all eight modules in the EU Stats app" loading="lazy" />
+      </div>
     </header>
 
     <!-- ============ AT-A-GLANCE STRIP ============ -->
@@ -963,6 +1122,7 @@
         <article class="module-row" style="--mod-accent: var(--mod-population);">
           <img class="module-frame" src="gifs/population.gif" alt="Population module — drag the year slider to morph the pyramid" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">01</span>
             <h3>Population</h3>
             <div class="datasets">demo_pjangroup &middot; 18 cohorts &middot; M/F/T</div>
             <p>A demographic pyramid for 18 age cohorts (five-year bands, Y_LT5 through Y_GE85). The headline shows total population with year-over-year change. A three-option segmented control (Total / Men / Women) dims the opposite side of the pyramid when a single sex is selected. A year slider scrubs through available years; a country chips row switches the active country without re-fetching.</p>
@@ -978,6 +1138,7 @@
         <article class="module-row reverse" style="--mod-accent: var(--mod-economy);">
           <img class="module-frame" src="gifs/economy.gif" alt="Economy module — GDP, HICP inflation, and deficit" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">02</span>
             <h3>Economy</h3>
             <div class="datasets">nama_10_gdp &middot; prc_hicp_aind &middot; gov_10dd_edpt1</div>
             <p>Three macro indicators &mdash; GDP in current prices (billion EUR), HICP inflation index (2015 = 100), and government net lending/borrowing as % of GDP &mdash; displayed as a multi-country line chart. A segmented control switches the active metric; the two inactive metrics remain visible as dimmed secondary stat tiles. A dual-handle year scrubber trims the chart's x-range; a separate year dropdown picks the year used by the headline.</p>
@@ -993,6 +1154,7 @@
         <article class="module-row" style="--mod-accent: var(--mod-environment);">
           <img class="module-frame" src="gifs/environment.gif" alt="Environment module — GHG, energy, SDG climate index" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">03</span>
             <h3>Environment</h3>
             <div class="datasets">env_air_gge &middot; nrg_bal_c &middot; sdg_13_10</div>
             <p>Three climate datasets selectable via a dropdown: greenhouse gas emissions in Mt CO&#8322;-eq, final energy consumption in ktoe, and the SDG 13 climate index at 1990 = 100. When GHG or Energy is active, a chip row filters by sector (TOTAL / TRANSPORT / INDUSTRY). The hero is a line chart comparing the active country against one peer; two stat tiles show the other two metrics for the same year.</p>
@@ -1008,6 +1170,7 @@
         <article class="module-row reverse" style="--mod-accent: var(--mod-trade);">
           <img class="module-frame" src="gifs/trade.gif" alt="Trade module — diverging bars for exports, imports, balance" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">04</span>
             <h3>Trade</h3>
             <div class="datasets">ext_lt_intratrd</div>
             <p>Intra-EU goods trade flows &mdash; exports, imports, and trade balance in billion EUR. The hero is a diverging bar chart spanning the eight most recent years, with exports extending to the right and imports to the left. Three underline tabs (Exports / Imports / Balance) highlight the relevant direction. Two compact stat tiles show the active country's figures for the selected year.</p>
@@ -1023,6 +1186,7 @@
         <article class="module-row" style="--mod-accent: var(--mod-transport);">
           <img class="module-frame" src="gifs/transport.gif" alt="Transport module — small multiples of road and air passengers" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">05</span>
             <h3>Transport</h3>
             <div class="datasets">road_pa_buscoa &middot; avia_paoc</div>
             <p>Road and air passenger volumes presented as small-multiple line charts side by side. Road data (billion passengers) and air data (million passengers) are independently scaled per panel. A pill toggle (ROAD / AIR / ALL) controls which panels are visible. A log-scale switch compresses the axis for countries with very different magnitudes. Three stat tiles summarise road, air, and a "sea: n/a" tile that honestly explains the port-keyed dataset is intentionally excluded.</p>
@@ -1038,6 +1202,7 @@
         <article class="module-row reverse" style="--mod-accent: var(--mod-tourism);">
           <img class="module-frame" src="gifs/tourism.gif" alt="Tourism module — stacked nights and seasonality heatmap" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">06</span>
             <h3>Tourism</h3>
             <div class="datasets">tour_occ_ninat &middot; tour_occ_nim</div>
             <p>Accommodation overnight stays &mdash; domestic, foreign, and total nights &mdash; rendered as a stacked bar chart covering the nine most recent years. A chip row controls which metric drives the headline figure. Below the stacked bars, a monthly seasonality heatmap (cells = month &times; year) shows the distribution of nights through the calendar.</p>
@@ -1053,6 +1218,7 @@
         <article class="module-row" style="--mod-accent: var(--mod-social);">
           <img class="module-frame" src="gifs/social.gif" alt="Social module — KPI tiles drive a highlighted line chart" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">07</span>
             <h3>Social</h3>
             <div class="datasets">ilc_li02 &middot; ilc_peps01 &middot; hlth_silc_01</div>
             <p>Three welfare percentage indicators drawn from EU-SILC surveys: at-risk-of-poverty rate, at-risk-of-poverty-or-social-exclusion rate, and the share of population reporting very-good self-perceived health. All three are plotted together as a multi-line highlighted chart; tapping a KPI tile shifts the emphasis to that series and updates the headline value.</p>
@@ -1068,6 +1234,7 @@
         <article class="module-row reverse" style="--mod-accent: var(--mod-science);">
           <img class="module-frame" src="gifs/science.gif" alt="Science module — radar chart of R&D, internet usage and tertiary education" loading="lazy" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">08</span>
             <h3>Science</h3>
             <div class="datasets">rd_e_gerdtot &middot; isoc_ci_ifp_iu &middot; edat_lfse_03</div>
             <p>Three innovation indicators &mdash; R&amp;D expenditure as % of GDP, internet usage rate, and tertiary education attainment among 25&ndash;64 year-olds &mdash; shown simultaneously on a radar chart. The radar overlays the active country against a single peer (preferring DE, then FR, then EU27). Three sparklines beneath always show the full trend. There is no metric switcher; the radar presents all three axes at once.</p>
@@ -1266,6 +1433,22 @@
     <!-- ============ NLNET ============ -->
     <section id="nlnet" class="wrap">
       <div class="nlnet">
+        <svg class="stars stars-nlnet" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
+          <g fill="currentColor">
+            <use href="#star12" transform="translate(0,-38)"/>
+            <use href="#star12" transform="rotate(30) translate(0,-38) rotate(-30)"/>
+            <use href="#star12" transform="rotate(60) translate(0,-38) rotate(-60)"/>
+            <use href="#star12" transform="rotate(90) translate(0,-38) rotate(-90)"/>
+            <use href="#star12" transform="rotate(120) translate(0,-38) rotate(-120)"/>
+            <use href="#star12" transform="rotate(150) translate(0,-38) rotate(-150)"/>
+            <use href="#star12" transform="rotate(180) translate(0,-38) rotate(-180)"/>
+            <use href="#star12" transform="rotate(210) translate(0,-38) rotate(-210)"/>
+            <use href="#star12" transform="rotate(240) translate(0,-38) rotate(-240)"/>
+            <use href="#star12" transform="rotate(270) translate(0,-38) rotate(-270)"/>
+            <use href="#star12" transform="rotate(300) translate(0,-38) rotate(-300)"/>
+            <use href="#star12" transform="rotate(330) translate(0,-38) rotate(-330)"/>
+          </g>
+        </svg>
         <div class="section-eyebrow" style="text-align: center; margin-bottom: var(--s-3);">Open source &middot; public interest</div>
         <h2>Built independently. Released under AGPL-3.0.</h2>
         <p>Currently exploring an NLnet open-call submission to fund the next milestones. Citizens, journalists, and students should be able to explore public European data without depending on any single vendor &mdash; on any device they already own.</p>
@@ -1284,7 +1467,7 @@
       <div class="footer-grid">
         <div>
           <h4>EU Stats Multiplatform</h4>
-          <p>Open-source client for the public Eurostat API. Released under AGPL-3.0-or-later. Typeset in Inter from Google Fonts.</p>
+          <p>Open-source client for the public Eurostat API. Released under AGPL-3.0-or-later. Typeset in the system grotesque stack &mdash; no external fonts, no trackers.</p>
         </div>
         <div>
           <h4>Project</h4>
