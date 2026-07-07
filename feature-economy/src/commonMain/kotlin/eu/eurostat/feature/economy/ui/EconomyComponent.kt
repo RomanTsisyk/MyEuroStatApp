@@ -41,6 +41,7 @@ class DefaultEconomyComponent(
     private var selectedMetric: EconomyMetric = EconomyMetric.Gdp
     private var displayYearRange: IntRange? = null
     private var selectedYear: Int? = null
+    private var normalized: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -82,6 +83,10 @@ class DefaultEconomyComponent(
             }
             is EconomyIntent.SelectYear -> {
                 selectedYear = intent.year
+                rerenderFromLastData()
+            }
+            is EconomyIntent.SetNormalized -> {
+                normalized = intent.normalized
                 rerenderFromLastData()
             }
         }
@@ -153,6 +158,7 @@ class DefaultEconomyComponent(
             displayYearRange = displayYearRange,
             selectedYear = activeYear,
             availableYears = availableYears,
+            normalized = normalized,
         )
     }
 }

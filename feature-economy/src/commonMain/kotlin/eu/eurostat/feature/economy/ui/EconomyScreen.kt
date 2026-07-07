@@ -35,6 +35,7 @@ import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.model.ChartAxis
 import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
+import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyMetric
@@ -44,6 +45,7 @@ import eu.eurostat.ui.component.CountryPickerSheet
 import eu.eurostat.ui.component.EuroCard
 import eu.eurostat.ui.component.MetricHeadline
 import eu.eurostat.ui.component.ModuleAppBar
+import eu.eurostat.ui.component.PillToggle
 import eu.eurostat.ui.component.SegmentedControl
 import eu.eurostat.ui.component.SourceFooter
 import eu.eurostat.ui.component.StatTile
@@ -59,18 +61,19 @@ import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
 
-private val SeriesFr: Color = Color(0xFF7A5C46)
-private val SeriesPl: Color = Color(0xFF5E6B58)
-
 private const val M_TO_B: Long = 1_000L
 private const val PERCENT: Double = 100.0
+
+/** [PillToggle] labels for the chart scale: absolute values vs. index rebased to 100. */
+private val NormalizationLabels: List<String> = listOf("Absolute", "Indexed 100")
 
 /**
  * Editorial Economy feature screen. Bound to [EconomyComponent.state]:
  * Loading / Empty / Error branches use the shared status views; the
  * Content branch renders the headline + GDP/Inflation/Deficit segmented
- * switcher, a multi-country line chart hero, secondary KPI tiles for the
- * inactive metrics, the year scrubber and country chips.
+ * switcher, a multi-country line chart hero with an Absolute / Indexed-100
+ * scale toggle (comparison mode), secondary KPI tiles for the inactive
+ * metrics, the year scrubber and country chips.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,8 +236,16 @@ private fun EconomyContent(
 
             EuroCard {
                 Column {
-                    val chartSeries = remember(timeSeries, selectedMetric, accent, yearRange) {
-                        buildChartSeries(timeSeries, selectedMetric, accent, yearRange)
+                    PillToggle(
+                        options = NormalizationLabels,
+                        selectedIndex = if (state.normalized) 1 else 0,
+                        onSelect = { component.onIntent(EconomyIntent.SetNormalized(it == 1)) },
+                        activeColor = accent,
+                    )
+                    Spacer(Modifier.height(Euro.spacing.s))
+                    val chartSeries = remember(timeSeries, selectedMetric, yearRange, state.normalized) {
+                        val absolute = buildChartSeries(timeSeries, selectedMetric, yearRange)
+                        if (state.normalized) rebaseToIndex(absolute) else absolute
                     }
                     if (chartSeries.isEmpty() || chartSeries.all { it.points.isEmpty() }) {
                         Box(
@@ -252,7 +263,13 @@ private fun EconomyContent(
                         EurostatLineChart(
                             series = chartSeries,
                             xAxis = ChartAxis(label = "Year"),
-                            yAxis = ChartAxis(label = yAxisLabelFor(selectedMetric)),
+                            yAxis = ChartAxis(
+                                label = if (state.normalized) {
+                                    "Index (first year = 100)"
+                                } else {
+                                    yAxisLabelFor(selectedMetric)
+                                },
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(chartHeight),
@@ -434,15 +451,16 @@ private fun LegendDot(color: Color, label: String) {
 
 /**
  * Project the merged [EconomyTimeSeries] list into chart series for the
- * given [metric], filtered to [yearRange] and using the editorial color
- * palette (DE = module accent, FR = sienna, PL = olive, EU27_* = muted).
+ * given [metric], filtered to [yearRange]. Series colors are assigned by
+ * stable index over the rendered series list via [SeriesPalette], so any
+ * combination of picked countries stays visually distinct (cycling only
+ * past 8 series).
  */
 private fun buildChartSeries(
     timeSeries: List<EconomyTimeSeries>,
     metric: EconomyMetric,
-    accent: Color,
     yearRange: IntRange,
-): List<ChartSeries> = timeSeries.map { ts ->
+): List<ChartSeries> = timeSeries.mapIndexed { index, ts ->
     val points = ts.points
         .filter { it.year in yearRange }
         .mapNotNull { p ->
@@ -450,16 +468,9 @@ private fun buildChartSeries(
         }
     ChartSeries(
         label = ts.countryCode,
-        color = colorFor(ts.countryCode, accent),
+        color = SeriesPalette.colorAt(index),
         points = points,
     )
-}
-
-private fun colorFor(countryCode: String, accent: Color): Color = when (countryCode) {
-    "DE" -> accent
-    "FR" -> SeriesFr
-    "PL" -> SeriesPl
-    else -> if (countryCode.startsWith("EU")) Color(0xFFA39A8D) else accent
 }
 
 private fun yAxisLabelFor(metric: EconomyMetric): String = when (metric) {

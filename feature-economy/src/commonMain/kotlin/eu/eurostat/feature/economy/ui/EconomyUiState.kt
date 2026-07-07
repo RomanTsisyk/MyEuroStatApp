@@ -28,6 +28,8 @@ sealed interface EconomyUiState {
      * @property selectedYear the year shown in the headline and stat tiles; defaults to the
      *   latest year available for the active country.
      * @property availableYears sorted ascending list of observation years for the active country.
+     * @property normalized true when the chart is rebased to an index (first visible
+     *   year = 100) for cross-country comparison; survives rotation.
      */
     data class Content(
         val timeSeries: List<EconomyTimeSeries>,
@@ -39,6 +41,7 @@ sealed interface EconomyUiState {
         val displayYearRange: IntRange? = null,
         val selectedYear: Int = 0,
         val availableYears: List<Int> = emptyList(),
+        val normalized: Boolean = false,
     ) : EconomyUiState
 
     data class Empty(val query: EconomyQuery) : EconomyUiState

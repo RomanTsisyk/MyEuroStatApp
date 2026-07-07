@@ -271,4 +271,43 @@ class EconomyComponentTest {
         assertEquals(2021, updatedState.selectedYear)
         assertEquals(observeCallsBefore, repo.observeCallCount)
     }
+
+    @Test
+    fun set_normalized_updates_state_without_network_call_and_survives_re_emission() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(multiYearEconomySeries("DE")), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val initialState = component.state.value
+        assertIs<EconomyUiState.Content>(initialState)
+        assertFalse(initialState.normalized)
+
+        val observeCallsBefore = repo.observeCallCount
+        component.onIntent(EconomyIntent.SetNormalized(true))
+        testScheduler.advanceUntilIdle()
+
+        val updatedState = component.state.value
+        assertIs<EconomyUiState.Content>(updatedState)
+        assertTrue(updatedState.normalized)
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+
+        // The flag is owned by the component (like selectedMetric), so a fresh
+        // repository emission must not reset it.
+        repo.emissions.value = Result.Success(listOf(multiYearEconomySeries("DE")), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val reEmittedState = component.state.value
+        assertIs<EconomyUiState.Content>(reEmittedState)
+        assertTrue(reEmittedState.normalized)
+
+        component.onIntent(EconomyIntent.SetNormalized(false))
+        testScheduler.advanceUntilIdle()
+
+        val disabledState = component.state.value
+        assertIs<EconomyUiState.Content>(disabledState)
+        assertFalse(disabledState.normalized)
+    }
 }
