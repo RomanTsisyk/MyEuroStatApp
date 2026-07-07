@@ -1,10 +1,16 @@
 package eu.eurostat.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import eu.eurostat.core.common.prefs.AppPreferences
+import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.core.navigation.RootComponent
 import eu.eurostat.feature.economy.ui.EconomyComponent
@@ -30,18 +36,33 @@ import eu.eurostat.feature.transport.ui.TransportScreen
 import eu.eurostat.ui.layout.AdaptiveScaffold
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EurostatTheme
+import org.koin.mp.KoinPlatform
 
 /**
  * Root composable. Hosts a Home grid screen as the default destination.
  * Tapping a module card pushes the corresponding feature screen via Decompose.
  * Each feature screen's back button pops back to Home via [RootComponent.onBack].
  *
+ * Observes the persisted theme preference ([AppPreferences.themePreference])
+ * and re-themes live when the user changes it on the Settings screen;
+ * [ThemePreference.SYSTEM] follows [isSystemInDarkTheme]. Koin is resolved
+ * lazily here because every platform entry point starts Koin before composing
+ * this function.
+ *
  * The [BottomTabBar] component file is preserved for potential future use but
  * is no longer rendered here.
  */
 @Composable
 fun EurostatApp(root: RootComponent) {
-    EurostatTheme {
+    val preferences = remember { KoinPlatform.getKoin().get<AppPreferences>() }
+    val themePreference by preferences.themePreference
+        .collectAsState(initial = ThemePreference.SYSTEM)
+    val darkTheme = when (themePreference) {
+        ThemePreference.SYSTEM -> isSystemInDarkTheme()
+        ThemePreference.LIGHT -> false
+        ThemePreference.DARK -> true
+    }
+    EurostatTheme(darkTheme = darkTheme) {
         AdaptiveScaffold(modifier = Modifier.fillMaxSize()) { _ ->
             Children(
                 stack = root.stack,

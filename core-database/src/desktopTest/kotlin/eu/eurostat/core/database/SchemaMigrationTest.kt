@@ -8,17 +8,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Guards the v1 -> v2 migration (`migrations/1.sqm`): an install whose
- * database predates the blob cache must gain `MultiDimCacheEntity` and lose
- * the replaced `TourismCacheEntity` when migrated — the drivers only run
- * `Schema.create()` on brand-new files, so migrations are the only path
- * existing users have to the new table.
+ * Guards the migration chain — the drivers only run `Schema.create()` on
+ * brand-new files, so migrations are the only path existing users have to
+ * new tables:
+ *  - v1 -> v2 (`migrations/1.sqm`): an install predating the blob cache must
+ *    gain `MultiDimCacheEntity` and lose the replaced `TourismCacheEntity`.
+ *  - v2 -> v3 (`migrations/2.sqm`): an install predating Settings persistence
+ *    must gain the `PreferenceEntity` key/value table.
  */
 class SchemaMigrationTest {
 
     @Test
-    fun schema_version_is_2() {
-        assertEquals(2L, AppDatabase.Schema.version)
+    fun schema_version_is_3() {
+        assertEquals(3L, AppDatabase.Schema.version)
     }
 
     @Test
@@ -51,6 +53,30 @@ class SchemaMigrationTest {
         val db = AppDatabase(driver)
         db.multiDimCacheQueries.upsert("k", "{}", 1L)
         assertEquals("{}", db.multiDimCacheQueries.selectByKey("k").executeAsOne().data_json)
+    }
+
+    @Test
+    fun migrate_v2_to_v3_creates_preferences_table() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+
+        AppDatabase.Schema.migrate(driver, oldVersion = 2L, newVersion = 3L)
+
+        assertTrue(tableExists(driver, "PreferenceEntity"), "2.sqm must create PreferenceEntity")
+
+        // The migrated table must be usable through the generated queries.
+        val db = AppDatabase(driver)
+        db.preferencesQueries.upsert("theme", "dark")
+        assertEquals("dark", db.preferencesQueries.selectByKey("theme").executeAsOne())
+    }
+
+    @Test
+    fun migrate_v1_to_v3_runs_the_full_chain() {
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+
+        AppDatabase.Schema.migrate(driver, oldVersion = 1L, newVersion = 3L)
+
+        assertTrue(tableExists(driver, "MultiDimCacheEntity"), "chain must apply 1.sqm")
+        assertTrue(tableExists(driver, "PreferenceEntity"), "chain must apply 2.sqm")
     }
 
     private fun tableExists(driver: JdbcSqliteDriver, name: String): Boolean =

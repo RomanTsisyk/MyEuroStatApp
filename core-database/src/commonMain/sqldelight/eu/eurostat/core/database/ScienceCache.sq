@@ -26,3 +26,6 @@ WHERE country_code IN ? AND year BETWEEN ? AND ?;
 deleteByCountriesAndYears:
 DELETE FROM ScienceCacheEntity
 WHERE country_code IN ? AND year BETWEEN ? AND ?;
+
+clearAll:
+DELETE FROM ScienceCacheEntity;

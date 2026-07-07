@@ -10,6 +10,6 @@ fun featureSettingsModule() = module {
     factory<ComponentFactory<Any>>(
         qualifier = named(ChildConfig.Settings::class.qualifiedName!!)
     ) {
-        ComponentFactory { ctx -> DefaultSettingsComponent(ctx) }
+        ComponentFactory { ctx -> DefaultSettingsComponent(ctx, get(), get(), get()) }
     }
 }

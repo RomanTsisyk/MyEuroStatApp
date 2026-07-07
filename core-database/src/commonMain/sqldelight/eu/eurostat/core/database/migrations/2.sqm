@@ -1,0 +1,12 @@
+-- v2 -> v3: user-preferences key/value table backing the Settings screen
+-- (SqlDelightAppPreferences).
+--
+-- Existing installs carry user_version = 2 and would otherwise never gain
+-- PreferenceEntity: AndroidSqliteDriver / NativeSqliteDriver only run
+-- Schema.create() on a brand-new database file and only run migrations when
+-- user_version < Schema.version. Must match the table in Preferences.sq.
+
+CREATE TABLE PreferenceEntity (
+    pref_key TEXT NOT NULL PRIMARY KEY,
+    pref_value TEXT NOT NULL
+);

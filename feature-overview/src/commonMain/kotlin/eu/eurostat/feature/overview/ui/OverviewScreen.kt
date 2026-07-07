@@ -3,17 +3,23 @@ package eu.eurostat.feature.overview.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -61,7 +67,9 @@ fun OverviewScreen(
         verticalArrangement = Arrangement.spacedBy(Euro.spacing.s),
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
     ) {
-        item(span = { GridItemSpan(maxLineSpan) }) { HeaderBar() }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            HeaderBar(onSettings = { onModuleSelected(ChildConfig.Settings) })
+        }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             HeroBlock(hero = state.hero)
@@ -93,27 +101,62 @@ fun OverviewScreen(
 }
 
 @Composable
-private fun HeaderBar() {
-    Column(
+private fun HeaderBar(onSettings: () -> Unit) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Euro.colors.ink)
             .statusBarsPadding()
             .padding(horizontal = Euro.spacing.base, vertical = Euro.spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "EU Stats",
-            color = Euro.colors.paper,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-        )
-        Text(
-            text = "European Statistics · open data",
-            color = Euro.colors.paper.copy(alpha = 0.65f),
-            fontSize = 13.sp,
-            letterSpacing = 0.25.sp,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "EU Stats",
+                color = Euro.colors.paper,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
+            )
+            Text(
+                text = "European Statistics · open data",
+                color = Euro.colors.paper.copy(alpha = 0.65f),
+                fontSize = 13.sp,
+                letterSpacing = 0.25.sp,
+            )
+        }
+        SettingsPill(onClick = onSettings)
+    }
+}
+
+/**
+ * Circular settings affordance on the header's ink band — mirrors the 36dp
+ * icon pill inside a 48dp tap target used by ModuleAppBar, tinted for the
+ * dark band. Navigates to the Settings screen via ChildConfig.Settings.
+ */
+@Composable
+private fun SettingsPill(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Euro.colors.paper.copy(alpha = 0.14f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = Euro.colors.paper,
+                modifier = Modifier.size(18.dp),
+            )
+        }
     }
 }
 

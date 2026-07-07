@@ -27,3 +27,6 @@ WHERE country_code IN ? AND year BETWEEN ? AND ? AND sector = ?;
 deleteByCountriesAndYears:
 DELETE FROM EnvironmentCacheEntity
 WHERE country_code IN ? AND year BETWEEN ? AND ? AND sector = ?;
+
+clearAll:
+DELETE FROM EnvironmentCacheEntity;
