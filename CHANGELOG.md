@@ -34,10 +34,15 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Desktop database driver crashed on the second launch (unconditional
   `Schema.create()`); now schema-managed with migrations
-- iOS toolchain: builds work with `DEVELOPER_DIR=/Applications/Xcode.app/
-  Contents/Developer` when `xcode-select` points at CommandLineTools
-  (permanent fix: `sudo xcode-select -s`); `iosApp.xcodeproj` builds for
-  the iOS simulator
+- iOS app now actually builds and launches in the simulator: the stub
+  `project.pbxproj` was replaced with a real XcodeGen-generated project
+  (`iosApp/project.yml`), plus `-lsqlite3` linking, the
+  `CADisableMinimumFrameDurationOnPhone` Info.plist key, the
+  `doInitKoinIos()` export-name fix and JAVA_HOME pinning in the gradle
+  pre-build phase; toolchain builds work with
+  `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when
+  `xcode-select` points at CommandLineTools (permanent fix:
+  `sudo xcode-select -s`)
 
 ### Planned for v0.5 / v1.0
 

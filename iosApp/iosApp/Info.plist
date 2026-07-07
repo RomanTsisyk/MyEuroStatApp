@@ -42,5 +42,9 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <!-- Required by Compose Multiplatform's PlistSanityCheck: without it the
+         app aborts at startup (high-refresh displays need this opt-out). -->
+    <key>CADisableMinimumFrameDurationOnPhone</key>
+    <true/>
 </dict>
 </plist>

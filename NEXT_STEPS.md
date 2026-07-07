@@ -32,10 +32,12 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 
 **Update:** the KMP common code now *compiles* for iOS Native — `./gradlew :composeApp:compileKotlinIosSimulatorArm64` is green after removing a JVM-only `toSortedSet` in `feature-environment` (commit `282acb5`). The remaining blockers are the Xcode toolchain (`xcrun` exit 72) and the `linkDebug*Ios*` / `iosApp.xcodeproj` wrapper — not the Kotlin sources.
 
-**Update 2 (v0.4.0 release prep, RESOLVED except simulator run):** root cause found — `xcode-select -p` points at `/Library/Developer/CommandLineTools` while a full Xcode 26.2 sits in `/Applications/Xcode.app`. Without touching system state, `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` makes everything green:
-- `./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64` — BUILD SUCCESSFUL
-- `xcrun xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` — succeeds (exit 0)
-The permanent machine fix (needs admin password, run once): `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`. Remaining: boot a simulator, install + launch the app, walk the 8 tabs (steps 5–6 below).
+**Update 2 (v0.4.0 release prep, ✅ RESOLVED — app runs in the simulator):**
+two independent blockers were found and fixed:
+1. *Toolchain*: `xcode-select -p` pointed at `/Library/Developer/CommandLineTools` while a full Xcode 26.2 sits in `/Applications/Xcode.app`. Workaround without touching system state: prefix builds with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`. Permanent machine fix (needs admin password, once): `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`.
+2. *Project*: `iosApp.xcodeproj/project.pbxproj` was a 1.2 KB stub placeholder (see the old iosApp/README.md) — `xcodebuild` failed with "Unable to read project". A real project is now generated from `iosApp/project.yml` via XcodeGen and checked in, with three integration fixes: `JAVA_HOME` pinned in the gradle pre-build phase (Xcode scrubs PATH → JDK mismatch corrupted Kotlin incremental caches), `-lsqlite3` linked (static framework + SQLDelight native driver), `CADisableMinimumFrameDurationOnPhone` added to Info.plist (Compose PlistSanityCheck aborts without it), and the Swift call corrected to `KoinIOSKt.doInitKoinIos()`.
+
+**Verified:** `xcodebuild … build` → BUILD SUCCEEDED; app installs and launches on the iPhone 17 simulator (iOS 26.2) and renders the Overview dashboard with live Eurostat data (hero GDP + all 8 module teasers). Remaining: walk all 8 tabs interactively (step 6 below) — same as the Android on-device smoke run.
 
 **Steps:**
 1. Run `xcode-select -p` — confirm path points to a real Xcode.app, not just Command Line Tools.
@@ -378,7 +380,7 @@ This is a maintenance landmine. Pick one convergent approach.
 **Definition of "100% working" for this app:**
 
 1. ✅ Android APK installs and launches on a fresh device.
-2. 🟡 iOS app **builds** for the simulator (`xcodebuild` green via `DEVELOPER_DIR`); launch-in-simulator walk-through pending.
+2. ✅ iOS app builds AND launches in the simulator (real XcodeGen project; Overview renders live Eurostat data); full 8-tab walk-through pending alongside the Android one.
 3. ⏳ All 8 feature tabs render real Eurostat data on first open (needs the on-device smoke run).
 4. ✅ Refresh button + pull-to-refresh both work (pull-to-refresh on all 8 screens).
 5. ✅ Offline state shows cached data with stale indicator (incl. cohort pyramid + tourism heatmap via the blob cache).
@@ -390,4 +392,4 @@ This is a maintenance landmine. Pick one convergent approach.
 11. ✅ No `mock*()` calls remain in any feature Screen.
 12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 10/12 (+1 partial). Remaining: the Android on-device + iOS in-simulator verification runs.
+Currently 11/12. Remaining: the interactive 8-tab walk-throughs on an Android device and in the iOS simulator (item 3).

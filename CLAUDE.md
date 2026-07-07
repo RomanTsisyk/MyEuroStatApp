@@ -141,7 +141,7 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - [x] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (loaded from `composeResources/font/`)
 - [x] **Phase 5** — Real flag rendering (`flagFor()` Unicode emoji in core-common) + Android PL/UK string resources
 - [~] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting (formatting DONE in `eu.eurostat.ui.format`; Compose-Resources strings + applying the language preference still ahead)
-- [~] **Phase 5** — iOS toolchain (root cause: `xcode-select` → CommandLineTools; builds green via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` incl. `iosApp.xcodeproj` simulator build; permanent fix needs `sudo xcode-select -s`; run-in-simulator verification pending)
+- [x] **Phase 5** — iOS toolchain + app: real `iosApp.xcodeproj` generated from `iosApp/project.yml` (XcodeGen); builds green via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (permanent fix: `sudo xcode-select -s`); app launches on the iPhone 17 simulator and renders live Eurostat data. Gotchas documented in `iosApp/README.md` (JAVA_HOME pinning, `-lsqlite3`, `CADisableMinimumFrameDurationOnPhone`, `doInitKoinIos`). Interactive 8-tab walk-through pending (Phase 6).
 - [ ] **Phase 6** — Verified on Android device + iOS simulator; CI; release config; signing
 
 See `NEXT_STEPS.md` for the prioritized punch list with file refs and acceptance criteria.
