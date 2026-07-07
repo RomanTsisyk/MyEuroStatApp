@@ -25,6 +25,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_chip_add
+import myeurostatapp.core_ui.generated.resources.ui_chip_add_country
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Horizontally-scrolling row of [CountryChip]s with a dashed "+ add" chip at
@@ -92,12 +96,12 @@ private fun AddCountryChip(onClick: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.Default.Add,
-            contentDescription = "Add country",
+            contentDescription = stringResource(Res.string.ui_chip_add_country),
             tint = Euro.colors.muted,
             modifier = Modifier.padding(0.dp),
         )
         Text(
-            text = "add",
+            text = stringResource(Res.string.ui_chip_add),
             style = Euro.typography.labelLarge,
             color = Euro.colors.muted,
             modifier = Modifier.padding(start = Euro.spacing.xs),

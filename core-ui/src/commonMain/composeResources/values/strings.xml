@@ -1,0 +1,20 @@
+<resources>
+    <!-- CountryPickerSheet -->
+    <string name="ui_country_picker_title">Choose countries</string>
+    <string name="ui_country_picker_search_label">Search by name or code</string>
+    <string name="ui_country_picker_apply">Apply (%1$d)</string>
+
+    <!-- ErrorState -->
+    <string name="ui_error_retry">retry</string>
+
+    <!-- StaleBanner -->
+    <string name="ui_stale_banner_message">showing cached data · refreshing…</string>
+
+    <!-- CountryChip / CountryChipsRow -->
+    <string name="ui_chip_remove_country">Remove %1$s</string>
+    <string name="ui_chip_add_country">Add country</string>
+    <string name="ui_chip_add">add</string>
+
+    <!-- YearDropdown -->
+    <string name="ui_year_dropdown_label">year:</string>
+</resources>

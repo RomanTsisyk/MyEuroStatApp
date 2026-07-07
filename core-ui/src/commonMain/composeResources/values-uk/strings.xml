@@ -1,0 +1,20 @@
+<resources>
+    <!-- CountryPickerSheet -->
+    <string name="ui_country_picker_title">Оберіть країни</string>
+    <string name="ui_country_picker_search_label">Пошук за назвою або кодом</string>
+    <string name="ui_country_picker_apply">Застосувати (%1$d)</string>
+
+    <!-- ErrorState -->
+    <string name="ui_error_retry">повторити</string>
+
+    <!-- StaleBanner -->
+    <string name="ui_stale_banner_message">кешовані дані · оновлення…</string>
+
+    <!-- CountryChip / CountryChipsRow -->
+    <string name="ui_chip_remove_country">Прибрати %1$s</string>
+    <string name="ui_chip_add_country">Додати країну</string>
+    <string name="ui_chip_add">додати</string>
+
+    <!-- YearDropdown -->
+    <string name="ui_year_dropdown_label">рік:</string>
+</resources>

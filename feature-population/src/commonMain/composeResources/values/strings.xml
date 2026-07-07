@@ -1,0 +1,34 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="population_module_title">Population</string>
+    <string name="population_tagline">Demography</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="population_empty_headline">no data</string>
+    <string name="population_empty_body">No population data for the selected filters.</string>
+
+    <!-- ErrorState -->
+    <string name="population_error_headline">Couldn't load population</string>
+
+    <!-- SegmentedControl metric switcher -->
+    <string name="population_metric_total">Total</string>
+    <string name="population_metric_men">Men</string>
+    <string name="population_metric_women">Women</string>
+
+    <!-- MetricHeadline subtitle -->
+    <string name="population_subtitle_total">total</string>
+    <string name="population_headline_yoy">%1$s YoY</string>
+
+    <!-- Pyramid card -->
+    <string name="population_cohort_empty_headline">No cohort data</string>
+    <string name="population_cohort_empty_body">No 5-year age cohort data available for %1$s %2$d.</string>
+    <string name="population_pyramid_cohorts_label">5-yr cohorts</string>
+    <string name="population_legend_men">men %1$s</string>
+    <string name="population_legend_women">women %1$s</string>
+
+    <!-- Year slider -->
+    <string name="population_year_label">year</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="population_footer_staleness_fresh">fresh</string>
+</resources>

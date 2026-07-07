@@ -29,6 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_country_picker_apply
+import myeurostatapp.core_ui.generated.resources.ui_country_picker_search_label
+import myeurostatapp.core_ui.generated.resources.ui_country_picker_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Multi-select country picker presented as a [ModalBottomSheet].
@@ -51,7 +56,7 @@ fun CountryPickerSheet(
     selected: Set<String>,
     onConfirm: (Set<String>) -> Unit,
     onDismiss: () -> Unit,
-    title: String = "Choose countries",
+    title: String = stringResource(Res.string.ui_country_picker_title),
     maxSelection: Int = 5,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -94,7 +99,7 @@ fun CountryPickerSheet(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                label = { Text("Search by name or code") },
+                label = { Text(stringResource(Res.string.ui_country_picker_search_label)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,7 +174,7 @@ fun CountryPickerSheet(
                 ),
             ) {
                 Text(
-                    text = "Apply (${selectedLocal.size})",
+                    text = stringResource(Res.string.ui_country_picker_apply, selectedLocal.size),
                     style = Euro.typography.bodyMedium,
                 )
             }

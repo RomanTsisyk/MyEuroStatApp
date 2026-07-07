@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.eurostat.core.common.flagFor
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_chip_remove_country
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Pill-shaped country selector chip.
@@ -83,7 +86,7 @@ fun CountryChip(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Remove $code",
+                    contentDescription = stringResource(Res.string.ui_chip_remove_country, code),
                     tint = fg,
                     modifier = Modifier.size(14.dp),
                 )

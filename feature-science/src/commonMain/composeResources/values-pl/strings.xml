@@ -1,0 +1,27 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="science_module_title">Nauka</string>
+    <string name="science_module_tagline">Innowacje</string>
+
+    <!-- Empty / error states -->
+    <string name="science_empty_headline">brak danych</string>
+    <string name="science_empty_body">Brak wskaźników naukowych dla wybranych filtrów.</string>
+    <string name="science_error_headline">Nie udało się wczytać danych o nauce</string>
+
+    <!-- Metric headline -->
+    <string name="science_headline_subtitle">Wydatki na B+R · % PKB</string>
+
+    <!-- Radar card -->
+    <string name="science_radar_caption">radar · wybrany kraj vs. kraj porównawczy</string>
+    <string name="science_radar_axis_rd">B+R %PKB</string>
+    <string name="science_radar_axis_internet">Internet %</string>
+    <string name="science_radar_axis_tertiary">Wyższe %</string>
+
+    <!-- Sparkline KPI tiles -->
+    <string name="science_spark_rd">B+R</string>
+    <string name="science_spark_internet">Internet</string>
+    <string name="science_spark_tertiary">Wykszt. wyższe</string>
+    <string name="science_unit_pct_gdp">%PKB</string>
+    <string name="science_unit_pct_individuals">%osób</string>
+    <string name="science_unit_pct_age_25_64">%25-64</string>
+</resources>

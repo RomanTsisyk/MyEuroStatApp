@@ -51,6 +51,24 @@ import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.feature_science.generated.resources.Res
+import myeurostatapp.feature_science.generated.resources.science_empty_body
+import myeurostatapp.feature_science.generated.resources.science_empty_headline
+import myeurostatapp.feature_science.generated.resources.science_error_headline
+import myeurostatapp.feature_science.generated.resources.science_headline_subtitle
+import myeurostatapp.feature_science.generated.resources.science_module_tagline
+import myeurostatapp.feature_science.generated.resources.science_module_title
+import myeurostatapp.feature_science.generated.resources.science_radar_axis_internet
+import myeurostatapp.feature_science.generated.resources.science_radar_axis_rd
+import myeurostatapp.feature_science.generated.resources.science_radar_axis_tertiary
+import myeurostatapp.feature_science.generated.resources.science_radar_caption
+import myeurostatapp.feature_science.generated.resources.science_spark_internet
+import myeurostatapp.feature_science.generated.resources.science_spark_rd
+import myeurostatapp.feature_science.generated.resources.science_spark_tertiary
+import myeurostatapp.feature_science.generated.resources.science_unit_pct_age_25_64
+import myeurostatapp.feature_science.generated.resources.science_unit_pct_gdp
+import myeurostatapp.feature_science.generated.resources.science_unit_pct_individuals
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Editorial Science feature screen. Renders the R&D / Internet / Tertiary
@@ -78,8 +96,8 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Science",
-            tagline = "Innovation",
+            title = stringResource(Res.string.science_module_title),
+            tagline = stringResource(Res.string.science_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -98,11 +116,11 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
                         modifier = Modifier.padding(Euro.spacing.base),
                     )
                     is ScienceUiState.Empty -> EmptyState(
-                        headline = "no data",
-                        body = "No science indicators for the selected filters.",
+                        headline = stringResource(Res.string.science_empty_headline),
+                        body = stringResource(Res.string.science_empty_body),
                     )
                     is ScienceUiState.Error -> ErrorState(
-                        headline = "Couldn't load science",
+                        headline = stringResource(Res.string.science_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(ScienceIntent.Retry) }
@@ -184,11 +202,12 @@ private fun ScienceContent(
     // Sections shared between the compact (phone) ordering and the ≥840dp
     // two-pane split. Purely structural — all state stays on the component.
     val headlineSection: @Composable (Modifier) -> Unit = { modifier ->
+        val subtitleBase = stringResource(Res.string.science_headline_subtitle)
         MetricHeadline(
             value = headlineRd?.formatPct() ?: "—",
             unit = "%",
             subtitle = buildString {
-                append("R&D spend · % of GDP")
+                append(subtitleBase)
                 if (selectedYear != null) append(" · ").append(selectedYear)
             },
             year = selectedYear?.toString().orEmpty(),
@@ -209,9 +228,10 @@ private fun ScienceContent(
         EuroCard(modifier = Modifier.fillMaxWidth()) {
             Column {
                 // Label clarifies: active country (primary) vs. best-available comparison (DE/FR/EU27).
+                val radarCaption = stringResource(Res.string.science_radar_caption)
                 Text(
                     text = buildString {
-                        append("radar · selected country vs. top peer")
+                        append(radarCaption)
                         if (selectedYear != null) append(" · ").append(selectedYear)
                     },
                     style = Euro.typography.bodySmall,
@@ -226,7 +246,11 @@ private fun ScienceContent(
                     secondaryColor = warn,
                 )
                 EurostatRadarChart(
-                    axes = listOf("R&D %GDP", "Internet %", "Tertiary %"),
+                    axes = listOf(
+                        stringResource(Res.string.science_radar_axis_rd),
+                        stringResource(Res.string.science_radar_axis_internet),
+                        stringResource(Res.string.science_radar_axis_tertiary),
+                    ),
                     series = radarSeries,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -252,22 +276,22 @@ private fun ScienceContent(
             horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
         ) {
             SparkTile(
-                label = "R&D",
-                unit = "%GDP",
+                label = stringResource(Res.string.science_spark_rd),
+                unit = stringResource(Res.string.science_unit_pct_gdp),
                 accent = accent,
                 series = activeSeries?.toSparkSeries(accent) { it.rdSpendPctGdp },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
-                label = "Internet",
-                unit = "%ind",
+                label = stringResource(Res.string.science_spark_internet),
+                unit = stringResource(Res.string.science_unit_pct_individuals),
                 accent = accent,
                 series = activeSeries?.toSparkSeries(accent) { it.internetUsagePct },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
-                label = "Tertiary",
-                unit = "%25-64",
+                label = stringResource(Res.string.science_spark_tertiary),
+                unit = stringResource(Res.string.science_unit_pct_age_25_64),
                 accent = accent,
                 series = activeSeries?.toSparkSeries(accent) { it.tertiaryEducPct },
                 modifier = Modifier.weight(1f),

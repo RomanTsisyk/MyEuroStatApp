@@ -51,6 +51,25 @@ import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
+import myeurostatapp.feature_population.generated.resources.Res
+import myeurostatapp.feature_population.generated.resources.population_cohort_empty_body
+import myeurostatapp.feature_population.generated.resources.population_cohort_empty_headline
+import myeurostatapp.feature_population.generated.resources.population_empty_body
+import myeurostatapp.feature_population.generated.resources.population_empty_headline
+import myeurostatapp.feature_population.generated.resources.population_error_headline
+import myeurostatapp.feature_population.generated.resources.population_footer_staleness_fresh
+import myeurostatapp.feature_population.generated.resources.population_headline_yoy
+import myeurostatapp.feature_population.generated.resources.population_legend_men
+import myeurostatapp.feature_population.generated.resources.population_legend_women
+import myeurostatapp.feature_population.generated.resources.population_metric_men
+import myeurostatapp.feature_population.generated.resources.population_metric_total
+import myeurostatapp.feature_population.generated.resources.population_metric_women
+import myeurostatapp.feature_population.generated.resources.population_module_title
+import myeurostatapp.feature_population.generated.resources.population_pyramid_cohorts_label
+import myeurostatapp.feature_population.generated.resources.population_subtitle_total
+import myeurostatapp.feature_population.generated.resources.population_tagline
+import myeurostatapp.feature_population.generated.resources.population_year_label
+import org.jetbrains.compose.resources.stringResource
 
 /** Number of discrete steps reserved for the year slider. Slider needs steps + 2 = count. */
 private const val SLIDER_STEP_PADDING = 2
@@ -76,8 +95,8 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Population",
-            tagline = "Demography",
+            title = stringResource(Res.string.population_module_title),
+            tagline = stringResource(Res.string.population_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -96,11 +115,11 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
                         modifier = Modifier.padding(Euro.spacing.base),
                     )
                     is PopulationUiState.Empty -> EmptyState(
-                        headline = "no data",
-                        body = "No population data for the selected filters.",
+                        headline = stringResource(Res.string.population_empty_headline),
+                        body = stringResource(Res.string.population_empty_body),
                     )
                     is PopulationUiState.Error -> ErrorState(
-                        headline = "Couldn't load population",
+                        headline = stringResource(Res.string.population_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(PopulationIntent.Retry) }
@@ -118,7 +137,7 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
         }
         SourceFooter(
             dataset = "demo_pjangroup",
-            staleness = "fresh",
+            staleness = stringResource(Res.string.population_footer_staleness_fresh),
             stale = (state as? PopulationUiState.Content)?.isStale == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -170,15 +189,21 @@ private fun PopulationContent(
     // Sections shared between the compact (phone) ordering and the ≥840dp
     // two-pane split. Purely structural — all state stays on the component.
     val headlineSection: @Composable () -> Unit = {
+        // stringResource is @Composable — resolve labels here, then assemble the
+        // plain-string subtitle. The "YoY" suffix lives in the resource so PL/UK
+        // can localize it ("r/r" / "р/р"); the signed percent stays code-built.
+        val totalLabel = stringResource(Res.string.population_subtitle_total)
+        val yoyLabel = headlineYoY?.let { stringResource(Res.string.population_headline_yoy, it) }
         MetricHeadline(
             value = headlineValue,
             unit = headlineUnit,
             subtitle = buildString {
-                append("total · ")
+                append(totalLabel)
+                append(" · ")
                 append(headlineCountryName)
-                if (headlineYoY != null) {
+                if (yoyLabel != null) {
                     append(" · ")
-                    append(headlineYoY)
+                    append(yoyLabel)
                 }
             },
             year = state.selectedYear.toString(),
@@ -187,7 +212,11 @@ private fun PopulationContent(
     }
     val metricSwitcherSection: @Composable () -> Unit = {
         SegmentedControl(
-            options = listOf("Total", "Men", "Women"),
+            options = listOf(
+                stringResource(Res.string.population_metric_total),
+                stringResource(Res.string.population_metric_men),
+                stringResource(Res.string.population_metric_women),
+            ),
             selectedIndex = state.selectedMetric,
             onSelect = { onIntent(PopulationIntent.SelectMetric(it)) },
             activeColor = accent,
@@ -289,8 +318,12 @@ private fun PyramidCardContent(
                     LoadingShimmer(height = pyramidHeight)
                 } else {
                     EmptyState(
-                        headline = "No cohort data",
-                        body = "No 5-year age cohort data available for ${snapshot.countryName} ${snapshot.year}.",
+                        headline = stringResource(Res.string.population_cohort_empty_headline),
+                        body = stringResource(
+                            Res.string.population_cohort_empty_body,
+                            snapshot.countryName,
+                            snapshot.year,
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -312,17 +345,23 @@ private fun PyramidCardContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "5-yr cohorts",
+                text = stringResource(Res.string.population_pyramid_cohorts_label),
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
             )
             LegendDot(
                 color = accent.copy(alpha = maleAlpha),
-                label = "men ${formatLargeNumber(snapshot?.totalMale ?: 0L)}",
+                label = stringResource(
+                    Res.string.population_legend_men,
+                    formatLargeNumber(snapshot?.totalMale ?: 0L),
+                ),
             )
             LegendDot(
                 color = femaleColor.copy(alpha = femaleAlpha),
-                label = "women ${formatLargeNumber(snapshot?.totalFemale ?: 0L)}",
+                label = stringResource(
+                    Res.string.population_legend_women,
+                    formatLargeNumber(snapshot?.totalFemale ?: 0L),
+                ),
             )
         }
     }
@@ -346,7 +385,7 @@ private fun YearSlider(
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
     ) {
         Text(
-            text = "year",
+            text = stringResource(Res.string.population_year_label),
             style = Euro.typography.bodySmall,
             color = Euro.colors.muted,
         )
@@ -396,10 +435,13 @@ private fun fallbackTotal(state: PopulationUiState.Content): Long {
 }
 
 /**
- * Year-over-year percent change for the selected (country, year), or null
- * when not computable. Uses an ASCII `+`/`-` sign (not the Unicode minus
- * used elsewhere) to match this screen's existing subtitle typography;
- * magnitude rounding delegates to the shared [formatDecimal].
+ * Year-over-year percent change for the selected (country, year) as a signed
+ * percent string (e.g. `"+0.3%"`), or null when not computable. Uses an ASCII
+ * `+`/`-` sign (not the Unicode minus used elsewhere) to match this screen's
+ * existing subtitle typography; magnitude rounding delegates to the shared
+ * [formatDecimal]. The localized "YoY" suffix is applied at the composable
+ * call site (`population_headline_yoy`) — this helper is not composable and
+ * must stay resource-free.
  */
 private fun computeYoY(
     state: PopulationUiState.Content,
@@ -414,7 +456,7 @@ private fun computeYoY(
     if (previous == 0L) return null
     val pct = (current - previous).toDouble() / previous.toDouble() * 100.0
     val sign = if (pct >= 0) "+" else "-"
-    return "${sign}${formatDecimal(abs(pct), 1)}% YoY"
+    return "${sign}${formatDecimal(abs(pct), 1)}%"
 }
 
 /**

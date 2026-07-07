@@ -1,0 +1,27 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="science_module_title">Science</string>
+    <string name="science_module_tagline">Innovation</string>
+
+    <!-- Empty / error states -->
+    <string name="science_empty_headline">no data</string>
+    <string name="science_empty_body">No science indicators for the selected filters.</string>
+    <string name="science_error_headline">Couldn’t load science</string>
+
+    <!-- Metric headline -->
+    <string name="science_headline_subtitle">R&amp;D spend · % of GDP</string>
+
+    <!-- Radar card -->
+    <string name="science_radar_caption">radar · selected country vs. top peer</string>
+    <string name="science_radar_axis_rd">R&amp;D %GDP</string>
+    <string name="science_radar_axis_internet">Internet %</string>
+    <string name="science_radar_axis_tertiary">Tertiary %</string>
+
+    <!-- Sparkline KPI tiles -->
+    <string name="science_spark_rd">R&amp;D</string>
+    <string name="science_spark_internet">Internet</string>
+    <string name="science_spark_tertiary">Tertiary</string>
+    <string name="science_unit_pct_gdp">%GDP</string>
+    <string name="science_unit_pct_individuals">%ind</string>
+    <string name="science_unit_pct_age_25_64">%25-64</string>
+</resources>

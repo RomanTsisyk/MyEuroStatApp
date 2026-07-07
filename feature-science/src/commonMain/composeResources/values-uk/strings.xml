@@ -1,0 +1,27 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="science_module_title">Наука</string>
+    <string name="science_module_tagline">Інновації</string>
+
+    <!-- Empty / error states -->
+    <string name="science_empty_headline">немає даних</string>
+    <string name="science_empty_body">Немає наукових показників для вибраних фільтрів.</string>
+    <string name="science_error_headline">Не вдалося завантажити дані про науку</string>
+
+    <!-- Metric headline -->
+    <string name="science_headline_subtitle">Витрати на НДДКР · % ВВП</string>
+
+    <!-- Radar card -->
+    <string name="science_radar_caption">радар · вибрана країна vs. країна для порівняння</string>
+    <string name="science_radar_axis_rd">НДДКР %ВВП</string>
+    <string name="science_radar_axis_internet">Інтернет %</string>
+    <string name="science_radar_axis_tertiary">Вища освіта %</string>
+
+    <!-- Sparkline KPI tiles -->
+    <string name="science_spark_rd">НДДКР</string>
+    <string name="science_spark_internet">Інтернет</string>
+    <string name="science_spark_tertiary">Вища освіта</string>
+    <string name="science_unit_pct_gdp">%ВВП</string>
+    <string name="science_unit_pct_individuals">%осіб</string>
+    <string name="science_unit_pct_age_25_64">%25-64</string>
+</resources>
