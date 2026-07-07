@@ -250,7 +250,11 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ## ✅ DONE · Comparison mode screen
 
-**Status:** ✅ Done (in-module variant). The economy hero chart overlays every picked country (CountryPickerSheet) with index-stable `SeriesPalette` colors + legend, and gains an "Absolute / Indexed 100" normalization toggle — each series rebased to 100 at its first point inside the visible year range (pure `rebaseToIndex()`, 9 tests; zero/missing-first series dropped, gaps preserved). Acceptance met: DE/FR/PL GDP on one chart with distinct colors and legend. A dedicated cross-module compare screen remains a possible v0.5 enhancement. Original notes below.
+**Status:** ✅ Done (in-module variant). The economy hero chart overlays every picked country (CountryPickerSheet) with index-stable `SeriesPalette` colors + legend, and gains an "Absolute / Indexed 100" normalization toggle — each series rebased to 100 at its first point inside the visible year range (pure `rebaseToIndex()`, 9 tests; zero/missing-first series dropped, gaps preserved). Acceptance met: DE/FR/PL GDP on one chart with distinct colors and legend.
+
+**Dedicated cross-module compare screen (backlog):** a `feature-compare/` data+domain layer was scaffolded (a `CompareIndicator` adapter abstraction + one adapter per module mapping each module's headline metric to per-country year/value series, a catalog, models) but reverted from the branch because the UI half never landed — no component/state/intent/screen, no `ChildConfig.Compare` wiring, no tests. To finish: build the Component/UiState/Intent + screen (indicator dropdown, `CountryPickerSheet` 2–3 countries, `EurostatLineChart` overlay with `SeriesPalette` + generalized `rebaseToIndex`, `PillToggle` Absolute/Indexed-100), wire `ChildConfig.Compare` like `feature-search`, add an Overview header pill. The scaffolded adapters are recoverable from git history if wanted.
+
+Original notes below.
 
 **Why:** wireframes (`design/screens-compare.jsx`) define an overlay-lines or small-multiples view for comparing 2-3 countries on the same indicator. Currently the in-module screens only show one country at a time. Comparison is a flagship feature per the brief.
 
@@ -308,21 +312,18 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Translations: PL + UK strings
+## 🟡 IN PROGRESS · Translations: PL + UK strings
 
-**Why:** `CLAUDE.md` lists EN/DE/FR/PL/UK. Eurostat returns EN/DE/FR labels natively. PL + UK need our translation. Currently every string is a hardcoded literal in Kotlin — no string resources.
+**Why:** `CLAUDE.md` lists EN/DE/FR/PL/UK. Eurostat returns EN/DE/FR labels natively. PL + UK need our translation. Currently most strings are hardcoded literals in Kotlin.
 
-**Steps:**
-1. Set up Compose Resources string resources in `core-ui` (or `core-common`).
-2. Extract every user-facing string from feature Screens + core-ui components into `strings.xml` (or Compose Resources `.xml`).
-3. Translate EN → PL + UK.
-4. Settings screen language picker switches Locale.
+**Status (started):** the Compose Resources pattern is established and proven — per-module `composeResources/values{,-pl,-uk}/strings.xml` with a plugin-derived `Res` package (NO gradle changes needed). **Landed:** core-ui shared components (CountryPickerSheet, EmptyState/ErrorState, StaleBanner, YearDropdown, CountryChip(sRow)) + `feature-population` + `feature-science`, all with EN/PL/UK, screens resolving via `stringResource(...)`; compile + tests green.
 
-**Files involved:** all Screens, all core-ui components, new resource files.
+**Remaining (clean backlog — next weekly commits):**
+1. Extract the other 6 feature screens the same way: `economy` (~34 strings), `transport` (~23), `environment`, `trade`, `tourism`, `social`. Reference implementations: `feature-population` / `feature-science`. Pattern gotchas: hoist `stringResource` out of `buildString`/non-composable helpers to the call site; escape `'` in PL/UK XML.
+2. Apply the *language* preference (`AppPreferences.language`, already persisted by Settings) at runtime — set the Compose `LocaleList`/resource locale from the stored code so the Settings language picker actually switches UI language.
+3. Consider localizing the shared `SourceFooter` "fresh/stale" word (currently hardcoded EN in every module) as a single core-ui change.
 
 **Acceptance:** language switcher in Settings changes UI language across all screens.
-
-**Estimate:** ~200-300 strings. Big lift.
 
 ---
 

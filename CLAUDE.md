@@ -150,7 +150,7 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - [x] **Phase 5** — Cache strategy convergence (`MultiDimCache` JSON-blob table + `JsonBlobCache<T>` in core-common + `.sqm` migrations; population cohorts cached, tourism off the sentinel table; desktop driver schema-managed)
 - [x] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (loaded from `composeResources/font/`)
 - [x] **Phase 5** — Real flag rendering (`flagFor()` Unicode emoji in core-common) + Android PL/UK string resources
-- [~] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting (formatting DONE in `eu.eurostat.ui.format`; Compose-Resources strings + applying the language preference still ahead)
+- [~] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting (formatting DONE in `eu.eurostat.ui.format`; Compose-Resources strings STARTED — pattern proven, core-ui + population + science extracted EN/PL/UK; 6 feature screens + applying the language preference still ahead)
 - [x] **Phase 5** — iOS toolchain + app: real `iosApp.xcodeproj` generated from `iosApp/project.yml` (XcodeGen); builds green via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (permanent fix: `sudo xcode-select -s`); app launches on the iPhone 17 simulator and renders live Eurostat data. Gotchas documented in `iosApp/README.md` (JAVA_HOME pinning, `-lsqlite3`, `CADisableMinimumFrameDurationOnPhone`, `doInitKoinIos`). Interactive 8-tab walk-through pending (Phase 6).
 - [ ] **Phase 6** — Verified on Android device + iOS simulator; CI; release config; signing
 
