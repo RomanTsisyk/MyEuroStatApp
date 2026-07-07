@@ -42,8 +42,31 @@ fun browseSections(
         if (moduleEntries.isEmpty()) null else SearchSection(module, moduleEntries)
     }
 
-/** Word boundaries inside labels: anything that is not a letter, digit or '&'. */
-private val WORD_SEPARATORS = Regex("[^\\p{L}\\p{N}&]+")
+/**
+ * Splits [text] into words on runs of non-word characters (anything that is
+ * not a letter, digit or '&'), dropping empties.
+ *
+ * Done with a manual character scan rather than a `Regex` on purpose: a
+ * top-level `Regex("[^\\p{L}\\p{N}&]+")` throws on Kotlin/Native (its engine
+ * rejects the `\p{L}`/`\p{N}` Unicode-property classes), and a top-level `val`
+ * that throws takes the whole file's initializer down with a
+ * `FileFailedToInitializeException` — failing every ranking call on iOS while
+ * passing on the JVM. Character predicates are identical across platforms.
+ */
+private fun labelWords(text: String): List<String> {
+    val words = mutableListOf<String>()
+    val current = StringBuilder()
+    for (ch in text) {
+        if (ch.isLetter() || ch.isDigit() || ch == '&') {
+            current.append(ch)
+        } else if (current.isNotEmpty()) {
+            words.add(current.toString())
+            current.clear()
+        }
+    }
+    if (current.isNotEmpty()) words.add(current.toString())
+    return words
+}
 
 /**
  * Best (lowest) match tier for [entry] against the already-normalized
@@ -53,7 +76,7 @@ private fun matchTier(entry: IndicatorEntry, query: String): Int? {
     val label = entry.label.lowercase()
     return when {
         label.startsWith(query) -> 0
-        label.split(WORD_SEPARATORS).any { it.startsWith(query) } -> 1
+        labelWords(label).any { it.startsWith(query) } -> 1
         label.contains(query) -> 2
         entry.keywords.any { it.lowercase().contains(query) } -> 3
         entry.description.lowercase().contains(query) -> 4
