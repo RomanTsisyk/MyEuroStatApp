@@ -6,7 +6,7 @@
 ## What this is
 
 Kotlin Multiplatform app (Android · iOS · macOS · Linux · Windows desktop) that visualizes public European statistical data.
-Multi-module Clean Architecture. **Phase 4 complete; Phase 5 nearly done** — all 8 feature modules ship real public-API data through the design-system UI. Landed from the Phase 5 list: Overview/landing dashboard, searchable country picker (`CountryPickerSheet`) + Unicode flags, bundled Inter + IBM Plex Mono fonts, Android PL/UK string resources, cache-strategy convergence (JSON-blob `MultiDimCache` + SQLDelight migrations, schema v3), Settings persistence (theme applied app-wide), comparison mode (economy: `SeriesPalette` + Indexed-100 normalization toggle), shared locale-aware number formatting (`eu.eurostat.ui.format`), pull-to-refresh on all 8 screens, shared `AppError.toUserMessage()`. Still ahead: Search screen, KMP-level (Compose Resources) PL/UK localization, applying the stored language + default-country preferences, simulator/device verification. iOS builds work via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when `xcode-select` points at CommandLineTools (permanent fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`). See `NEXT_STEPS.md`.
+Multi-module Clean Architecture. **Phase 5 essentially complete; Phase 6 (release) in progress** — all 8 feature modules ship real public-API data through the design-system UI. Landed: Overview/landing dashboard, searchable country picker (`CountryPickerSheet`) + Unicode flags, bundled Inter + IBM Plex Mono fonts, cache-strategy convergence (JSON-blob `MultiDimCache` + SQLDelight migrations, schema v3), Settings persistence (theme applied app-wide; default-country now seeds every component's first query), comparison mode (economy: `SeriesPalette` + Indexed-100 toggle), shared locale-aware number formatting (`eu.eurostat.ui.format`), pull-to-refresh, shared `AppError.toUserMessage()`, **Search screen** (`feature-search`, 27-indicator index + ranking), **responsive master-detail** on all 8 screens (`AdaptiveTwoPane`), and **PL/UK Compose-Resources localization** started (core-ui + population + science). Still ahead: the remaining 6 localization screens + applying the stored language preference, a dedicated cross-module compare screen, bundled SVG flags, and on-device/simulator interactive verification. iOS builds work via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when `xcode-select` points at CommandLineTools (permanent fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`). **NOTE for KMP changes: verify with `iosSimulatorArm64Test`, not just `compileKotlinIosSimulatorArm64` — a `\p{L}` regex passed JVM tests but crashed on Native.** See `NEXT_STEPS.md`.
 
 ## Architecture
 
@@ -126,6 +126,12 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - Platform-specific tests in `androidUnitTest` / `iosTest` only when testing actual implementations
 - Use Turbine for Flow testing: `flow.test { assertEquals(Loading, awaitItem()); ... }`
 - Fake repositories implement the interface directly, not Mockk — KMP doesn't have Mockk on iOS
+- **Before calling a module iOS-clean, run its iOS *test* task, not just the compile** —
+  `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ./gradlew :module:iosSimulatorArm64Test`
+  (or full `allTests`). JVM-green ≠ Native-green: a top-level `Regex("[^\p{L}\p{N}&]+")`
+  compiled fine and passed JVM tests but threw at Native init (`FileFailedToInitializeException`),
+  crashing every call in the file on iOS. Prefer `Char.isLetter()/isDigit()` over regex
+  Unicode-property classes; keep top-level `val`s trivial (a throwing one fails the whole file).
 
 ## Phase status
 

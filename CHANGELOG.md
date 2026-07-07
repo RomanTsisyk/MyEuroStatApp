@@ -4,17 +4,54 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] — v0.6 development (branch `develop-v0.6`)
+
+### Added
+
+- Search screen (`feature-search`): a compiled-in index of 27 indicators
+  across the 8 modules (labels, dataset codes, natural-language keywords)
+  with pure tiered ranking (label prefix > word prefix > substring >
+  keyword > description) and browse-by-module on a blank query; reachable
+  from a search pill on the Overview header, and opening a result brings
+  the target module to front
+- The persisted default-country preference now seeds every feature
+  component's (and the Overview's) first query — read once before the
+  first fetch, no double-fetch, no wrong-country flash; mid-session
+  changes apply on next start
+- Tablet/desktop responsive master-detail via a shared three-slot
+  `AdaptiveTwoPane` in core-ui: exact phone ordering below 840 dp, a
+  320 dp controls pane beside a content pane at ≥ 840 dp; adopted by all
+  8 feature screens; desktop window opens at 1280×800 (visually verified
+  at 400/1280 dp on the desktop target)
+- KMP-level PL/UK localization, started: per-module Compose Resources
+  `strings.xml` (EN/PL/UK) for the shared core-ui components and the
+  population + science screens, resolving via `stringResource(...)`
+  (pattern proven; the other 6 screens + applying the language
+  preference are next)
+- CI: a compile-only iOS gate on `macos-latest`
+  (`:composeApp:compileKotlinIosSimulatorArm64`, gated behind the Linux
+  job) so iOS-only breakage is caught without spending simulator minutes
+
+### Fixed
+
+- Search crashed on Kotlin/Native (iOS): a top-level
+  `Regex("[^\\p{L}\\p{N}&]+")` threw at construction (Native rejects the
+  `\p{L}`/`\p{N}` Unicode-property classes) and took the whole file's
+  initializer down, failing every ranking call on iOS while passing on
+  the JVM — replaced with a portable character-scan word splitter
+- Intermittent test failures: the 8 API-service test suites captured
+  parallel MockEngine requests into an unsynchronized list; now guarded
+  by a `Mutex`-backed recorder
 
 ### Planned for v0.6 / v1.0
 
-- Search screen (indicator index across the 8 modules)
-- KMP-level (Compose Resources) PL/UK localization driven by the stored
-  language preference; wire default-country preference into the feature
-  components
-- Bundled SVG flags via Compose Resources; dedicated cross-module compare screen
-- Tablet master-detail layouts at the `Expanded` breakpoint
-- Verified launch on a physical iPhone (TestFlight); on-device Android smoke run
+- Finish PL/UK localization: the remaining 6 feature screens + apply the
+  stored language preference at runtime so the Settings picker switches
+  UI language
+- Bundled SVG flags via Compose Resources; dedicated cross-module compare
+  screen (data-layer scaffold recoverable from git history)
+- Verified launch on a physical iPhone (TestFlight); on-device Android
+  smoke run; interactive 8-tab walk-through → `RUN_REPORT.md`
 - Native Windows / macOS installers (`.msi`, `.dmg`) from Compose Desktop
 - F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
 - GitHub Actions release workflow with reproducible signed APK
