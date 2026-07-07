@@ -15,6 +15,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -40,9 +42,9 @@ class TransportApiServiceImplTest {
         }
     """.trimIndent()
 
-    private fun buildService(capturedUrls: MutableList<String>): TransportApiServiceImpl {
+    private fun buildService(recorder: RequestRecorder): TransportApiServiceImpl {
         val engine = MockEngine { request ->
-            capturedUrls += request.url.toString()
+            recorder.record(request.url.toString())
             respond(
                 content = ByteReadChannel(oneCell()),
                 status = HttpStatusCode.OK,
@@ -62,27 +64,30 @@ class TransportApiServiceImplTest {
 
     @Test
     fun fetch_road_mode_calls_only_road_pa_buscoa() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.ROAD))
+        val urls = recorder.all()
         assertEquals(1, urls.size)
         assertTrue(urls[0].contains("road_pa_buscoa"), "Expected road_pa_buscoa in URL, got: ${urls[0]}")
     }
 
     @Test
     fun fetch_air_mode_calls_only_avia_paoc() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.AIR))
+        val urls = recorder.all()
         assertEquals(1, urls.size)
         assertTrue(urls[0].contains("avia_paoc"), "Expected avia_paoc in URL, got: ${urls[0]}")
     }
 
     @Test
     fun fetch_sea_mode_fires_no_requests() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         val result = service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.SEA))
+        val urls = recorder.all()
         assertEquals(0, urls.size, "SEA is disabled: mar_pa_aa uses port-based dim, not geo")
         assertTrue(result.isEmpty(), "SEA fetch should return empty list")
     }
@@ -93,9 +98,10 @@ class TransportApiServiceImplTest {
 
     @Test
     fun fetch_all_mode_calls_road_and_air_endpoints() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.ALL))
+        val urls = recorder.all()
         assertEquals(2, urls.size, "ALL mode fires 2 requests (SEA disabled), got: $urls")
         assertTrue(urls.any { it.contains("road_pa_buscoa") }, "Missing road_pa_buscoa in $urls")
         assertTrue(urls.any { it.contains("avia_paoc") },     "Missing avia_paoc in $urls")
@@ -107,9 +113,10 @@ class TransportApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_geo_and_time_params() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL", "DE"), 2021..2022, mode = TransportMode.ROAD))
+        val urls = recorder.all()
         val url = urls[0]
         assertTrue(url.contains("geo=PL"),   "URL should contain geo=PL, got: $url")
         assertTrue(url.contains("geo=DE"),   "URL should contain geo=DE, got: $url")
@@ -123,9 +130,9 @@ class TransportApiServiceImplTest {
 
     @Test
     fun fetch_road_mode_returns_road_data_points() = runTest {
-        val urls = mutableListOf<String>()
+        val recorder = RequestRecorder()
         val engine = MockEngine { request ->
-            urls += request.url.toString()
+            recorder.record(request.url.toString())
             respond(
                 content = ByteReadChannel(oneCell(value = 5_000_000.0)),
                 status = HttpStatusCode.OK,
@@ -155,9 +162,10 @@ class TransportApiServiceImplTest {
         // Eurostat road_pa_buscoa does not expose a `vehicle` dimension —
         // pinning it returns HTTP 400 INVALID_QUERY_DIMENSION. Verified
         // against the live API; see CLAUDE.md.
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.ROAD))
+        val urls = recorder.all()
         val url = urls.first { it.contains("road_pa_buscoa") }
         assertTrue(!url.contains("vehicle="), "road_pa_buscoa must NOT send vehicle dim: $url")
     }
@@ -167,27 +175,30 @@ class TransportApiServiceImplTest {
         // Eurostat avia_paoc does not expose a `partner` dimension —
         // pinning it returns HTTP 400 INVALID_QUERY_DIMENSION. Verified
         // against the live API; see CLAUDE.md.
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.AIR))
+        val urls = recorder.all()
         val url = urls.first { it.contains("avia_paoc") }
         assertTrue(!url.contains("partner="), "avia_paoc must NOT send partner dim: $url")
     }
 
     @Test
     fun fetch_all_mode_road_url_does_not_contain_vehicle_dim() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.ALL))
+        val urls = recorder.all()
         val roadUrl = urls.first { it.contains("road_pa_buscoa") }
         assertTrue(!roadUrl.contains("vehicle="), "road_pa_buscoa in ALL mode must NOT send vehicle dim: $roadUrl")
     }
 
     @Test
     fun fetch_all_mode_air_url_does_not_contain_partner_dim() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(TransportQuery(listOf("PL"), 2020..2020, mode = TransportMode.ALL))
+        val urls = recorder.all()
         val airUrl = urls.first { it.contains("avia_paoc") }
         assertTrue(!airUrl.contains("partner="), "avia_paoc in ALL mode must NOT send partner dim: $airUrl")
     }
@@ -217,4 +228,22 @@ class TransportApiServiceImplTest {
         assertEquals(1_000L, result[0].airPassengers)
         assertNull(result[0].seaPassengers)
     }
+}
+
+/**
+ * Thread-safe request-URL recorder: MockEngine may invoke handlers concurrently on
+ * different threads (ALL mode fires 2 parallel requests), so unsynchronized
+ * appends to a plain list can lose elements.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val urls = mutableListOf<String>()
+
+    /** Records one intercepted request URL under the mutex. */
+    suspend fun record(url: String) {
+        mutex.withLock { urls += url }
+    }
+
+    /** Returns a snapshot of all recorded request URLs. */
+    suspend fun all(): List<String> = mutex.withLock { urls.toList() }
 }

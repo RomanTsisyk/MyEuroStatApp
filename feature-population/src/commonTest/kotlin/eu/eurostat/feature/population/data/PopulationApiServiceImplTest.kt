@@ -15,6 +15,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -67,7 +69,7 @@ class PopulationApiServiceImplTest {
     private fun buildService(
         responseBody: String = cannedJsonStatResponse(),
         status: HttpStatusCode = HttpStatusCode.OK,
-        onRequest: (HttpRequestData) -> Unit = {},
+        onRequest: suspend (HttpRequestData) -> Unit = {},
     ): PopulationApiServiceImpl {
         val engine = MockEngine { request ->
             onRequest(request)
@@ -91,11 +93,12 @@ class PopulationApiServiceImplTest {
 
     @Test
     fun fetchPopulation_requestTargets_demo_pjan() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchPopulation(PopulationQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val urlStr = captured!!.url.toString()
         assertTrue(
@@ -110,11 +113,12 @@ class PopulationApiServiceImplTest {
 
     @Test
     fun fetchPopulation_geoParamsPresent() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchPopulation(PopulationQuery(listOf("PL", "DE"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val geoValues = captured!!.url.parameters.getAll("geo") ?: emptyList()
         assertTrue("PL" in geoValues, "geo filter must include PL, got: $geoValues")
@@ -127,11 +131,12 @@ class PopulationApiServiceImplTest {
 
     @Test
     fun fetchPopulation_timeParamsPresentForEachYear() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchPopulation(PopulationQuery(listOf("PL"), 2020..2022))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val timeValues = captured!!.url.parameters.getAll("time") ?: emptyList()
         assertTrue("2020" in timeValues, "time filter must include 2020, got: $timeValues")
@@ -145,11 +150,12 @@ class PopulationApiServiceImplTest {
 
     @Test
     fun fetchPopulation_sexParamsAreT_M_F() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchPopulation(PopulationQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val sexValues = captured!!.url.parameters.getAll("sex") ?: emptyList()
         assertTrue("T" in sexValues, "sex filter must include T, got: $sexValues")
@@ -163,11 +169,12 @@ class PopulationApiServiceImplTest {
 
     @Test
     fun fetchPopulation_ageParamIsTOTAL() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchPopulation(PopulationQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val ageValues = captured!!.url.parameters.getAll("age") ?: emptyList()
         assertTrue("TOTAL" in ageValues, "age filter must include TOTAL, got: $ageValues")
@@ -235,13 +242,32 @@ class PopulationApiServiceImplTest {
 
     @Test
     fun fetchPopulation_formatJsonParamPresent() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchPopulation(PopulationQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val formatValues = captured!!.url.parameters.getAll("format") ?: emptyList()
         assertTrue("JSON" in formatValues, "format=JSON must be present as query parameter, got: $formatValues")
     }
+}
+
+/**
+ * Thread-safe request recorder: MockEngine may invoke handlers concurrently on
+ * different threads, so unsynchronized writes from the handler can be lost or
+ * remain invisible to the asserting test thread.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val requests = mutableListOf<HttpRequestData>()
+
+    /** Records one intercepted request under the mutex. */
+    suspend fun record(request: HttpRequestData) {
+        mutex.withLock { requests += request }
+    }
+
+    /** Returns a snapshot of all recorded requests. */
+    suspend fun all(): List<HttpRequestData> = mutex.withLock { requests.toList() }
 }

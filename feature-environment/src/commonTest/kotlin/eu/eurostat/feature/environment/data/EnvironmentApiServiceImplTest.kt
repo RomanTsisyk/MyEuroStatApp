@@ -15,6 +15,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -98,7 +100,7 @@ class EnvironmentApiServiceImplTest {
         ghgStatus: HttpStatusCode = HttpStatusCode.OK,
         energyStatus: HttpStatusCode = HttpStatusCode.OK,
         sdgStatus: HttpStatusCode = HttpStatusCode.OK,
-        onRequest: (HttpRequestData) -> Unit = {},
+        onRequest: suspend (HttpRequestData) -> Unit = {},
     ): EnvironmentApiServiceImpl {
         val engine = MockEngine { request ->
             onRequest(request)
@@ -134,11 +136,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_makesExactlyThreeRequests() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         assertEquals(3, captured.size, "Service must make exactly 3 requests (env_air_gge + nrg_bal_c + sdg_13_10)")
     }
 
@@ -148,11 +151,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_ghgRequestTargets_env_air_gge() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         val ghgReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("nrg") && !urlStr.contains("sdg")
@@ -171,11 +175,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_ghgRequest_airpolIsGHG() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         val ghgReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("nrg") && !urlStr.contains("sdg")
@@ -191,11 +196,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_ghgRequest_srcCrfContainsAllThreeSectorCodes() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         val ghgReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("nrg") && !urlStr.contains("sdg")
@@ -213,11 +219,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_ghgRequest_unitIsMIO_T() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         val ghgReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("nrg") && !urlStr.contains("sdg")
@@ -233,11 +240,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_energyRequest_hasCorrectFilters() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         val energyReq = captured.firstOrNull { req -> req.url.toString().contains("nrg") }
         assertNotNull(energyReq, "nrg_bal_c request not found among: ${captured.map { it.url }}")
 
@@ -260,11 +268,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_sdgRequest_unitIsI90() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         val sdgReq = captured.firstOrNull { req -> req.url.toString().contains("sdg") }
         assertNotNull(sdgReq, "sdg_13_10 request not found among: ${captured.map { it.url }}")
         val unitValues = sdgReq!!.url.parameters.getAll("unit") ?: emptyList()
@@ -277,12 +286,13 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_ghgRequest_geoParamsPresent() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
         val query = EnvironmentQuery(listOf("PL", "DE"), 2020..2020)
 
         service.fetch(query)
 
+        val captured = recorder.all()
         val ghgReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("nrg") && !urlStr.contains("sdg")
@@ -299,12 +309,13 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_ghgRequest_timeParamsPresentForEachYear() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
         val query = EnvironmentQuery(listOf("PL"), 2020..2022)
 
         service.fetch(query)
 
+        val captured = recorder.all()
         val ghgReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("nrg") && !urlStr.contains("sdg")
@@ -366,11 +377,12 @@ class EnvironmentApiServiceImplTest {
 
     @Test
     fun fetch_formatJsonParamPresent() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(defaultQuery)
 
+        val captured = recorder.all()
         assertNotNull(captured.firstOrNull())
         val ghgReq = captured.first { req ->
             val urlStr = req.url.toString()
@@ -401,4 +413,22 @@ class EnvironmentApiServiceImplTest {
         val result = service.fetch(defaultQuery)
         assertEquals("PL", result[0].countryCode)
     }
+}
+
+/**
+ * Thread-safe request recorder: MockEngine may invoke handlers concurrently on
+ * different threads (the service fires 3 parallel requests), so unsynchronized
+ * appends to a plain list can lose elements.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val requests = mutableListOf<HttpRequestData>()
+
+    /** Records one intercepted request under the mutex. */
+    suspend fun record(request: HttpRequestData) {
+        mutex.withLock { requests += request }
+    }
+
+    /** Returns a snapshot of all recorded requests. */
+    suspend fun all(): List<HttpRequestData> = mutex.withLock { requests.toList() }
 }

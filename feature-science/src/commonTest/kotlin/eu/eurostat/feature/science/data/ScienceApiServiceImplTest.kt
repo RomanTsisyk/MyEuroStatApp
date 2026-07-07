@@ -14,6 +14,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -97,9 +99,9 @@ class ScienceApiServiceImplTest {
      * Builds a service where every request returns the same [body].
      * Use for URL-check and request-count tests only (not value-assertion tests).
      */
-    private fun buildService(capturedUrls: MutableList<String>, body: String = rdCell()): ScienceApiServiceImpl {
+    private fun buildService(recorder: RequestRecorder, body: String = rdCell()): ScienceApiServiceImpl {
         val engine = MockEngine { request ->
-            capturedUrls += request.url.toString()
+            recorder.record(request.url.toString())
             respond(
                 content = ByteReadChannel(body),
                 status = HttpStatusCode.OK,
@@ -116,14 +118,14 @@ class ScienceApiServiceImplTest {
      * Allows mapper filter predicates to pass and produce real ScienceDataPoint values.
      */
     private fun buildPerDatasetService(
-        capturedUrls: MutableList<String> = mutableListOf(),
+        recorder: RequestRecorder = RequestRecorder(),
         rdBody: String = rdCell(),
         internetBody: String = internetCell(),
         educBody: String = educCell(),
     ): ScienceApiServiceImpl {
         val engine = MockEngine { request ->
             val url = request.url.toString()
-            capturedUrls += url
+            recorder.record(url)
             val body = when {
                 url.contains("rd_e_gerdtot") -> rdBody
                 url.contains("isoc_ci_ifp_iu") -> internetBody
@@ -147,10 +149,11 @@ class ScienceApiServiceImplTest {
 
     @Test
     fun fetch_calls_all_three_dataset_codes() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(ScienceQuery(listOf("PL"), 2020..2020))
 
+        val urls = recorder.all()
         assertEquals(3, urls.size, "Expected 3 requests, got $urls")
         for (code in datasetCodes) {
             assertTrue(urls.any { it.contains(code) }, "Missing $code in $urls")
@@ -159,22 +162,25 @@ class ScienceApiServiceImplTest {
 
     @Test
     fun fetch_calls_rd_e_gerdtot() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         assertTrue(urls.any { it.contains("rd_e_gerdtot") })
     }
 
     @Test
     fun fetch_calls_isoc_ci_ifp_iu() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         assertTrue(urls.any { it.contains("isoc_ci_ifp_iu") })
     }
 
     @Test
     fun fetch_calls_edat_lfse_03() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         assertTrue(urls.any { it.contains("edat_lfse_03") })
     }
 
@@ -184,8 +190,9 @@ class ScienceApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_geo_and_time_params() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL", "FI"), 2018..2019))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL", "FI"), 2018..2019))
+        val urls = recorder.all()
         val url = urls.first { it.contains("rd_e_gerdtot") }
         assertTrue(url.contains("geo=PL"),    "Missing geo=PL in $url")
         assertTrue(url.contains("geo=FI"),    "Missing geo=FI in $url")
@@ -195,8 +202,9 @@ class ScienceApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_rd_filter_params() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("rd_e_gerdtot") }
         assertTrue(url.contains("unit=PC_GDP"), "Missing unit=PC_GDP in $url")
         assertTrue(url.contains("sectperf=TOTAL"), "Missing sectperf=TOTAL in $url")
@@ -204,8 +212,9 @@ class ScienceApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_internet_filter_params() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("isoc_ci_ifp_iu") }
         assertTrue(url.contains("indic_is=I_IU3"), "Missing indic_is=I_IU3 in $url")
         assertTrue(url.contains("ind_type=IND_TOTAL"), "Missing ind_type=IND_TOTAL in $url")
@@ -214,8 +223,9 @@ class ScienceApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_educ_filter_params() = runTest {
-        val urls = mutableListOf<String>()
-        buildService(urls).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val recorder = RequestRecorder()
+        buildService(recorder).fetch(ScienceQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("edat_lfse_03") }
         assertTrue(url.contains("isced11=ED5-8"), "Missing isced11=ED5-8 in $url")
         assertTrue(url.contains("sex=T"), "Missing sex=T in $url")
@@ -358,4 +368,22 @@ class ScienceApiServiceImplTest {
         val result = service.fetch(ScienceQuery(listOf("PL"), 2020..2020))
         assertTrue(result.isEmpty(), "Expected empty result when all datasets return no data")
     }
+}
+
+/**
+ * Thread-safe request-URL recorder: MockEngine may invoke handlers concurrently on
+ * different threads (the service fires 3 parallel requests), so unsynchronized
+ * appends to a plain list can lose elements.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val urls = mutableListOf<String>()
+
+    /** Records one intercepted request URL under the mutex. */
+    suspend fun record(url: String) {
+        mutex.withLock { urls += url }
+    }
+
+    /** Returns a snapshot of all recorded request URLs. */
+    suspend fun all(): List<String> = mutex.withLock { urls.toList() }
 }

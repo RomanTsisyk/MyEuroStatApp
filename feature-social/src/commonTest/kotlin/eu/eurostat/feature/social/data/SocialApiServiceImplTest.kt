@@ -14,6 +14,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,9 +38,9 @@ class SocialApiServiceImplTest {
         }
     """.trimIndent()
 
-    private fun buildService(capturedUrls: MutableList<String>, body: String = oneCell()): SocialApiServiceImpl {
+    private fun buildService(recorder: RequestRecorder, body: String = oneCell()): SocialApiServiceImpl {
         val engine = MockEngine { request ->
-            capturedUrls += request.url.toString()
+            recorder.record(request.url.toString())
             respond(
                 content = ByteReadChannel(body),
                 status = HttpStatusCode.OK,
@@ -56,9 +58,10 @@ class SocialApiServiceImplTest {
 
     @Test
     fun fetch_calls_all_three_dataset_codes() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
 
         assertEquals(3, urls.size, "Expected 3 requests, got $urls")
         for (code in datasetCodes) {
@@ -72,9 +75,10 @@ class SocialApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_geo_and_time_params() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL", "DE"), 2021..2022))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_li02") }
         assertTrue(url.contains("geo=PL"),    "Missing geo=PL in $url")
         assertTrue(url.contains("geo=DE"),    "Missing geo=DE in $url")
@@ -216,8 +220,8 @@ class SocialApiServiceImplTest {
               "value":{}
             }
         """.trimIndent()
-        val urls = mutableListOf<String>()
-        val service = buildService(urls, emptyBody)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder, emptyBody)
         val result = service.fetch(SocialQuery(listOf("PL"), 2020..2020))
         assertTrue(result.isEmpty(), "Expected empty result when all datasets return no data")
     }
@@ -233,27 +237,30 @@ class SocialApiServiceImplTest {
         // Eurostat ilc_peps01n does not expose an `indic_il` dimension —
         // pinning it returns HTTP 400 INVALID_QUERY_DIMENSION. Verified
         // against the live API; see CLAUDE.md.
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_peps01n") }
         assertTrue(!url.contains("indic_il="), "ilc_peps01n must NOT send indic_il dim: $url")
     }
 
     @Test
     fun fetch_atRisk_url_contains_sex_T() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_peps01n") }
         assertTrue(url.contains("sex=T"), "ilc_peps01n must pin sex=T (total population) to avoid last-cell-wins: $url")
     }
 
     @Test
     fun fetch_atRisk_url_contains_age_TOTAL() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_peps01n") }
         assertTrue(url.contains("age=TOTAL"), "ilc_peps01n must pin age=TOTAL to avoid last-cell-wins: $url")
     }
@@ -268,18 +275,20 @@ class SocialApiServiceImplTest {
 
     @Test
     fun fetch_poverty_url_contains_statinfo_MED_EI() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_li02") }
         assertTrue(url.contains("statinfo=MED_EI"), "ilc_li02 must pin statinfo=MED_EI: $url")
     }
 
     @Test
     fun fetch_poverty_url_contains_rskpovth_B_60() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_li02") }
         assertTrue(url.contains("rskpovth=B_60"), "ilc_li02 must pin rskpovth=B_60 (below 60% median): $url")
     }
@@ -288,9 +297,10 @@ class SocialApiServiceImplTest {
     fun fetch_poverty_url_does_not_contain_indic_il_dim() = runTest {
         // indic_il was removed from ilc_li02 upstream; sending it returns
         // HTTP 400 INVALID_QUERY_DIMENSION. Verified against the live API.
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("ilc_li02") }
         assertTrue(!url.contains("indic_il="), "ilc_li02 must NOT send indic_il dim: $url")
     }
@@ -303,36 +313,40 @@ class SocialApiServiceImplTest {
 
     @Test
     fun fetch_health_url_contains_levels_VGOOD() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("hlth_silc_01") }
         assertTrue(url.contains("levels=VGOOD"), "hlth_silc_01 must pin levels=VGOOD: $url")
     }
 
     @Test
     fun fetch_health_url_contains_wstatus_POP() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("hlth_silc_01") }
         assertTrue(url.contains("wstatus=POP"), "hlth_silc_01 must pin wstatus=POP: $url")
     }
 
     @Test
     fun fetch_health_url_contains_age_Y_GE16() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("hlth_silc_01") }
         assertTrue(url.contains("age=Y_GE16"), "hlth_silc_01 must pin age=Y_GE16: $url")
     }
 
     @Test
     fun fetch_health_url_contains_sex_T() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildService(urls)
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
         service.fetch(SocialQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val url = urls.first { it.contains("hlth_silc_01") }
         assertTrue(url.contains("sex=T"), "hlth_silc_01 must pin sex=T: $url")
     }
@@ -374,4 +388,22 @@ class SocialApiServiceImplTest {
         assertEquals(21.0, result[0].atRiskRate)
         assertNull(result[0].healthSatisfaction)
     }
+}
+
+/**
+ * Thread-safe request-URL recorder: MockEngine may invoke handlers concurrently on
+ * different threads (the service fires 3 parallel requests), so unsynchronized
+ * appends to a plain list can lose elements.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val urls = mutableListOf<String>()
+
+    /** Records one intercepted request URL under the mutex. */
+    suspend fun record(url: String) {
+        mutex.withLock { urls += url }
+    }
+
+    /** Returns a snapshot of all recorded request URLs. */
+    suspend fun all(): List<String> = mutex.withLock { urls.toList() }
 }
