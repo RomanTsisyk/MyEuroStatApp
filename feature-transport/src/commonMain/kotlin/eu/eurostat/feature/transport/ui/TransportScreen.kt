@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,6 +77,7 @@ import kotlin.math.roundToInt
  *  - [CountryChipsRow] derived from the country codes present in [series].
  *  - [SourceFooter] citing the underlying datasets.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -101,47 +104,55 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(TransportIntent.Refresh) },
         )
 
-        when (val s = state) {
-            is TransportUiState.Loading -> LoadingBody()
-            is TransportUiState.Error -> ErrorState(
-                headline = "Couldn't load",
-                body = s.message,
-                onRetry = if (s.canRetry) {
-                    { component.onIntent(TransportIntent.Retry) }
-                } else {
-                    null
-                },
-            )
-            is TransportUiState.Empty -> EmptyState(
-                headline = "No data",
-                body = "No transport data for the selected filters.",
-            )
-            is TransportUiState.Content -> ContentBody(
-                series = s.series,
-                isStale = s.isStale,
-                accent = accent,
-                activeCountry = s.activeCountry,
-                availableCountries = s.availableCountries,
-                panelMode = s.displayPanelMode,
-                logScale = s.logScale,
-                selectedYear = s.selectedYear,
-                availableYears = s.availableYears,
-                onSelectCountry = { code ->
-                    component.onIntent(TransportIntent.SelectActiveCountry(code))
-                },
-                onSelectCountries = { codes ->
-                    component.onIntent(TransportIntent.SelectCountries(codes))
-                },
-                onPanelModeChange = { mode ->
-                    component.onIntent(TransportIntent.SelectPanelMode(mode))
-                },
-                onLogScaleToggle = {
-                    component.onIntent(TransportIntent.ToggleLogScale)
-                },
-                onSelectYear = { year ->
-                    component.onIntent(TransportIntent.SelectYear(year))
-                },
-            )
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            PullToRefreshBox(
+                isRefreshing = state is TransportUiState.Loading,
+                onRefresh = { component.onIntent(TransportIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    is TransportUiState.Loading -> LoadingBody()
+                    is TransportUiState.Error -> ErrorState(
+                        headline = "Couldn't load",
+                        body = s.message,
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(TransportIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is TransportUiState.Empty -> EmptyState(
+                        headline = "No data",
+                        body = "No transport data for the selected filters.",
+                    )
+                    is TransportUiState.Content -> ContentBody(
+                        series = s.series,
+                        isStale = s.isStale,
+                        accent = accent,
+                        activeCountry = s.activeCountry,
+                        availableCountries = s.availableCountries,
+                        panelMode = s.displayPanelMode,
+                        logScale = s.logScale,
+                        selectedYear = s.selectedYear,
+                        availableYears = s.availableYears,
+                        onSelectCountry = { code ->
+                            component.onIntent(TransportIntent.SelectActiveCountry(code))
+                        },
+                        onSelectCountries = { codes ->
+                            component.onIntent(TransportIntent.SelectCountries(codes))
+                        },
+                        onPanelModeChange = { mode ->
+                            component.onIntent(TransportIntent.SelectPanelMode(mode))
+                        },
+                        onLogScaleToggle = {
+                            component.onIntent(TransportIntent.ToggleLogScale)
+                        },
+                        onSelectYear = { year ->
+                            component.onIntent(TransportIntent.SelectYear(year))
+                        },
+                    )
+                }
+            }
         }
     }
 }

@@ -28,6 +28,21 @@ import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 
 /**
+ * Precomputed axis bounds + tick positions for [EurostatLineChart], derived once per
+ * `remember(series, xAxis, yAxis)` key change instead of on every recomposition.
+ */
+private data class LineChartBounds(
+    val xMin: Float,
+    val xMax: Float,
+    val yMin: Float,
+    val yMax: Float,
+    val xSpan: Float,
+    val ySpan: Float,
+    val yTicks: List<Float>,
+    val xTicks: List<Float>,
+)
+
+/**
  * Editorial multi-series line chart rendered on Compose Canvas.
  *
  * Renders dashed horizontal gridlines with tabular axis labels.
@@ -55,25 +70,33 @@ fun EurostatLineChart(
         return
     }
 
-    val allPoints = series.flatMap { it.points }
-    val xValues = allPoints.map { it.x.toFloat() }
-    val yValues = allPoints.mapNotNull { it.y?.toFloat() }
+    val yValues = remember(series) { series.flatMap { it.points }.mapNotNull { it.y?.toFloat() } }
     if (yValues.isEmpty()) {
         Box(modifier = modifier)
         return
     }
 
-    val xMin = xAxis.range?.start ?: xValues.min()
-    val xMax = xAxis.range?.endInclusive ?: xValues.max()
-    val yMin = yAxis.range?.start ?: yValues.min()
-    val yMax = yAxis.range?.endInclusive ?: yValues.max()
-    val xSpan = (xMax - xMin).coerceAtLeast(0.0001f)
-    val ySpan = (yMax - yMin).coerceAtLeast(0.0001f)
+    // Axis bounds + tick positions are pure derivations of series/xAxis/yAxis —
+    // hoisted so they aren't recomputed (including the min/max scans over all
+    // points) on every recomposition.
+    val bounds = remember(series, xAxis, yAxis) {
+        val allPoints = series.flatMap { it.points }
+        val xValues = allPoints.map { it.x.toFloat() }
+        val yValuesInner = allPoints.mapNotNull { it.y?.toFloat() }
+        val xMin = xAxis.range?.start ?: xValues.min()
+        val xMax = xAxis.range?.endInclusive ?: xValues.max()
+        val yMin = yAxis.range?.start ?: yValuesInner.min()
+        val yMax = yAxis.range?.endInclusive ?: yValuesInner.max()
+        val xSpan = (xMax - xMin).coerceAtLeast(0.0001f)
+        val ySpan = (yMax - yMin).coerceAtLeast(0.0001f)
+        val tickCount = 4
+        val yTicks = (0..tickCount).map { i -> yMin + ySpan * i / tickCount }
+        val xTicks = listOf(xMin, xMax)
+        LineChartBounds(xMin, xMax, yMin, yMax, xSpan, ySpan, yTicks, xTicks)
+    }
+    val (xMin, _, yMin, _, xSpan, ySpan, yTicks, xTicks) = bounds
 
     val gutter = if (hideAxis) 0.dp else ChartDefaults.AxisGutterDp
-    val tickCount = 4
-    val yTicks = (0..tickCount).map { i -> yMin + ySpan * i / tickCount }
-    val xTicks = listOf(xMin, xMax)
 
     // Hoist Path allocation outside Canvas to avoid per-frame GC pressure.
     val paths = remember(series.size) { List(series.size) { Path() } }

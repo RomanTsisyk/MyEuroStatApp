@@ -2,9 +2,9 @@ package eu.eurostat.feature.population.ui
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
-import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.population.domain.GetPopulationTimeSeriesUseCase
 import eu.eurostat.feature.population.domain.PopulationData
 import eu.eurostat.feature.population.domain.PopulationQuery
@@ -147,13 +147,5 @@ class DefaultPopulationComponent(
             isStale = isStale,
             query = query,
         )
-    }
-
-    private fun AppError.toUserMessage(): String = when (this) {
-        AppError.NoNetwork -> "No network"
-        is AppError.HttpError -> "HTTP $code"
-        is AppError.ParseError -> "Parse error"
-        AppError.CacheEmpty -> "No cache"
-        is AppError.Unknown -> "Unknown error"
     }
 }

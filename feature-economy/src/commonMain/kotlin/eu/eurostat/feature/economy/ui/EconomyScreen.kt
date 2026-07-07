@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -70,6 +72,7 @@ private const val PERCENT: Double = 100.0
  * switcher, a multi-country line chart hero, secondary KPI tiles for the
  * inactive metrics, the year scrubber and country chips.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -96,28 +99,34 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(EconomyIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                EconomyUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
-                is EconomyUiState.Empty -> EmptyState(
-                    headline = "no data",
-                    body = "No economy data for the selected filters.",
-                )
-                is EconomyUiState.Error -> ErrorState(
-                    headline = "Couldn't load economy",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(EconomyIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
-                is EconomyUiState.Content -> EconomyContent(
-                    accent = accent,
-                    state = s,
-                    component = component,
-                )
+            PullToRefreshBox(
+                isRefreshing = state is EconomyUiState.Loading,
+                onRefresh = { component.onIntent(EconomyIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    EconomyUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
+                    is EconomyUiState.Empty -> EmptyState(
+                        headline = "no data",
+                        body = "No economy data for the selected filters.",
+                    )
+                    is EconomyUiState.Error -> ErrorState(
+                        headline = "Couldn't load economy",
+                        body = s.message,
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(EconomyIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is EconomyUiState.Content -> EconomyContent(
+                        accent = accent,
+                        state = s,
+                        component = component,
+                    )
+                }
             }
         }
         SourceFooter(

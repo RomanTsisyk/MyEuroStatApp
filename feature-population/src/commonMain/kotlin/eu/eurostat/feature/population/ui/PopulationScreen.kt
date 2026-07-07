@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,6 +65,7 @@ private const val SLIDER_STEP_PADDING = 2
  * into a demographic pyramid plus headline total, country chips, year scrubber,
  * and a Total/Men/Women segmented control.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -88,28 +91,34 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(PopulationIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                PopulationUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
-                is PopulationUiState.Empty -> EmptyState(
-                    headline = "no data",
-                    body = "No population data for the selected filters.",
-                )
-                is PopulationUiState.Error -> ErrorState(
-                    headline = "Couldn't load population",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(PopulationIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
-                is PopulationUiState.Content -> PopulationContent(
-                    state = s,
-                    accent = accent,
-                    onIntent = component::onIntent,
-                )
+            PullToRefreshBox(
+                isRefreshing = state is PopulationUiState.Loading,
+                onRefresh = { component.onIntent(PopulationIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    PopulationUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
+                    is PopulationUiState.Empty -> EmptyState(
+                        headline = "no data",
+                        body = "No population data for the selected filters.",
+                    )
+                    is PopulationUiState.Error -> ErrorState(
+                        headline = "Couldn't load population",
+                        body = s.message,
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(PopulationIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is PopulationUiState.Content -> PopulationContent(
+                        state = s,
+                        accent = accent,
+                        onIntent = component::onIntent,
+                    )
+                }
             }
         }
         SourceFooter(

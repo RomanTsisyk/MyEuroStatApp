@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -63,6 +65,7 @@ import eu.eurostat.ui.theme.Euro
  * No metric switcher — the radar already presents all three normalized %
  * metrics at once.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -89,41 +92,47 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(ScienceIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                ScienceUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
-                is ScienceUiState.Empty -> EmptyState(
-                    headline = "no data",
-                    body = "No science indicators for the selected filters.",
-                )
-                is ScienceUiState.Error -> ErrorState(
-                    headline = "Couldn't load science",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(ScienceIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
-                is ScienceUiState.Content -> ScienceContent(
-                    accent = accent,
-                    timeSeries = s.series,
-                    isStale = s.isStale,
-                    activeCountry = s.activeCountry,
-                    availableCountries = s.availableCountries,
-                    selectedYear = s.selectedYear,
-                    availableYears = s.availableYears,
-                    onSelectActiveCountry = { code ->
-                        component.onIntent(ScienceIntent.SelectActiveCountry(code))
-                    },
-                    onSelectCountries = { codes ->
-                        component.onIntent(ScienceIntent.SelectCountries(codes))
-                    },
-                    onSelectYear = { year ->
-                        component.onIntent(ScienceIntent.SelectYear(year))
-                    },
-                )
+            PullToRefreshBox(
+                isRefreshing = state is ScienceUiState.Loading,
+                onRefresh = { component.onIntent(ScienceIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    ScienceUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
+                    is ScienceUiState.Empty -> EmptyState(
+                        headline = "no data",
+                        body = "No science indicators for the selected filters.",
+                    )
+                    is ScienceUiState.Error -> ErrorState(
+                        headline = "Couldn't load science",
+                        body = s.message,
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(ScienceIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is ScienceUiState.Content -> ScienceContent(
+                        accent = accent,
+                        timeSeries = s.series,
+                        isStale = s.isStale,
+                        activeCountry = s.activeCountry,
+                        availableCountries = s.availableCountries,
+                        selectedYear = s.selectedYear,
+                        availableYears = s.availableYears,
+                        onSelectActiveCountry = { code ->
+                            component.onIntent(ScienceIntent.SelectActiveCountry(code))
+                        },
+                        onSelectCountries = { codes ->
+                            component.onIntent(ScienceIntent.SelectCountries(codes))
+                        },
+                        onSelectYear = { year ->
+                            component.onIntent(ScienceIntent.SelectYear(year))
+                        },
+                    )
+                }
             }
         }
         SourceFooter(

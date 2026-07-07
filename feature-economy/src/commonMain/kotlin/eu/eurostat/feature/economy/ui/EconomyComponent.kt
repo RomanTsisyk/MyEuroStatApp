@@ -2,9 +2,9 @@ package eu.eurostat.feature.economy.ui
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
-import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
@@ -154,13 +154,5 @@ class DefaultEconomyComponent(
             selectedYear = activeYear,
             availableYears = availableYears,
         )
-    }
-
-    private fun AppError.toUserMessage(): String = when (this) {
-        AppError.NoNetwork -> "No network"
-        is AppError.HttpError -> "HTTP $code"
-        is AppError.ParseError -> "Parse error"
-        AppError.CacheEmpty -> "No cache"
-        is AppError.Unknown -> "Unknown error"
     }
 }

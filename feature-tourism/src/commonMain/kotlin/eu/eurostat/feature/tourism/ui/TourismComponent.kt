@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.tourism.domain.GetTourismTimeSeriesUseCase
 import eu.eurostat.feature.tourism.domain.TourismData
 import eu.eurostat.feature.tourism.domain.TourismQuery
@@ -149,7 +150,7 @@ class DefaultTourismComponent(
                 )
             }
             is Result.Error -> TourismUiState.Error(
-                message = result.cause.toString(),
+                message = result.cause.toUserMessage(),
                 canRetry = true,
             )
         }

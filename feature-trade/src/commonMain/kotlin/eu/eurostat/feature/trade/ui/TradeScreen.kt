@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -62,6 +64,7 @@ private const val MAX_VISIBLE_YEARS = 8
  * (no re-fetch). The "+" chip opens a [CountryPickerSheet] whose "Apply" dispatches
  * [TradeIntent.SelectCountries], triggering a re-fetch.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -88,43 +91,51 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(TradeIntent.Refresh) },
         )
 
-        when (val s = state) {
-            is TradeUiState.Loading -> LoadingBody()
-            is TradeUiState.Error -> ErrorState(
-                headline = "Could not load Trade",
-                body = s.message,
-                onRetry = if (s.canRetry) {
-                    { component.onIntent(TradeIntent.Retry) }
-                } else {
-                    null
-                },
-            )
-            is TradeUiState.Empty -> ErrorState(
-                headline = "No data",
-                body = "No data for the selected filters.",
-            )
-            is TradeUiState.Content -> ContentBody(
-                accent = accent,
-                series = s.series,
-                isStale = s.isStale,
-                activeCountry = s.activeCountry,
-                availableCountries = s.availableCountries,
-                selectedTabIndex = s.selectedTabIndex,
-                selectedYear = s.selectedYear,
-                availableYears = s.availableYears,
-                onSelectTab = { index ->
-                    component.onIntent(TradeIntent.SelectTab(index))
-                },
-                onSelectActiveCountry = { code ->
-                    component.onIntent(TradeIntent.SelectActiveCountry(code))
-                },
-                onSelectCountries = { codes ->
-                    component.onIntent(TradeIntent.SelectCountries(codes))
-                },
-                onSelectYear = { year ->
-                    component.onIntent(TradeIntent.SelectYear(year))
-                },
-            )
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            PullToRefreshBox(
+                isRefreshing = state is TradeUiState.Loading,
+                onRefresh = { component.onIntent(TradeIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    is TradeUiState.Loading -> LoadingBody()
+                    is TradeUiState.Error -> ErrorState(
+                        headline = "Could not load Trade",
+                        body = s.message,
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(TradeIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is TradeUiState.Empty -> ErrorState(
+                        headline = "No data",
+                        body = "No data for the selected filters.",
+                    )
+                    is TradeUiState.Content -> ContentBody(
+                        accent = accent,
+                        series = s.series,
+                        isStale = s.isStale,
+                        activeCountry = s.activeCountry,
+                        availableCountries = s.availableCountries,
+                        selectedTabIndex = s.selectedTabIndex,
+                        selectedYear = s.selectedYear,
+                        availableYears = s.availableYears,
+                        onSelectTab = { index ->
+                            component.onIntent(TradeIntent.SelectTab(index))
+                        },
+                        onSelectActiveCountry = { code ->
+                            component.onIntent(TradeIntent.SelectActiveCountry(code))
+                        },
+                        onSelectCountries = { codes ->
+                            component.onIntent(TradeIntent.SelectCountries(codes))
+                        },
+                        onSelectYear = { year ->
+                            component.onIntent(TradeIntent.SelectYear(year))
+                        },
+                    )
+                }
+            }
         }
     }
 }

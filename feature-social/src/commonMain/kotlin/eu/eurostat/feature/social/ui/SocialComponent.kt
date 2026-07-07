@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.social.domain.GetSocialTimeSeriesUseCase
 import eu.eurostat.feature.social.domain.SocialQuery
 import eu.eurostat.feature.social.domain.SocialTimeSeries
@@ -153,7 +154,7 @@ class DefaultSocialComponent(
                 )
             }
             is Result.Error -> SocialUiState.Error(
-                message = cause.toString(),
+                message = cause.toUserMessage(),
                 canRetry = true,
             )
         }

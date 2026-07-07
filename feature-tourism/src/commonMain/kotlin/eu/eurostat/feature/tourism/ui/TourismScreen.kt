@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -68,6 +70,7 @@ import kotlin.math.abs
  *
  * @param component the Decompose component driving this screen.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -95,36 +98,42 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
         )
 
         Box(modifier = Modifier.weight(1f)) {
-            when (val s = state) {
-                is TourismUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
+            PullToRefreshBox(
+                isRefreshing = state is TourismUiState.Loading,
+                onRefresh = { component.onIntent(TourismIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    is TourismUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
 
-                is TourismUiState.Error -> ErrorState(
-                    headline = "Couldn't load tourism",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(TourismIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
+                    is TourismUiState.Error -> ErrorState(
+                        headline = "Couldn't load tourism",
+                        body = s.message,
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(TourismIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
 
-                is TourismUiState.Empty -> EmptyState(
-                    headline = "No data",
-                    body = "No tourism data for the selected filters.",
-                )
+                    is TourismUiState.Empty -> EmptyState(
+                        headline = "No data",
+                        body = "No tourism data for the selected filters.",
+                    )
 
-                is TourismUiState.Content -> TourismContent(
-                    content = s,
-                    accent = accent,
-                    onResidenceToggle = { component.onIntent(TourismIntent.HighlightResidence(it)) },
-                    onCountrySelect = { component.onIntent(TourismIntent.SelectActiveCountry(it)) },
-                    onConfirmCountries = { codes ->
-                        component.onIntent(TourismIntent.SelectCountries(codes))
-                    },
-                    onYearSelect = { component.onIntent(TourismIntent.SelectYear(it)) },
-                )
+                    is TourismUiState.Content -> TourismContent(
+                        content = s,
+                        accent = accent,
+                        onResidenceToggle = { component.onIntent(TourismIntent.HighlightResidence(it)) },
+                        onCountrySelect = { component.onIntent(TourismIntent.SelectActiveCountry(it)) },
+                        onConfirmCountries = { codes ->
+                            component.onIntent(TourismIntent.SelectCountries(codes))
+                        },
+                        onYearSelect = { component.onIntent(TourismIntent.SelectYear(it)) },
+                    )
+                }
             }
         }
 
