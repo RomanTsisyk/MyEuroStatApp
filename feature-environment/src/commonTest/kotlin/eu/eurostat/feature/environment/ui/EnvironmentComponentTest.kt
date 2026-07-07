@@ -7,6 +7,8 @@ import com.arkivanov.essenty.lifecycle.resume
 import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.prefs.AppPreferences
+import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.feature.environment.domain.EnvironmentDataPoint
 import eu.eurostat.feature.environment.domain.EnvironmentQuery
 import eu.eurostat.feature.environment.domain.EnvironmentRepository
@@ -58,6 +60,18 @@ private class TestDispatcherProviderLocal(
     override val main: CoroutineDispatcher = dispatcher
     override val io: CoroutineDispatcher = dispatcher
     override val default: CoroutineDispatcher = dispatcher
+}
+
+/** In-memory [AppPreferences] fake; only [defaultCountry] matters to the component. */
+private class FakeAppPreferences(
+    defaultCountry: String = AppPreferences.DEFAULT_COUNTRY,
+) : AppPreferences {
+    override val themePreference: Flow<ThemePreference> = MutableStateFlow(ThemePreference.SYSTEM)
+    override val language: Flow<String> = MutableStateFlow(AppPreferences.DEFAULT_LANGUAGE)
+    override val defaultCountry: Flow<String> = MutableStateFlow(defaultCountry)
+    override suspend fun setThemePreference(value: ThemePreference) = Unit
+    override suspend fun setLanguage(value: String) = Unit
+    override suspend fun setDefaultCountry(value: String) = Unit
 }
 
 // ---------------------------------------------------------------------------
@@ -116,10 +130,31 @@ class EnvironmentComponentTest {
     private fun buildComponent(
         repo: FakeEnvironmentRepository,
         dispatcher: kotlinx.coroutines.test.TestDispatcher,
+        preferences: AppPreferences = FakeAppPreferences(),
     ): DefaultEnvironmentComponent {
         val useCase = GetEnvironmentTimeSeriesUseCase(repo)
         val dispatchers = TestDispatcherProviderLocal(dispatcher)
-        return DefaultEnvironmentComponent(context, useCase, dispatchers)
+        return DefaultEnvironmentComponent(context, useCase, dispatchers, preferences)
+    }
+
+    @Test
+    fun stored_default_country_seeds_active_country_and_first_query() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher, FakeAppPreferences(defaultCountry = "IT"))
+
+        repo.emissions.value = Result.Success(
+            listOf(sampleEnvironmentSeries("IT"), sampleEnvironmentSeries("DE")),
+            isStale = false,
+        )
+        testScheduler.advanceUntilIdle()
+
+        // Preference country joins the list right after the EU aggregate.
+        assertEquals(listOf("EU27_2020", "IT", "DE", "FR", "PL"), repo.lastQuery?.countryCodes)
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertEquals("IT", state.activeCountry)
     }
 
     // ------------------------------------------------------------------------------------

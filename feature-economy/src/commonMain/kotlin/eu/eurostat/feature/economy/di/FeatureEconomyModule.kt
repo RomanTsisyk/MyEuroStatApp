@@ -23,6 +23,6 @@ fun featureEconomyModule() = module {
     factory<ComponentFactory<Any>>(
         qualifier = named(ChildConfig.Economy::class.qualifiedName!!)
     ) {
-        ComponentFactory { ctx -> DefaultEconomyComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultEconomyComponent(ctx, get(), get(), get()) }
     }
 }

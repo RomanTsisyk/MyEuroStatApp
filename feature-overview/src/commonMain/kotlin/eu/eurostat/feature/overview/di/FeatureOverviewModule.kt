@@ -28,6 +28,7 @@ fun featureOverviewModule() = module {
                 get(), // SocialRepository
                 get(), // ScienceRepository
                 get(), // DispatcherProvider
+                get(), // AppPreferences
             )
         }
     }

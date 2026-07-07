@@ -33,6 +33,6 @@ fun featurePopulationModule() = module {
     factory<ComponentFactory<Any>>(
         qualifier = named(ChildConfig.Population::class.qualifiedName!!)
     ) {
-        ComponentFactory { ctx -> DefaultPopulationComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultPopulationComponent(ctx, get(), get(), get()) }
     }
 }

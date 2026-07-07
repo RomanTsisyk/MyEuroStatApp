@@ -7,6 +7,7 @@ import eu.eurostat.core.common.Result
 import eu.eurostat.core.common.formatCompactNumber
 import eu.eurostat.core.common.formatGrouped
 import eu.eurostat.core.common.formatPercent
+import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyRepository
@@ -39,14 +40,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
  * Landing-screen component. Aggregates one at-a-glance teaser metric per feature
- * for the default country ([DEFAULT_COUNTRY]) by observing all eight feature
- * repositories concurrently and merging their [Result] streams into a single
- * [OverviewUiState].
+ * for the headline country by observing all eight feature repositories
+ * concurrently and merging their [Result] streams into a single
+ * [OverviewUiState]. The headline country is the persisted default-country
+ * preference ([AppPreferences.defaultCountry]) when set, falling back to
+ * [DEFAULT_COUNTRY] otherwise.
  *
  * Each teaser degrades independently: a broken or empty dataset yields an
  * [TeaserStatus.Error] / [TeaserStatus.Empty] tile rather than failing the whole
@@ -70,6 +74,7 @@ class DefaultOverviewComponent(
     private val socialRepo: SocialRepository,
     private val scienceRepo: ScienceRepository,
     private val dispatchers: DispatcherProvider,
+    private val appPreferences: AppPreferences,
 ) : OverviewComponent, ComponentContext by componentContext {
 
     private val scope = coroutineScope(SupervisorJob() + dispatchers.main)
@@ -77,13 +82,41 @@ class DefaultOverviewComponent(
     private val _state = MutableStateFlow(OverviewUiState(BASE_TEASERS))
     override val state: StateFlow<OverviewUiState> = _state.asStateFlow()
 
-    private val countries = listOf("EU27_2020", DEFAULT_COUNTRY, "FR", "PL")
+    private var countries = listOf("EU27_2020", DEFAULT_COUNTRY, "FR", "PL")
     private val years = 2010..2024
+
+    /** Country whose latest values the teasers headline; seeded from preferences. */
+    private var headlineCountry: String = DEFAULT_COUNTRY
 
     private var collectJob: Job? = null
 
     init {
-        start()
+        scope.launch {
+            applyDefaultCountryPreference()
+            start()
+        }
+    }
+
+    /**
+     * Seeds the headline country and the queried country list from the persisted
+     * default-country preference ([AppPreferences.defaultCountry]).
+     *
+     * Read exactly once, before the first load, so the very first queries already
+     * target the preferred country (no double fetch, no flash of the wrong
+     * country). Changing the preference mid-session therefore takes effect on
+     * the next app start; live re-querying is intentionally out of scope.
+     * When the preference is unset (the [AppPreferences.DEFAULT_COUNTRY] EU
+     * aggregate), the historical defaults are kept unchanged.
+     */
+    private suspend fun applyDefaultCountryPreference() {
+        val preferred = appPreferences.defaultCountry.first()
+        if (preferred.isBlank() || preferred == AppPreferences.DEFAULT_COUNTRY) return
+        headlineCountry = preferred
+        if (preferred !in countries) {
+            val codes = countries.toMutableList()
+            codes.add(if (codes.firstOrNull() == "EU27_2020") 1 else 0, preferred)
+            countries = codes
+        }
     }
 
     override fun onRefresh() = start()
@@ -176,12 +209,12 @@ class DefaultOverviewComponent(
         Headline(formatPercent(rd, 1), "R&D of GDP", point.year)
     }
 
-    /** Default country's series, falling back to the first available. */
+    /** Headline country's series, falling back to the first available. */
     private inline fun <S> List<S>.pickDefault(code: (S) -> String): S? =
-        firstOrNull { code(it) == DEFAULT_COUNTRY } ?: firstOrNull()
+        firstOrNull { code(it) == headlineCountry } ?: firstOrNull()
 
     companion object {
-        /** Country whose latest values the dashboard headlines (matches feature defaults). */
+        /** Fallback headline country when no preference is set (matches feature defaults). */
         const val DEFAULT_COUNTRY = "DE"
 
         private val BASE_POPULATION = ModuleTeaser(ChildConfig.Population, "population", "Population", "👥", "—", "people", null, TeaserStatus.Loading)

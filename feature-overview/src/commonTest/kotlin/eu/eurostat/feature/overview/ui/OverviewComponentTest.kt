@@ -7,6 +7,8 @@ import com.arkivanov.essenty.lifecycle.resume
 import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.prefs.AppPreferences
+import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyQuery
@@ -68,8 +70,12 @@ private class FakePopulationRepository : PopulationRepository {
 }
 
 private class FakeEconomyRepository : EconomyRepository {
+    var lastQuery: EconomyQuery? = null
     val emissions = MutableStateFlow<Result<List<EconomyTimeSeries>>>(Result.Loading)
-    override fun observe(query: EconomyQuery): Flow<Result<List<EconomyTimeSeries>>> = emissions
+    override fun observe(query: EconomyQuery): Flow<Result<List<EconomyTimeSeries>>> {
+        lastQuery = query
+        return emissions
+    }
     override suspend fun refresh(query: EconomyQuery) {}
 }
 
@@ -114,6 +120,18 @@ private class TestDispatchers(dispatcher: TestDispatcher) : DispatcherProvider {
     override val main: CoroutineDispatcher = dispatcher
     override val io: CoroutineDispatcher = dispatcher
     override val default: CoroutineDispatcher = dispatcher
+}
+
+/** In-memory [AppPreferences] fake; only [defaultCountry] matters to the component. */
+private class FakeAppPreferences(
+    defaultCountry: String = AppPreferences.DEFAULT_COUNTRY,
+) : AppPreferences {
+    override val themePreference: Flow<ThemePreference> = MutableStateFlow(ThemePreference.SYSTEM)
+    override val language: Flow<String> = MutableStateFlow(AppPreferences.DEFAULT_LANGUAGE)
+    override val defaultCountry: Flow<String> = MutableStateFlow(defaultCountry)
+    override suspend fun setThemePreference(value: ThemePreference) = Unit
+    override suspend fun setLanguage(value: String) = Unit
+    override suspend fun setDefaultCountry(value: String) = Unit
 }
 
 // ---------------------------------------------------------------------------
@@ -163,11 +181,15 @@ class OverviewComponentTest {
         lifecycle.destroy()
     }
 
-    private fun build(dispatcher: TestDispatcher) = DefaultOverviewComponent(
+    private fun build(
+        dispatcher: TestDispatcher,
+        preferences: AppPreferences = FakeAppPreferences(),
+    ) = DefaultOverviewComponent(
         context,
         population, economy, environment, trade,
         transport, tourism, social, science,
         TestDispatchers(dispatcher),
+        preferences,
     )
 
     private fun OverviewUiState.teaser(destination: ChildConfig): ModuleTeaser =
@@ -288,6 +310,29 @@ class OverviewComponentTest {
         val teaser = component.state.value.teaser(ChildConfig.Economy)
         assertEquals(TeaserStatus.Loaded, teaser.status)
         assertTrue(teaser.value != "—")
+    }
+
+    @Test
+    fun stored_default_country_headlines_teasers_and_joins_queries() = runTest {
+        val component = build(
+            StandardTestDispatcher(testScheduler),
+            FakeAppPreferences(defaultCountry = "IT"),
+        )
+        economy.emissions.value = Result.Success(
+            listOf(
+                EconomyTimeSeries("DE", "Germany", listOf(EconomyDataPoint("DE", 2023, gdpEur = 4_500_000L))),
+                EconomyTimeSeries("IT", "Italy", listOf(EconomyDataPoint("IT", 2022, gdpEur = 2_000_000L))),
+            ),
+        )
+        testScheduler.advanceUntilIdle()
+
+        // Preference country joins the queried list right after the EU aggregate.
+        assertEquals(listOf("EU27_2020", "IT", "DE", "FR", "PL"), economy.lastQuery?.countryCodes)
+
+        // The teaser headlines the preferred country's series (IT @ 2022), not DE's.
+        val teaser = component.state.value.teaser(ChildConfig.Economy)
+        assertEquals(TeaserStatus.Loaded, teaser.status)
+        assertEquals(2022, teaser.year)
     }
 
     @Test

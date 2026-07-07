@@ -23,6 +23,6 @@ fun featureEnvironmentModule() = module {
     factory<ComponentFactory<Any>>(
         qualifier = named(ChildConfig.Environment::class.qualifiedName!!)
     ) {
-        ComponentFactory { ctx -> DefaultEnvironmentComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultEnvironmentComponent(ctx, get(), get(), get()) }
     }
 }

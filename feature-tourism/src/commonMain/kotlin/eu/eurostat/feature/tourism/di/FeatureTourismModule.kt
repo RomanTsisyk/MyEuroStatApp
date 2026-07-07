@@ -27,6 +27,6 @@ fun featureTourismModule() = module {
     factory<Clock> { Clock.System }
     factory { GetTourismTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(qualifier = named(ChildConfig.Tourism::class.qualifiedName!!)) {
-        ComponentFactory { ctx -> DefaultTourismComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultTourismComponent(ctx, get(), get(), get()) }
     }
 }
