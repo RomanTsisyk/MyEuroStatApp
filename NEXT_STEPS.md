@@ -201,7 +201,10 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Tablet + desktop responsive layouts
+## 🟡 MOSTLY DONE · Tablet + desktop responsive layouts
+
+**Status:** implemented via a shared three-slot `AdaptiveTwoPane` in core-ui (exact phone ordering <840dp through the compact slot; ≥840dp renders a 320dp controls pane + content pane), adopted by all 8 feature screens; desktop window opens at 1280×800. Unit suite + APK + iOS compiles green; desktop app ran at 1280×800 with no runtime exceptions. **Remaining:** the visual pass at 360/600/840/1280 (needs macOS Screen Recording permission for the assistant, or a manual look) — treat as part of the demo/RUN_REPORT week. Original notes below.
+
 
 **Why:** desktop target ALREADY builds (`./gradlew :composeApp:packageUberJarForCurrentOS` produces a 99 MB self-contained `.jar` that runs on macOS/Linux/Windows). Tablet works as Android-large / iPad. But every Screen is currently phone-first — a 13" desktop window shows a 360dp-wide column with empty space on each side. Doesn't crash, but looks wrong.
 
@@ -264,11 +267,11 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Search & Settings screens — Settings ✅ DONE, Search open
+## ✅ DONE · Search & Settings screens
 
-**Status:** Settings is done: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; language (System/EN/PL/UK) and default-country persisted (applying them to components is the follow-up below); functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header. Search has not started.
+**Status:** Both done. Settings: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header; **default-country now seeds all 9 components' first query** (read once before the first fetch; mid-session changes apply on next start). Search: `feature-search` module — compiled-in index of 27 indicators across the 8 modules with tiered ranking (label prefix > word prefix > substring > keyword > description) and browse-by-module on blank query; search pill on the Overview header; opening a result brings the target module to front. 17 ranking/component tests.
 
-**Follow-ups:** wire `AppPreferences.defaultCountry` into the 8 feature components' initial queries + Overview; apply the language preference once KMP string resources exist.
+**Remaining follow-up:** apply the *language* preference once KMP string resources exist (below).
 
 **Why:** wireframes (`design/screens-system.jsx`) define both. Settings exposes theme/language/default-country preferences; Search lets users find indicators across all 8 modules. Both are referenced in `ModuleAppBar` (search icon dispatches nowhere).
 

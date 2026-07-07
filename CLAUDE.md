@@ -31,7 +31,10 @@ core-ui          → Compose Multiplatform design system
                      (formatDecimal/formatSignedPercent/formatLargeNumber/…;
                      expect/actual separators per platform). Screens keep only
                      thin wrappers that add domain suffixes.
-                   - layout/  → AdaptiveScaffold (WindowSizeClass-driven shell)
+                   - layout/  → AdaptiveScaffold (WindowSizeClass-driven shell),
+                     AdaptiveTwoPane (three-slot master-detail wrapper: exact
+                     phone ordering <840dp via the compact slot, 320dp controls
+                     pane + content pane >=840dp — used by all 8 feature screens)
 core-charts      → Pure Compose Canvas chart library (Koalaplot dropped)
                    - line, stacked-bar, pyramid, heatmap, diverging-bar,
                      radar, small-multiples, multi-line-highlighted
@@ -52,8 +55,15 @@ feature-settings  → real Settings screen (theme / language / default country /
                    clear cache / about) persisting via AppPreferences
                    (core-common contract; SQLDelight-backed impl in
                    core-database). Theme drives EurostatTheme app-wide; the
-                   Overview header gear navigates here. Language and
-                   default-country are persisted but not yet applied (Phase 5).
+                   Overview header gear navigates here. Default-country seeds
+                   every component's first query (read once at start; changes
+                   apply on next launch). Language persisted, applied once
+                   KMP string resources exist (Phase 5 remainder).
+feature-search    → Search screen: compiled-in index of 27 indicators across the
+                   8 modules (labels, dataset codes, keywords), pure tiered
+                   ranking, browse-by-module on blank query; synchronous
+                   component (no Loading/Error). Entry: search pill on the
+                   Overview header; results bringToFront the target module.
 feature-overview  → Overview dashboard (the landing screen). DefaultOverviewComponent
                    aggregates one live teaser metric per feature by observing all 8
                    repositories concurrently (Koin singletons) and combine()-ing them
@@ -136,7 +146,7 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - [x] **Phase 5** — Overview dashboard / landing screen (`feature-overview`: `DefaultOverviewComponent` aggregates 8 live per-module teaser metrics → `OverviewScreen` hero + tile grid, bound to `ChildConfig.Home`; unit-tested. On-device visual check pending.)
 - [~] **Phase 5** — Country picker (searchable `CountryPickerSheet` ships inline on feature screens; tap-the-map variant deferred)
 - [x] **Phase 5** — Comparison mode (economy multi-country overlay: `SeriesPalette` index-stable colors + "Absolute / Indexed 100" rebasing toggle, pure tested `rebaseToIndex()`)
-- [~] **Phase 5** — Search & Settings screens (Settings DONE: SQLDelight-persisted theme/language/default-country + functional clear-cache, theme applied app-wide, gear entry on Overview; Search not started)
+- [x] **Phase 5** — Search & Settings screens (Settings: SQLDelight-persisted theme/language/default-country + functional clear-cache, theme applied app-wide, default-country now seeds all 9 components' first query; Search: `feature-search` with a 27-indicator compiled-in index, tiered ranking, browse-by-module, entry pill on the Overview header)
 - [x] **Phase 5** — Cache strategy convergence (`MultiDimCache` JSON-blob table + `JsonBlobCache<T>` in core-common + `.sqm` migrations; population cohorts cached, tourism off the sentinel table; desktop driver schema-managed)
 - [x] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (loaded from `composeResources/font/`)
 - [x] **Phase 5** — Real flag rendering (`flagFor()` Unicode emoji in core-common) + Android PL/UK string resources
