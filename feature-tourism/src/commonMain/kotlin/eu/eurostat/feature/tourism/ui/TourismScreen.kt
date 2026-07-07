@@ -10,13 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -32,13 +29,12 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatHeatmapChart
 import eu.eurostat.core.charts.EurostatStackedBarChart
 import eu.eurostat.core.charts.StackedBarRow
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.core.charts.model.ColorScale
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.tourism.domain.TourismDataPoint
@@ -163,7 +159,6 @@ private fun TourismContent(
     onConfirmCountries: (List<String>) -> Unit,
     onYearSelect: (Int) -> Unit,
 ) {
-    val scroll = rememberScrollState()
     val active = content.timeSeries.firstOrNull { it.countryCode == content.activeCountry }
         ?: content.timeSeries.firstOrNull()
     if (active == null) {
@@ -192,22 +187,14 @@ private fun TourismContent(
     val headlineSubtitle = headlineSubtitleFor(content.highlightedResidence)
     val headlineYear = if (content.selectedYear != 0) content.selectedYear.toString() else "—"
 
-    val maxW = adaptiveContentMaxWidth()
     val barChartHeight = adaptiveChartHeight(compact = 200.dp, medium = 260.dp, expanded = 320.dp)
     val heatmapHeight = adaptiveChartHeight(compact = 160.dp, medium = 220.dp, expanded = 280.dp)
 
-    Box(modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-            .align(Alignment.TopCenter)
-            .verticalScroll(scroll)
-            .padding(horizontal = Euro.spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Euro.spacing.base),
-    ) {
-        Spacer(Modifier.height(Euro.spacing.s))
+    var showCountryPicker by remember { mutableStateOf(false) }
 
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
         MetricHeadline(
             value = headlineValue,
             unit = headlineUnit,
@@ -216,27 +203,25 @@ private fun TourismContent(
             accent = accent,
             modifier = Modifier.padding(top = Euro.spacing.s),
         )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            ChipRow(
-                options = ChipLabels,
-                selected = setOf(content.highlightedResidence.chipLabel),
-                onToggle = { label -> residenceForLabel(label)?.let(onResidenceToggle) },
-                modifier = Modifier.weight(1f),
+    }
+    val residenceChips: @Composable (Modifier) -> Unit = { modifier ->
+        ChipRow(
+            options = ChipLabels,
+            selected = setOf(content.highlightedResidence.chipLabel),
+            onToggle = { label -> residenceForLabel(label)?.let(onResidenceToggle) },
+            modifier = modifier,
+        )
+    }
+    val yearDropdown: @Composable () -> Unit = {
+        if (content.availableYears.isNotEmpty()) {
+            YearDropdown(
+                selectedYear = content.selectedYear,
+                years = content.availableYears,
+                onSelect = onYearSelect,
             )
-            if (content.availableYears.isNotEmpty()) {
-                YearDropdown(
-                    selectedYear = content.selectedYear,
-                    years = content.availableYears,
-                    onSelect = onYearSelect,
-                )
-            }
         }
-
+    }
+    val barChartSection: @Composable () -> Unit = {
         EuroCard {
             Column(verticalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
                 Text(
@@ -255,7 +240,8 @@ private fun TourismContent(
                 StackedBarLegend(accent = accent)
             }
         }
-
+    }
+    val heatmapSection: @Composable () -> Unit = {
         val heatmapData = content.heatmapCells.ifEmpty { placeholderHeatmapCells() }
         EuroCard {
             Column(verticalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
@@ -278,8 +264,8 @@ private fun TourismContent(
                 MonthAxisLabels()
             }
         }
-
-        var showCountryPicker by remember { mutableStateOf(false) }
+    }
+    val countriesSection: @Composable () -> Unit = {
         CountryChipsRow(
             countries = content.timeSeries.map { it.countryCode },
             active = setOf(content.activeCountry),
@@ -289,20 +275,53 @@ private fun TourismContent(
                 .fillMaxWidth()
                 .navigationBarsPadding(),
         )
-        if (showCountryPicker) {
-            CountryPickerSheet(
-                selected = content.timeSeries.map { it.countryCode }.toSet(),
-                onConfirm = { selected ->
-                    onConfirmCountries(selected.toList())
-                    showCountryPicker = false
-                },
-                onDismiss = { showCountryPicker = false },
-            )
-        }
-
-        Spacer(Modifier.height(Euro.spacing.base))
     }
-    } // end Box
+
+    AdaptiveTwoPane(
+        modifier = Modifier.fillMaxSize(),
+        sectionSpacing = Euro.spacing.base,
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.s))
+            residenceChips(Modifier.fillMaxWidth())
+            yearDropdown()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.base))
+        },
+        content = {
+            Spacer(Modifier.height(Euro.spacing.s))
+            headlineSection()
+            barChartSection()
+            heatmapSection()
+            Spacer(Modifier.height(Euro.spacing.base))
+        },
+        compact = {
+            Spacer(Modifier.height(Euro.spacing.s))
+            headlineSection()
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                residenceChips(Modifier.weight(1f))
+                yearDropdown()
+            }
+            barChartSection()
+            heatmapSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.base))
+        },
+    )
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = content.timeSeries.map { it.countryCode }.toSet(),
+            onConfirm = { selected ->
+                onConfirmCountries(selected.toList())
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
+        )
+    }
 }
 
 private const val BAR_ROWS_VISIBLE = 9

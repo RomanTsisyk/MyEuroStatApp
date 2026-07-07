@@ -14,10 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -30,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.model.ChartAxis
@@ -56,8 +52,8 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 
 /**
@@ -201,26 +197,10 @@ private fun EnvironmentContent(
     }
 
     val chartHeight = adaptiveChartHeight(compact = 180.dp, medium = 240.dp, expanded = 300.dp)
-    val maxW = adaptiveContentMaxWidth()
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Euro.spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-    ) {
-        if (content.isStale) {
-            StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
-        }
-
-        Spacer(Modifier.height(Euro.spacing.xs))
-
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
         MetricHeadline(
             value = headline.value,
             unit = headline.unit,
@@ -228,40 +208,40 @@ private fun EnvironmentContent(
             year = headline.year,
             accent = accent,
         )
-
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.xs),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.xs),
-        ) {
-            MetricDropdown(
-                label = "metric",
-                value = metric.label(),
-                options = EnvMetric.entries.map { it.label() },
-                onSelect = { picked ->
-                    val resolved = EnvMetric.entries.firstOrNull { it.label() == picked } ?: metric
-                    onSelectMetric(resolved)
+    }
+    val metricDropdown: @Composable () -> Unit = {
+        MetricDropdown(
+            label = "metric",
+            value = metric.label(),
+            options = EnvMetric.entries.map { it.label() },
+            onSelect = { picked ->
+                val resolved = EnvMetric.entries.firstOrNull { it.label() == picked } ?: metric
+                onSelectMetric(resolved)
+            },
+        )
+    }
+    val yearDropdown: @Composable () -> Unit = {
+        if (availableYears.isNotEmpty()) {
+            YearDropdown(
+                selectedYear = selectedYear,
+                years = availableYears,
+                onSelect = onSelectYear,
+            )
+        }
+    }
+    val sectorChips: @Composable () -> Unit = {
+        if (metric != EnvMetric.Sdg) {
+            ChipRow(
+                options = EnvSector.entries.map { it.label() },
+                selected = setOf(sector.label()),
+                onToggle = { picked ->
+                    val resolved = EnvSector.entries.firstOrNull { it.label() == picked } ?: sector
+                    onSelectSector(resolved)
                 },
             )
-            if (availableYears.isNotEmpty()) {
-                YearDropdown(
-                    selectedYear = selectedYear,
-                    years = availableYears,
-                    onSelect = onSelectYear,
-                )
-            }
-            if (metric != EnvMetric.Sdg) {
-                ChipRow(
-                    options = EnvSector.entries.map { it.label() },
-                    selected = setOf(sector.label()),
-                    onToggle = { picked ->
-                        val resolved = EnvSector.entries.firstOrNull { it.label() == picked } ?: sector
-                        onSelectSector(resolved)
-                    },
-                )
-            }
         }
-
+    }
+    val chartSection: @Composable () -> Unit = {
         EuroCard {
             Column {
                 Text(
@@ -299,7 +279,8 @@ private fun EnvironmentContent(
                 }
             }
         }
-
+    }
+    val tilesSection: @Composable () -> Unit = {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
@@ -319,7 +300,8 @@ private fun EnvironmentContent(
                 modifier = Modifier.weight(1f),
             )
         }
-
+    }
+    val countriesSection: @Composable () -> Unit = {
         CountryChipsRow(
             countries = countries,
             active = setOf(activeCountry),
@@ -327,21 +309,60 @@ private fun EnvironmentContent(
             onAdd = { showCountryPicker = true },
             modifier = Modifier.fillMaxWidth(),
         )
-
-        if (showCountryPicker) {
-            CountryPickerSheet(
-                selected = countries.toSet(),
-                onConfirm = { selected ->
-                    showCountryPicker = false
-                    onConfirmCountries(selected)
-                },
-                onDismiss = { showCountryPicker = false },
-            )
-        }
-
-        Spacer(Modifier.height(Euro.spacing.s))
     }
-    } // end Box
+
+    AdaptiveTwoPane(
+        modifier = Modifier.fillMaxSize(),
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            metricDropdown()
+            yearDropdown()
+            sectorChips()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
+            if (content.isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection()
+            chartSection()
+            tilesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        compact = {
+            if (content.isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection()
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Euro.spacing.xs),
+            ) {
+                metricDropdown()
+                yearDropdown()
+                sectorChips()
+            }
+            chartSection()
+            tilesSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = countries.toSet(),
+            onConfirm = { selected ->
+                showCountryPicker = false
+                onConfirmCountries(selected)
+            },
+            onDismiss = { showCountryPicker = false },
+        )
+    }
 }
 
 @Composable

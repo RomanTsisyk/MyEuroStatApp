@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -27,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.EurostatSmallMultiples
@@ -52,8 +49,8 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.ln
 import kotlin.math.roundToInt
@@ -198,110 +195,122 @@ private fun ContentBody(
     val roadValue = selectedPoint?.roadPassengers
     val airValue = selectedPoint?.airPassengers
     val headlineValue = roadValue?.let { formatBillionsValue(it) } ?: "—"
-    val maxW = adaptiveContentMaxWidth()
+
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
+        MetricHeadline(
+            value = headlineValue,
+            unit = "bn",
+            subtitle = "road · passengers · ${active?.countryName ?: activeCountry}",
+            year = selectedYear.toString(),
+            accent = accent,
+            modifier = Modifier.padding(top = Euro.spacing.s),
+        )
+    }
+    val yearSection: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+        ) {
+            if (availableYears.isNotEmpty()) {
+                YearDropdown(
+                    selectedYear = selectedYear,
+                    years = availableYears,
+                    onSelect = onSelectYear,
+                )
+            }
+        }
+    }
+    val modeSection: @Composable () -> Unit = {
+        ModeAndLogRow(
+            mode = panelMode,
+            onModeChange = onPanelModeChange,
+            logScale = logScale,
+            onLogChange = { onLogScaleToggle() },
+            accent = accent,
+        )
+    }
+    val panelsSection: @Composable () -> Unit = {
+        EuroCard(modifier = Modifier.fillMaxWidth()) {
+            val panels = buildPanels(
+                series = active,
+                mode = panelMode,
+                logScale = logScale,
+                accent = accent,
+                warn = Euro.colors.warn,
+            )
+            EurostatSmallMultiples(
+                panels = panels,
+                columns = if (panels.size >= 2) 2 else 1,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+    val tilesSection: @Composable () -> Unit = {
+        Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
+            StatTile(
+                label = "road",
+                value = roadValue?.let { formatBillions(it) } ?: "—",
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+            StatTile(
+                label = "air",
+                value = airValue?.let { formatMillions(it) } ?: "—",
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+            StatTile(
+                label = "sea",
+                value = "n/a",
+                delta = "port-based",
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+    val countriesSection: @Composable () -> Unit = {
+        if (countries.isNotEmpty()) {
+            CountryChipsRow(
+                countries = countries,
+                active = setOf(activeCountry),
+                onSelect = { code ->
+                    onSelectCountry(code)
+                },
+                onAdd = { showCountryPicker = true },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-        ) {
-            MetricHeadline(
-                value = headlineValue,
-                unit = "bn",
-                subtitle = "road · passengers · ${active?.countryName ?: activeCountry}",
-                year = selectedYear.toString(),
-                accent = accent,
-                modifier = Modifier.padding(top = Euro.spacing.s),
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-            ) {
-                if (availableYears.isNotEmpty()) {
-                    YearDropdown(
-                        selectedYear = selectedYear,
-                        years = availableYears,
-                        onSelect = onSelectYear,
-                    )
-                }
-            }
-
-            ModeAndLogRow(
-                mode = panelMode,
-                onModeChange = onPanelModeChange,
-                logScale = logScale,
-                onLogChange = { onLogScaleToggle() },
-                accent = accent,
-            )
-
-            EuroCard(modifier = Modifier.fillMaxWidth()) {
-                val panels = buildPanels(
-                    series = active,
-                    mode = panelMode,
-                    logScale = logScale,
-                    accent = accent,
-                    warn = Euro.colors.warn,
-                )
-                EurostatSmallMultiples(
-                    panels = panels,
-                    columns = if (panels.size >= 2) 2 else 1,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
-                StatTile(
-                    label = "road",
-                    value = roadValue?.let { formatBillions(it) } ?: "—",
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "air",
-                    value = airValue?.let { formatMillions(it) } ?: "—",
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "sea",
-                    value = "n/a",
-                    delta = "port-based",
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            if (countries.isNotEmpty()) {
-                CountryChipsRow(
-                    countries = countries,
-                    active = setOf(activeCountry),
-                    onSelect = { code ->
-                        onSelectCountry(code)
-                    },
-                    onAdd = { showCountryPicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (showCountryPicker) {
-                    CountryPickerSheet(
-                        selected = countries.toSet(),
-                        onConfirm = { selected ->
-                            onSelectCountries(selected.toList())
-                            showCountryPicker = false
-                        },
-                        onDismiss = { showCountryPicker = false },
-                    )
-                }
-            }
-        }
+        AdaptiveTwoPane(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            controls = {
+                Spacer(Modifier.height(Euro.spacing.xs))
+                yearSection()
+                modeSection()
+                countriesSection()
+            },
+            content = {
+                headlineSection()
+                panelsSection()
+                tilesSection()
+            },
+            compact = {
+                headlineSection()
+                yearSection()
+                modeSection()
+                panelsSection()
+                tilesSection()
+                countriesSection()
+            },
+        )
 
         SourceFooter(
             dataset = "road_pa_buscoa · avia_paoc",
@@ -310,6 +319,17 @@ private fun ContentBody(
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),
+        )
+    }
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = countries.toSet(),
+            onConfirm = { selected ->
+                onSelectCountries(selected.toList())
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
         )
     }
 }

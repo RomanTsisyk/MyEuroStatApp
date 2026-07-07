@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -26,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,11 +47,9 @@ import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatLargeNumber
 import eu.eurostat.ui.format.formatLargeNumberParts
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
-import eu.eurostat.ui.theme.EuroWindowWidth
-import eu.eurostat.ui.theme.LocalEuroWindowWidth
 import kotlin.math.abs
 
 /** Number of discrete steps reserved for the year slider. Slider needs steps + 2 = count. */
@@ -168,120 +163,107 @@ private fun PopulationContent(
     val headlineYoY = computeYoY(state, snapshot)
     val (headlineValue, headlineUnit) = headlineParts(snapshot?.total ?: fallbackTotal(state))
 
-    val windowWidth = LocalEuroWindowWidth.current
     val pyramidHeight = adaptiveChartHeight(compact = 220.dp, medium = 320.dp, expanded = 420.dp)
-    val maxW = adaptiveContentMaxWidth()
 
-    Box(
+    var showCountryPicker by remember { mutableStateOf(false) }
+
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
+        MetricHeadline(
+            value = headlineValue,
+            unit = headlineUnit,
+            subtitle = buildString {
+                append("total · ")
+                append(headlineCountryName)
+                if (headlineYoY != null) {
+                    append(" · ")
+                    append(headlineYoY)
+                }
+            },
+            year = state.selectedYear.toString(),
+            accent = accent,
+        )
+    }
+    val metricSwitcherSection: @Composable () -> Unit = {
+        SegmentedControl(
+            options = listOf("Total", "Men", "Women"),
+            selectedIndex = state.selectedMetric,
+            onSelect = { onIntent(PopulationIntent.SelectMetric(it)) },
+            activeColor = accent,
+        )
+    }
+    val pyramidSection: @Composable () -> Unit = {
+        EuroCard {
+            PyramidCardContent(
+                cohorts = cohorts,
+                accent = accent,
+                maleAlpha = maleAlpha,
+                femaleAlpha = femaleAlpha,
+                femaleColor = femaleColor,
+                snapshot = snapshot,
+                pyramidHeight = pyramidHeight,
+            )
+        }
+    }
+    val yearSection: @Composable () -> Unit = {
+        if (state.availableYears.isNotEmpty()) {
+            YearSlider(state = state, accent = accent, onIntent = onIntent)
+        }
+    }
+    val countriesSection: @Composable () -> Unit = {
+        if (state.availableCountries.isNotEmpty()) {
+            CountryChipsRow(
+                countries = state.availableCountries,
+                active = setOf(state.selectedCountry),
+                onSelect = { onIntent(PopulationIntent.SelectActiveCountry(it)) },
+                onAdd = { showCountryPicker = true },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+
+    AdaptiveTwoPane(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .then(
-                    if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier,
-                )
-                .padding(horizontal = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-        ) {
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            metricSwitcherSection()
+            yearSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
             if (state.isStale) {
                 StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
             }
-
             Spacer(Modifier.height(Euro.spacing.xs))
-
-            MetricHeadline(
-                value = headlineValue,
-                unit = headlineUnit,
-                subtitle = buildString {
-                    append("total · ")
-                    append(headlineCountryName)
-                    if (headlineYoY != null) {
-                        append(" · ")
-                        append(headlineYoY)
-                    }
-                },
-                year = state.selectedYear.toString(),
-                accent = accent,
-            )
-
-            SegmentedControl(
-                options = listOf("Total", "Men", "Women"),
-                selectedIndex = state.selectedMetric,
-                onSelect = { onIntent(PopulationIntent.SelectMetric(it)) },
-                activeColor = accent,
-            )
-
-            if (windowWidth == EuroWindowWidth.Expanded) {
-                // Two-pane: pyramid on the left, country/year controls on the right.
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-                ) {
-                    EuroCard(modifier = Modifier.weight(1f)) {
-                        PyramidCardContent(
-                            cohorts = cohorts,
-                            accent = accent,
-                            maleAlpha = maleAlpha,
-                            femaleAlpha = femaleAlpha,
-                            femaleColor = femaleColor,
-                            snapshot = snapshot,
-                            pyramidHeight = pyramidHeight,
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-                    ) {
-                        if (state.availableYears.isNotEmpty()) {
-                            YearSlider(state = state, accent = accent, onIntent = onIntent)
-                        }
-                        CountrySectionExpanded(state = state, onIntent = onIntent)
-                    }
-                }
-            } else {
-                EuroCard {
-                    PyramidCardContent(
-                        cohorts = cohorts,
-                        accent = accent,
-                        maleAlpha = maleAlpha,
-                        femaleAlpha = femaleAlpha,
-                        femaleColor = femaleColor,
-                        snapshot = snapshot,
-                        pyramidHeight = pyramidHeight,
-                    )
-                }
-
-                if (state.availableYears.isNotEmpty()) {
-                    YearSlider(state = state, accent = accent, onIntent = onIntent)
-                }
-
-                if (state.availableCountries.isNotEmpty()) {
-                    var showCountryPicker by remember { mutableStateOf(false) }
-                    CountryChipsRow(
-                        countries = state.availableCountries,
-                        active = setOf(state.selectedCountry),
-                        onSelect = { onIntent(PopulationIntent.SelectActiveCountry(it)) },
-                        onAdd = { showCountryPicker = true },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    if (showCountryPicker) {
-                        CountryPickerSheet(
-                            selected = state.availableCountries.toSet(),
-                            onConfirm = { selected ->
-                                onIntent(PopulationIntent.SelectCountries(selected.toList()))
-                                showCountryPicker = false
-                            },
-                            onDismiss = { showCountryPicker = false },
-                        )
-                    }
-                }
-            }
-
+            headlineSection()
+            pyramidSection()
             Spacer(Modifier.height(Euro.spacing.s))
-        }
+        },
+        compact = {
+            if (state.isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection()
+            metricSwitcherSection()
+            pyramidSection()
+            yearSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = state.availableCountries.toSet(),
+            onConfirm = { selected ->
+                onIntent(PopulationIntent.SelectCountries(selected.toList()))
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
+        )
     }
 }
 
@@ -341,33 +323,6 @@ private fun PyramidCardContent(
             LegendDot(
                 color = femaleColor.copy(alpha = femaleAlpha),
                 label = "women ${formatLargeNumber(snapshot?.totalFemale ?: 0L)}",
-            )
-        }
-    }
-}
-
-@Composable
-private fun CountrySectionExpanded(
-    state: PopulationUiState.Content,
-    onIntent: (PopulationIntent) -> Unit,
-) {
-    if (state.availableCountries.isNotEmpty()) {
-        var showCountryPicker by remember { mutableStateOf(false) }
-        CountryChipsRow(
-            countries = state.availableCountries,
-            active = setOf(state.selectedCountry),
-            onSelect = { onIntent(PopulationIntent.SelectActiveCountry(it)) },
-            onAdd = { showCountryPicker = true },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (showCountryPicker) {
-            CountryPickerSheet(
-                selected = state.availableCountries.toSet(),
-                onConfirm = { selected ->
-                    onIntent(PopulationIntent.SelectCountries(selected.toList()))
-                    showCountryPicker = false
-                },
-                onDismiss = { showCountryPicker = false },
             )
         }
     }

@@ -10,13 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -29,11 +26,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.core.charts.EurostatRadarChart
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.core.charts.RadarSeries
@@ -181,51 +177,35 @@ private fun ScienceContent(
             ?.rdSpendPctGdp
     }
 
-    val maxW = adaptiveContentMaxWidth()
     val radarHeight = adaptiveChartHeight(compact = 260.dp, medium = 320.dp, expanded = 380.dp)
 
-    Box(modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-            .align(Alignment.TopCenter)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Euro.spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-    ) {
-        if (isStale) {
-            StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
-        }
+    var showCountryPicker by remember { mutableStateOf(false) }
 
-        Spacer(Modifier.height(Euro.spacing.xs))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            MetricHeadline(
-                value = headlineRd?.formatPct() ?: "—",
-                unit = "%",
-                subtitle = buildString {
-                    append("R&D spend · % of GDP")
-                    if (selectedYear != null) append(" · ").append(selectedYear)
-                },
-                year = selectedYear?.toString().orEmpty(),
-                accent = accent,
-                modifier = Modifier.weight(1f),
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable (Modifier) -> Unit = { modifier ->
+        MetricHeadline(
+            value = headlineRd?.formatPct() ?: "—",
+            unit = "%",
+            subtitle = buildString {
+                append("R&D spend · % of GDP")
+                if (selectedYear != null) append(" · ").append(selectedYear)
+            },
+            year = selectedYear?.toString().orEmpty(),
+            accent = accent,
+            modifier = modifier,
+        )
+    }
+    val yearDropdown: @Composable () -> Unit = {
+        if (availableYears.isNotEmpty() && selectedYear != null) {
+            YearDropdown(
+                selectedYear = selectedYear,
+                years = availableYears,
+                onSelect = onSelectYear,
             )
-            if (availableYears.isNotEmpty() && selectedYear != null) {
-                Spacer(Modifier.width(Euro.spacing.s))
-                YearDropdown(
-                    selectedYear = selectedYear,
-                    years = availableYears,
-                    onSelect = onSelectYear,
-                )
-            }
         }
-
+    }
+    val radarSection: @Composable () -> Unit = {
         EuroCard(modifier = Modifier.fillMaxWidth()) {
             Column {
                 // Label clarifies: active country (primary) vs. best-available comparison (DE/FR/EU27).
@@ -265,7 +245,8 @@ private fun ScienceContent(
                 }
             }
         }
-
+    }
+    val sparkTilesSection: @Composable () -> Unit = {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
@@ -292,9 +273,9 @@ private fun ScienceContent(
                 modifier = Modifier.weight(1f),
             )
         }
-
+    }
+    val countriesSection: @Composable () -> Unit = {
         if (availableCountries.isNotEmpty()) {
-            var showCountryPicker by remember { mutableStateOf(false) }
             CountryChipsRow(
                 countries = availableCountries,
                 active = setOf(activeCountry),
@@ -302,21 +283,60 @@ private fun ScienceContent(
                 onAdd = { showCountryPicker = true },
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (showCountryPicker) {
-                CountryPickerSheet(
-                    selected = availableCountries.toSet(),
-                    onConfirm = { selected ->
-                        onSelectCountries(selected.toList())
-                        showCountryPicker = false
-                    },
-                    onDismiss = { showCountryPicker = false },
-                )
-            }
         }
-
-        Spacer(Modifier.height(Euro.spacing.s))
     }
-    } // end Box
+
+    AdaptiveTwoPane(
+        modifier = Modifier.fillMaxSize(),
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            yearDropdown()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
+            if (isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection(Modifier.fillMaxWidth())
+            radarSection()
+            sparkTilesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        compact = {
+            if (isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                headlineSection(Modifier.weight(1f))
+                if (availableYears.isNotEmpty() && selectedYear != null) {
+                    Spacer(Modifier.width(Euro.spacing.s))
+                }
+                yearDropdown()
+            }
+            radarSection()
+            sparkTilesSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = availableCountries.toSet(),
+            onConfirm = { selected ->
+                onSelectCountries(selected.toList())
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
+        )
+    }
 }
 
 /**

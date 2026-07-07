@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -24,12 +22,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.model.ChartAxis
@@ -56,8 +52,8 @@ import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatGrouped
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
 
@@ -188,129 +184,148 @@ private fun EconomyContent(
     var showCountryPicker by remember { mutableStateOf(false) }
 
     val chartHeight = adaptiveChartHeight(compact = 160.dp, medium = 220.dp, expanded = 280.dp)
-    val maxW = adaptiveContentMaxWidth()
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .then(
-                    if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier,
-                )
-                .padding(horizontal = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val yearSection: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(Modifier.height(Euro.spacing.xs))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (state.availableYears.isNotEmpty()) {
-                    YearDropdown(
-                        selectedYear = state.selectedYear,
-                        years = state.availableYears,
-                        onSelect = { component.onIntent(EconomyIntent.SelectYear(it)) },
-                    )
-                }
+            if (state.availableYears.isNotEmpty()) {
+                YearDropdown(
+                    selectedYear = state.selectedYear,
+                    years = state.availableYears,
+                    onSelect = { component.onIntent(EconomyIntent.SelectYear(it)) },
+                )
             }
-
-            HeadlineForMetric(
-                metric = selectedMetric,
-                latest = latestPoint,
-                previous = prevPoint,
-                accent = accent,
-            )
-
-            SegmentedControl(
-                options = metricLabels,
-                selectedIndex = selectedIndex,
-                onSelect = { component.onIntent(EconomyIntent.SelectMetric(metrics[it])) },
-                activeColor = accent,
-            )
-
-            EuroCard {
-                Column {
-                    PillToggle(
-                        options = NormalizationLabels,
-                        selectedIndex = if (state.normalized) 1 else 0,
-                        onSelect = { component.onIntent(EconomyIntent.SetNormalized(it == 1)) },
-                        activeColor = accent,
-                    )
-                    Spacer(Modifier.height(Euro.spacing.s))
-                    val chartSeries = remember(timeSeries, selectedMetric, yearRange, state.normalized) {
-                        val absolute = buildChartSeries(timeSeries, selectedMetric, yearRange)
-                        if (state.normalized) rebaseToIndex(absolute) else absolute
-                    }
-                    if (chartSeries.isEmpty() || chartSeries.all { it.points.isEmpty() }) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(chartHeight),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            EmptyState(
-                                headline = "no data",
-                                body = "No series available for the selected metric and year range.",
-                            )
-                        }
-                    } else {
-                        EurostatLineChart(
-                            series = chartSeries,
-                            xAxis = ChartAxis(label = "Year"),
-                            yAxis = ChartAxis(
-                                label = if (state.normalized) {
-                                    "Index (first year = 100)"
-                                } else {
-                                    yAxisLabelFor(selectedMetric)
-                                },
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(chartHeight),
-                        )
-                    }
-                    Spacer(Modifier.height(Euro.spacing.s))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        chartSeries.forEach { s ->
-                            LegendDot(color = s.color, label = s.label)
-                        }
-                    }
-                }
-            }
-
-            SecondaryMetricTiles(
-                selected = selectedMetric,
-                latest = latestPoint,
-            )
-
-            YearScrubber(
-                min = minYear,
-                max = maxYear,
-                value = yearRange,
-                onValueChange = { component.onIntent(EconomyIntent.SetDisplayYearRange(it)) },
-            )
-
-            CountryChipsRow(
-                countries = availableCountries,
-                active = setOf(activeCountry),
-                onSelect = { component.onIntent(EconomyIntent.SelectActiveCountry(it)) },
-                onAdd = { showCountryPicker = true },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(Euro.spacing.s))
         }
     }
+    val headlineSection: @Composable () -> Unit = {
+        HeadlineForMetric(
+            metric = selectedMetric,
+            latest = latestPoint,
+            previous = prevPoint,
+            accent = accent,
+        )
+    }
+    val metricSwitcherSection: @Composable () -> Unit = {
+        SegmentedControl(
+            options = metricLabels,
+            selectedIndex = selectedIndex,
+            onSelect = { component.onIntent(EconomyIntent.SelectMetric(metrics[it])) },
+            activeColor = accent,
+        )
+    }
+    val chartSection: @Composable () -> Unit = {
+        EuroCard {
+            Column {
+                PillToggle(
+                    options = NormalizationLabels,
+                    selectedIndex = if (state.normalized) 1 else 0,
+                    onSelect = { component.onIntent(EconomyIntent.SetNormalized(it == 1)) },
+                    activeColor = accent,
+                )
+                Spacer(Modifier.height(Euro.spacing.s))
+                val chartSeries = remember(timeSeries, selectedMetric, yearRange, state.normalized) {
+                    val absolute = buildChartSeries(timeSeries, selectedMetric, yearRange)
+                    if (state.normalized) rebaseToIndex(absolute) else absolute
+                }
+                if (chartSeries.isEmpty() || chartSeries.all { it.points.isEmpty() }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(chartHeight),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyState(
+                            headline = "no data",
+                            body = "No series available for the selected metric and year range.",
+                        )
+                    }
+                } else {
+                    EurostatLineChart(
+                        series = chartSeries,
+                        xAxis = ChartAxis(label = "Year"),
+                        yAxis = ChartAxis(
+                            label = if (state.normalized) {
+                                "Index (first year = 100)"
+                            } else {
+                                yAxisLabelFor(selectedMetric)
+                            },
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(chartHeight),
+                    )
+                }
+                Spacer(Modifier.height(Euro.spacing.s))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    chartSeries.forEach { s ->
+                        LegendDot(color = s.color, label = s.label)
+                    }
+                }
+            }
+        }
+    }
+    val tilesSection: @Composable () -> Unit = {
+        SecondaryMetricTiles(
+            selected = selectedMetric,
+            latest = latestPoint,
+        )
+    }
+    val scrubberSection: @Composable () -> Unit = {
+        YearScrubber(
+            min = minYear,
+            max = maxYear,
+            value = yearRange,
+            onValueChange = { component.onIntent(EconomyIntent.SetDisplayYearRange(it)) },
+        )
+    }
+    val countriesSection: @Composable () -> Unit = {
+        CountryChipsRow(
+            countries = availableCountries,
+            active = setOf(activeCountry),
+            onSelect = { component.onIntent(EconomyIntent.SelectActiveCountry(it)) },
+            onAdd = { showCountryPicker = true },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
+    AdaptiveTwoPane(
+        modifier = Modifier.fillMaxSize(),
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            yearSection()
+            metricSwitcherSection()
+            scrubberSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection()
+            chartSection()
+            tilesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        compact = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            yearSection()
+            headlineSection()
+            metricSwitcherSection()
+            chartSection()
+            tilesSection()
+            scrubberSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
 
     if (showCountryPicker) {
         CountryPickerSheet(

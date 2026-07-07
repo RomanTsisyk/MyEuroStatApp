@@ -1,7 +1,10 @@
 package eu.eurostat.app
 
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import eu.eurostat.app.di.appModules
@@ -31,6 +34,9 @@ fun main() {
         Window(
             onCloseRequest = ::exitApplication,
             title = "MyEuroStatApp",
+            // Desktop-friendly default: wide enough for the ≥840dp two-pane
+            // feature layouts (tablet/desktop responsive treatment).
+            state = rememberWindowState(size = DpSize(1280.dp, 800.dp)),
         ) {
             EurostatApp(root)
         }
