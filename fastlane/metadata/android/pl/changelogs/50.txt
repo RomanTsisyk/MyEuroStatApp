@@ -1,0 +1,6 @@
+• Pamięć podręczna offline dla piramid demograficznych i sezonowości turystyki
+• Ustawienia są zapisywane: motyw (stosowany w całej aplikacji), język, kraj domyślny; działające czyszczenie pamięci podręcznej
+• Porównywanie krajów na wykresie gospodarki: wyraźne kolory + przełącznik „Indeks 100"
+• Liczby używają separatorów dziesiętnych i tysięcy zgodnych z ustawieniami regionalnymi
+• Przeciągnij, aby odświeżyć na wszystkich ośmiu ekranach; czytelniejsze komunikaty o błędach
+• Aplikacja iOS buduje się i działa (zweryfikowano w symulatorze)

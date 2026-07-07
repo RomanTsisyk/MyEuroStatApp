@@ -60,6 +60,20 @@ so M1 now concentrates squarely on closing the iOS runtime gap.
   shows one live metric per module, each tile degrading independently so a single
   broken dataset never breaks the landing. Unit-tested with 8 fake repositories.
 
+*Post-submission update (July 2026, before review):* the iOS runtime gap this
+milestone targets has been largely closed on the author's own time. The stub
+Xcode wrapper was replaced with a real project generated from `iosApp/project.yml`
+(XcodeGen, manifest checked in), the toolchain root cause was identified
+(`xcode-select` pointing at CommandLineTools) and the integration gotchas fixed
+(`-lsqlite3`, `CADisableMinimumFrameDurationOnPhone`, Kotlin/Native `doInit`
+export naming, JAVA_HOME pinning in the Xcode build phase). The app now builds
+with `xcodebuild` and launches on the iPhone 17 simulator rendering live
+Eurostat data. Still open from this milestone: physical-device verification,
+TestFlight distribution, the public `RUN_REPORT.md` with the 8-tab walk-through,
+and green `:composeApp:build` across all targets. At MoU time the author
+proposes rescoping the freed hours toward the stretch list at the bottom of
+this document.
+
 ### Acceptance
 
 - `./gradlew :composeApp:build` passes ALL targets including iOS (the iOS
@@ -97,6 +111,15 @@ country.
 
 - Tap-the-map variant of the picker (defer to a future milestone)
 
+*Post-submission update (July 2026, before review):* partially pre-delivered on
+the author's own time: a searchable `CountryPickerSheet` now opens from the
+`+ add` chip on every feature screen (Unicode-emoji flags for now — the bundled
+SVG flag set stays in this milestone), and the economy screen ships the
+multi-country overlay with an index-stable series palette plus the
+"% of base year" (Indexed 100) normalization toggle, unit-tested. Still open:
+SVG flags via Compose Resources, and the dedicated cross-module comparison
+screen reachable from every module.
+
 ---
 
 ## M3 — Tablet & desktop responsive + PL/UK localization
@@ -129,6 +152,16 @@ labels natively for many dimensions; PL + UK need our translation.
 - All 8 screens render correctly at 360 / 600 / 840 / 1280 dp widths
 - Zero hardcoded user-facing strings in feature Screens
 - Language picker in Settings (placeholder today) switches PL/UK/EN at runtime
+
+*Post-submission update (July 2026, before review):* the locale-aware number
+formatting deliverable listed above shipped early, exactly as scoped:
+`core-ui/format/NumberFormat.kt` with per-platform decimal/grouping separators
+(expect/actual on Android/desktop/iOS), one rounding convention, and all eight
+screens migrated off their inline formatters (29-case test suite). The Settings
+screen is also no longer a placeholder — theme/language/default-country persist
+in SQLDelight and the theme preference is applied app-wide. The string
+extraction, PL/UK translations, responsive layouts and *applying* the language
+preference remain the funded body of this milestone.
 
 ### Out of scope
 

@@ -8,8 +8,8 @@ android {
     namespace = "eu.eurostat.app"
     defaultConfig {
         applicationId = "eu.eurostat.app"
-        versionCode = 40
-        versionName = "0.4.0"
+        versionCode = 50
+        versionName = "0.5.0"
         resourceConfigurations += listOf("en", "pl", "uk")
     }
 

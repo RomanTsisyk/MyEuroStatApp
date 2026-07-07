@@ -6,6 +6,21 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Planned for v0.6 / v1.0
+
+- Search screen (indicator index across the 8 modules)
+- KMP-level (Compose Resources) PL/UK localization driven by the stored
+  language preference; wire default-country preference into the feature
+  components
+- Bundled SVG flags via Compose Resources; dedicated cross-module compare screen
+- Tablet master-detail layouts at the `Expanded` breakpoint
+- Verified launch on a physical iPhone (TestFlight); on-device Android smoke run
+- Native Windows / macOS installers (`.msi`, `.dmg`) from Compose Desktop
+- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
+- GitHub Actions release workflow with reproducible signed APK
+
+## [0.5.0] — 2026-07-07
+
 ### Added
 
 - Convergent JSON-blob cache (`MultiDimCacheEntity` + `JsonBlobCache<T>`):
@@ -43,18 +58,6 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when
   `xcode-select` points at CommandLineTools (permanent fix:
   `sudo xcode-select -s`)
-
-### Planned for v0.5 / v1.0
-
-- Search screen (indicator index across the 8 modules)
-- KMP-level (Compose Resources) PL/UK localization driven by the stored
-  language preference; wire default-country preference into the feature
-  components
-- Tablet master-detail layouts at the `Expanded` breakpoint
-- Verified launch on iPhone + iPad simulator; on-device Android smoke run
-- Native Windows / macOS installers (`.msi`, `.dmg`) from Compose Desktop
-- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
-- GitHub Actions release workflow with reproducible signed APK
 
 ## [0.4.0] — 2026-05-29
 
@@ -138,5 +141,6 @@ the snapshot referenced in the NLnet NGI Zero Commons Fund proposal.
   `eurostat.android.application`) under `build-logic/`
 - Centralised version catalog (`gradle/libs.versions.toml`)
 
-[Unreleased]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/RomanTsisyk/MyEuroStatApp/releases/tag/v0.4.0
