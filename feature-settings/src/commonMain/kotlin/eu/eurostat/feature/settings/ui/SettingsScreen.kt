@@ -29,6 +29,25 @@ import eu.eurostat.ui.component.ModuleAppBar
 import eu.eurostat.ui.component.SegmentedControl
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.feature_settings.generated.resources.Res
+import myeurostatapp.feature_settings.generated.resources.settings_about_label
+import myeurostatapp.feature_settings.generated.resources.settings_about_version
+import myeurostatapp.feature_settings.generated.resources.settings_clear_cache_cleared
+import myeurostatapp.feature_settings.generated.resources.settings_clear_cache_clearing
+import myeurostatapp.feature_settings.generated.resources.settings_clear_cache_label
+import myeurostatapp.feature_settings.generated.resources.settings_clear_cache_subtitle
+import myeurostatapp.feature_settings.generated.resources.settings_default_country_label
+import myeurostatapp.feature_settings.generated.resources.settings_language_english
+import myeurostatapp.feature_settings.generated.resources.settings_language_label
+import myeurostatapp.feature_settings.generated.resources.settings_language_polski
+import myeurostatapp.feature_settings.generated.resources.settings_language_system
+import myeurostatapp.feature_settings.generated.resources.settings_language_ukrainska
+import myeurostatapp.feature_settings.generated.resources.settings_module_title
+import myeurostatapp.feature_settings.generated.resources.settings_theme_dark
+import myeurostatapp.feature_settings.generated.resources.settings_theme_label
+import myeurostatapp.feature_settings.generated.resources.settings_theme_light
+import myeurostatapp.feature_settings.generated.resources.settings_theme_system
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Settings screen: theme, language, default country, cache maintenance and
@@ -48,7 +67,7 @@ fun SettingsScreen(
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Settings",
+            title = stringResource(Res.string.settings_module_title),
             accent = Euro.colors.accent,
             onBack = onBack,
         )
@@ -73,6 +92,17 @@ private fun SettingsContent(
 ) {
     var showCountryPicker by remember { mutableStateOf(false) }
 
+    // stringResource is @Composable — resolve every label here (some are
+    // reused across two call sites, e.g. the default-country row and the
+    // picker sheet title) before handing plain Strings down.
+    val defaultCountryLabel = stringResource(Res.string.settings_default_country_label)
+    val clearCacheLabel = stringResource(Res.string.settings_clear_cache_label)
+    val clearingLabel = stringResource(Res.string.settings_clear_cache_clearing)
+    val cacheClearedLabel = stringResource(Res.string.settings_clear_cache_cleared)
+    val clearCacheSubtitle = stringResource(Res.string.settings_clear_cache_subtitle)
+    val aboutLabel = stringResource(Res.string.settings_about_label)
+    val aboutVersion = stringResource(Res.string.settings_about_version, content.appVersion)
+
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         item {
             ThemeRow(
@@ -90,7 +120,7 @@ private fun SettingsContent(
         item { SettingsDivider() }
         item {
             SettingsListItem(
-                headline = "Default country",
+                headline = defaultCountryLabel,
                 supporting = countryLabel(content.defaultCountry),
                 onClick = { showCountryPicker = true },
             )
@@ -98,11 +128,11 @@ private fun SettingsContent(
         item { SettingsDivider() }
         item {
             SettingsListItem(
-                headline = "Clear cache",
+                headline = clearCacheLabel,
                 supporting = when {
-                    content.isClearingCache -> "Clearing…"
-                    content.cacheCleared -> "Cache cleared"
-                    else -> "Remove all downloaded statistics"
+                    content.isClearingCache -> clearingLabel
+                    content.cacheCleared -> cacheClearedLabel
+                    else -> clearCacheSubtitle
                 },
                 onClick = if (content.isClearingCache) {
                     null
@@ -114,8 +144,8 @@ private fun SettingsContent(
         item { SettingsDivider() }
         item {
             SettingsListItem(
-                headline = "About",
-                supporting = "v${content.appVersion} · independent Eurostat API client",
+                headline = aboutLabel,
+                supporting = aboutVersion,
             )
         }
     }
@@ -134,7 +164,7 @@ private fun SettingsContent(
                 showCountryPicker = false
             },
             onDismiss = { showCountryPicker = false },
-            title = "Default country",
+            title = defaultCountryLabel,
             maxSelection = 2,
         )
     }
@@ -146,13 +176,24 @@ private fun ThemeRow(
     selected: ThemePreference,
     onSelect: (ThemePreference) -> Unit,
 ) {
+    // stringResource is @Composable — resolve the three segment labels here,
+    // then look them up from the plain (non-composable) displayLabel().
+    val systemLabel = stringResource(Res.string.settings_theme_system)
+    val lightLabel = stringResource(Res.string.settings_theme_light)
+    val darkLabel = stringResource(Res.string.settings_theme_dark)
+    fun ThemePreference.displayLabel(): String = when (this) {
+        ThemePreference.SYSTEM -> systemLabel
+        ThemePreference.LIGHT -> lightLabel
+        ThemePreference.DARK -> darkLabel
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Euro.spacing.base, vertical = Euro.spacing.s),
     ) {
         Text(
-            text = "Theme",
+            text = stringResource(Res.string.settings_theme_label),
             style = Euro.typography.labelLarge,
             color = Euro.colors.ink,
         )
@@ -171,13 +212,37 @@ private fun LanguageRow(
     languageCode: String,
     onSelect: (String) -> Unit,
 ) {
+    // English/Polski/Українська are endonyms and stay identical across every
+    // locale (see strings.xml comment); only "System" is translated. Resolve
+    // all four here — stringResource is @Composable — then look them up from
+    // the plain (non-composable) label <-> code helpers.
+    val systemLabel = stringResource(Res.string.settings_language_system)
+    val englishLabel = stringResource(Res.string.settings_language_english)
+    val polskiLabel = stringResource(Res.string.settings_language_polski)
+    val ukrainskaLabel = stringResource(Res.string.settings_language_ukrainska)
+
+    fun languageLabel(code: String): String = when (code) {
+        "en" -> englishLabel
+        "pl" -> polskiLabel
+        "uk" -> ukrainskaLabel
+        else -> systemLabel
+    }
+
+    /** Inverse of [languageLabel]; unknown labels fall back to `"system"`. */
+    fun languageCodeFor(label: String): String = when (label) {
+        englishLabel -> "en"
+        polskiLabel -> "pl"
+        ukrainskaLabel -> "uk"
+        else -> "system"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Euro.spacing.base, vertical = Euro.spacing.s),
     ) {
         MetricDropdown(
-            label = "Language",
+            label = stringResource(Res.string.settings_language_label),
             value = languageLabel(languageCode),
             options = AppPreferences.SUPPORTED_LANGUAGES.map { languageLabel(it) },
             onSelect = { label -> onSelect(languageCodeFor(label)) },
@@ -220,29 +285,6 @@ private fun SettingsListItem(
             .fillMaxWidth()
             .let { if (onClick != null) it.clickable(onClick = onClick) else it },
     )
-}
-
-/** UI label for a [ThemePreference] segment. */
-private fun ThemePreference.displayLabel(): String = when (this) {
-    ThemePreference.SYSTEM -> "System"
-    ThemePreference.LIGHT -> "Light"
-    ThemePreference.DARK -> "Dark"
-}
-
-/** Display name for a persisted language code. */
-private fun languageLabel(code: String): String = when (code) {
-    "en" -> "English"
-    "pl" -> "Polski"
-    "uk" -> "Українська"
-    else -> "System"
-}
-
-/** Inverse of [languageLabel]; unknown labels fall back to `"system"`. */
-private fun languageCodeFor(label: String): String = when (label) {
-    "English" -> "en"
-    "Polski" -> "pl"
-    "Українська" -> "uk"
-    else -> "system"
 }
 
 /** Flag + name + code line for the default-country row. */

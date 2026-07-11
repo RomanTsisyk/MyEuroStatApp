@@ -1,0 +1,30 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="social_module_title">Social</string>
+    <string name="social_module_tagline">Wellbeing</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="social_empty_headline">no data</string>
+    <string name="social_empty_body">No social indicators for the selected filters.</string>
+
+    <!-- ErrorState -->
+    <string name="social_error_headline">Couldn\'t load social data</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="social_footer_staleness_fresh">fresh</string>
+    <string name="social_footer_staleness_stale">stale</string>
+
+    <!-- MetricHeadline subtitle, keyed by selected KPI tile -->
+    <string name="social_headline_subtitle_poverty">at-risk-of-poverty</string>
+    <string name="social_headline_subtitle_at_risk">at-risk-of-poverty-or-social-exclusion</string>
+    <string name="social_headline_subtitle_health">very-good self-perceived health</string>
+
+    <!-- KpiTileSelector labels (shared with the chart legend / series labels) -->
+    <string name="social_kpi_label_poverty">poverty</string>
+    <string name="social_kpi_label_at_risk">at-risk</string>
+    <string name="social_kpi_label_health">health</string>
+
+    <!-- Chart card caption -->
+    <string name="social_chart_caption">three % series</string>
+    <string name="social_chart_caption_highlighted">three % series · highlighted = %1$s</string>
+</resources>

@@ -1,0 +1,40 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="tourism_module_title">Turystyka</string>
+    <string name="tourism_tagline">Wypoczynek</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="tourism_empty_headline">Brak danych</string>
+    <string name="tourism_empty_body">Brak danych o turystyce dla wybranych filtrów.</string>
+
+    <!-- EmptyState (content-level: no active-country series) -->
+    <string name="tourism_active_empty_body">Brak danych o turystyce dla wybranego kraju.</string>
+
+    <!-- ErrorState -->
+    <string name="tourism_error_headline">Nie udało się wczytać danych o turystyce</string>
+
+    <!-- Residence chip row -->
+    <string name="tourism_chip_domestic">Krajowe</string>
+    <string name="tourism_chip_foreign">Zagraniczne</string>
+    <string name="tourism_chip_total">Ogółem</string>
+
+    <!-- MetricHeadline subtitle (per residence) -->
+    <string name="tourism_headline_subtitle_domestic">noclegi krajowe · zakwaterowanie</string>
+    <string name="tourism_headline_subtitle_foreign">noclegi zagraniczne · zakwaterowanie</string>
+    <string name="tourism_headline_subtitle_total">noclegi ogółem · zakwaterowanie</string>
+
+    <!-- Stacked-bar nights card -->
+    <string name="tourism_bar_caption">noclegi · skumulowane wg rezydencji</string>
+    <string name="tourism_legend_domestic">krajowe</string>
+    <string name="tourism_legend_foreign">zagraniczne</string>
+
+    <!-- Seasonality heatmap card -->
+    <string name="tourism_heatmap_caption">sezonowość · miesiące × lata</string>
+    <string name="tourism_month_jan">sty</string>
+    <string name="tourism_month_jul">lip</string>
+    <string name="tourism_month_dec">gru</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="tourism_footer_staleness_fresh">aktualne</string>
+    <string name="tourism_footer_staleness_stale">nieaktualne</string>
+</resources>

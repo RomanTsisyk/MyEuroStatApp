@@ -1,0 +1,20 @@
+<resources>
+    <!-- SearchBar -->
+    <string name="search_bar_placeholder">Szukaj wskaźników</string>
+    <string name="search_bar_back">Wstecz</string>
+    <string name="search_bar_clear">Wyczyść zapytanie</string>
+
+    <!-- EmptyState (no matches) -->
+    <string name="search_empty_headline">Brak wyników</string>
+    <string name="search_empty_body">Żaden wskaźnik nie pasuje do „%1$s”. Spróbuj ogólniejszego określenia, np. „inflacja” lub „emisje”.</string>
+
+    <!-- Module names (SectionHeader eyebrow + ModuleChip label; order matches SearchModule) -->
+    <string name="search_module_population">Ludność</string>
+    <string name="search_module_economy">Gospodarka</string>
+    <string name="search_module_environment">Środowisko</string>
+    <string name="search_module_trade">Handel</string>
+    <string name="search_module_transport">Transport</string>
+    <string name="search_module_tourism">Turystyka</string>
+    <string name="search_module_social">Społeczeństwo</string>
+    <string name="search_module_science">Nauka</string>
+</resources>

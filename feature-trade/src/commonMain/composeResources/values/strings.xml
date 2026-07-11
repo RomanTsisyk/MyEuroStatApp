@@ -1,0 +1,42 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="trade_module_title">Trade</string>
+    <string name="trade_module_tagline">Flows</string>
+
+    <!-- ErrorState (screen-level) -->
+    <string name="trade_error_headline">Could not load Trade</string>
+
+    <!-- Empty state (no series at all) -->
+    <string name="trade_empty_headline">No data</string>
+    <string name="trade_empty_body">No data for the selected filters.</string>
+
+    <!-- Content-level empty (active country has no series) -->
+    <string name="trade_content_empty_headline">No data for %1$s</string>
+    <string name="trade_content_empty_body">Select a different country from the chips below.</string>
+
+    <!-- Exports/Imports/Balance tabs -->
+    <string name="trade_tab_exports">Exports</string>
+    <string name="trade_tab_imports">Imports</string>
+    <string name="trade_tab_balance">Balance</string>
+
+    <!-- MetricHeadline subtitle: "{metric} · partner EU27 · {country}" -->
+    <string name="trade_subtitle_format">%1$s · partner EU27 · %2$s</string>
+
+    <!-- Headline / KPI tile unit suffix -->
+    <string name="trade_unit_billion_eur">B €</string>
+
+    <!-- Diverging-bar chart caption -->
+    <string name="trade_chart_caption">exports vs. imports · €M</string>
+
+    <!-- KPI StatTile labels -->
+    <string name="trade_stat_exports_label">exports</string>
+    <string name="trade_stat_imports_label">imports</string>
+
+    <!-- Chart legend labels -->
+    <string name="trade_legend_exports">exports</string>
+    <string name="trade_legend_imports">imports</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="trade_footer_staleness_fresh">fresh</string>
+    <string name="trade_footer_staleness_stale">stale</string>
+</resources>

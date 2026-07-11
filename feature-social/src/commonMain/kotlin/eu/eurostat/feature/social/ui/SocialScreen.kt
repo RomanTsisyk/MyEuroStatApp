@@ -50,6 +50,23 @@ import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.feature_social.generated.resources.Res
+import myeurostatapp.feature_social.generated.resources.social_chart_caption
+import myeurostatapp.feature_social.generated.resources.social_chart_caption_highlighted
+import myeurostatapp.feature_social.generated.resources.social_empty_body
+import myeurostatapp.feature_social.generated.resources.social_empty_headline
+import myeurostatapp.feature_social.generated.resources.social_error_headline
+import myeurostatapp.feature_social.generated.resources.social_footer_staleness_fresh
+import myeurostatapp.feature_social.generated.resources.social_footer_staleness_stale
+import myeurostatapp.feature_social.generated.resources.social_headline_subtitle_at_risk
+import myeurostatapp.feature_social.generated.resources.social_headline_subtitle_health
+import myeurostatapp.feature_social.generated.resources.social_headline_subtitle_poverty
+import myeurostatapp.feature_social.generated.resources.social_kpi_label_at_risk
+import myeurostatapp.feature_social.generated.resources.social_kpi_label_health
+import myeurostatapp.feature_social.generated.resources.social_kpi_label_poverty
+import myeurostatapp.feature_social.generated.resources.social_module_tagline
+import myeurostatapp.feature_social.generated.resources.social_module_title
+import org.jetbrains.compose.resources.stringResource
 
 private const val TILE_POVERTY = "poverty"
 private const val TILE_AT_RISK = "atrisk"
@@ -81,8 +98,8 @@ fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Social",
-            tagline = "Wellbeing",
+            title = stringResource(Res.string.social_module_title),
+            tagline = stringResource(Res.string.social_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -101,11 +118,11 @@ fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
                         modifier = Modifier.padding(Euro.spacing.base),
                     )
                     is SocialUiState.Empty -> EmptyState(
-                        headline = "no data",
-                        body = "No social indicators for the selected filters.",
+                        headline = stringResource(Res.string.social_empty_headline),
+                        body = stringResource(Res.string.social_empty_body),
                     )
                     is SocialUiState.Error -> ErrorState(
-                        headline = "Couldn't load social data",
+                        headline = stringResource(Res.string.social_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(SocialIntent.Retry) }
@@ -121,10 +138,15 @@ fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
                 }
             }
         }
+        val footerStale = (state as? SocialUiState.Content)?.isStale == true
         SourceFooter(
             dataset = "ilc_li02 · +2",
-            staleness = if ((state as? SocialUiState.Content)?.isStale == true) "stale" else "fresh",
-            stale = (state as? SocialUiState.Content)?.isStale == true,
+            staleness = if (footerStale) {
+                stringResource(Res.string.social_footer_staleness_stale)
+            } else {
+                stringResource(Res.string.social_footer_staleness_fresh)
+            },
+            stale = footerStale,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),
@@ -178,27 +200,41 @@ private fun SocialContent(
     val atRiskStr = latest?.atRiskRate.formatPct()
     val healthStr = latest?.healthSatisfaction.formatPct()
 
+    // stringResource is @Composable — resolve the KPI labels here, at the
+    // composable call site, so they can be reused both by the (non-composable)
+    // buildChartSeries helper below and by the KpiTileSelector tiles further down.
+    val povertyLabel = stringResource(Res.string.social_kpi_label_poverty)
+    val atRiskLabel = stringResource(Res.string.social_kpi_label_at_risk)
+    val healthLabel = stringResource(Res.string.social_kpi_label_health)
+
     val (headlineValue, headlineSubtitle, highlightIdx) = when (selectedTile) {
         TILE_AT_RISK -> Triple(
             atRiskStr,
-            "at-risk-of-poverty-or-social-exclusion",
+            stringResource(Res.string.social_headline_subtitle_at_risk),
             1,
         )
         TILE_HEALTH -> Triple(
             healthStr,
-            "very-good self-perceived health",
+            stringResource(Res.string.social_headline_subtitle_health),
             2,
         )
         else -> Triple(
             povertyStr,
-            "at-risk-of-poverty",
+            stringResource(Res.string.social_headline_subtitle_poverty),
             0,
         )
     }
     val headlineYear: String = content.selectedYear.toString()
 
-    val series: List<ChartSeries> = remember(points, accent, mutedAlt) {
-        buildChartSeries(points = points, accent = accent, mutedAlt = mutedAlt)
+    val series: List<ChartSeries> = remember(points, accent, mutedAlt, povertyLabel, atRiskLabel, healthLabel) {
+        buildChartSeries(
+            points = points,
+            accent = accent,
+            mutedAlt = mutedAlt,
+            povertyLabel = povertyLabel,
+            atRiskLabel = atRiskLabel,
+            healthLabel = healthLabel,
+        )
     }
 
     val chartHeight = adaptiveChartHeight(compact = 200.dp, medium = 260.dp, expanded = 320.dp)
@@ -230,19 +266,19 @@ private fun SocialContent(
             tiles = listOf(
                 KpiTile(
                     key = TILE_POVERTY,
-                    label = "poverty",
+                    label = povertyLabel,
                     value = povertyStr,
                     unit = "% · ilc_li02",
                 ),
                 KpiTile(
                     key = TILE_AT_RISK,
-                    label = "at-risk",
+                    label = atRiskLabel,
                     value = atRiskStr,
                     unit = "% · peps01",
                 ),
                 KpiTile(
                     key = TILE_HEALTH,
-                    label = "health",
+                    label = healthLabel,
                     value = healthStr,
                     unit = "% · silc_01",
                 ),
@@ -263,9 +299,13 @@ private fun SocialContent(
         EuroCard {
             Column {
                 val highlightLabel = series.getOrNull(highlightIdx)?.label ?: ""
+                val chartCaption = if (highlightLabel.isNotEmpty()) {
+                    stringResource(Res.string.social_chart_caption_highlighted, highlightLabel)
+                } else {
+                    stringResource(Res.string.social_chart_caption)
+                }
                 Text(
-                    text = if (highlightLabel.isNotEmpty()) "three % series · highlighted = $highlightLabel"
-                           else "three % series",
+                    text = chartCaption,
                     style = Euro.typography.bodySmall,
                     color = Euro.colors.muted,
                 )
@@ -392,20 +432,27 @@ private fun LegendDot(color: Color, label: String, muted: Boolean) {
  *
  * Each null metric becomes a `ChartPoint(x, y = null)` so the chart can skip
  * the data gap without re-aligning the x-axis.
+ *
+ * [stringResource] is `@Composable` and this helper is not, so the localized
+ * [povertyLabel]/[atRiskLabel]/[healthLabel] are resolved at the composable
+ * call site (shared with the KPI tile labels) and passed in already-resolved.
  */
 private fun buildChartSeries(
     points: List<SocialDataPoint>,
     accent: Color,
     mutedAlt: Color,
+    povertyLabel: String,
+    atRiskLabel: String,
+    healthLabel: String,
 ): List<ChartSeries> {
     val sorted = points.sortedBy { it.year }
     val poverty = sorted.map { ChartPoint(x = it.year.toDouble(), y = it.povertyRate) }
     val atRisk = sorted.map { ChartPoint(x = it.year.toDouble(), y = it.atRiskRate) }
     val health = sorted.map { ChartPoint(x = it.year.toDouble(), y = it.healthSatisfaction) }
     return listOf(
-        ChartSeries(label = "poverty", color = accent, points = poverty),
-        ChartSeries(label = "at-risk", color = mutedAlt, points = atRisk),
-        ChartSeries(label = "health", color = mutedAlt, points = health),
+        ChartSeries(label = povertyLabel, color = accent, points = poverty),
+        ChartSeries(label = atRiskLabel, color = mutedAlt, points = atRisk),
+        ChartSeries(label = healthLabel, color = mutedAlt, points = health),
     )
 }
 

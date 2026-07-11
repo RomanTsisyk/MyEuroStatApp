@@ -42,6 +42,13 @@ import eu.eurostat.feature.search.domain.SearchModule
 import eu.eurostat.feature.search.domain.SearchSection
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.feature_search.generated.resources.Res
+import myeurostatapp.feature_search.generated.resources.search_bar_back
+import myeurostatapp.feature_search.generated.resources.search_bar_clear
+import myeurostatapp.feature_search.generated.resources.search_bar_placeholder
+import myeurostatapp.feature_search.generated.resources.search_empty_body
+import myeurostatapp.feature_search.generated.resources.search_empty_headline
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Search screen: a text field over the static indicator index.
@@ -105,7 +112,7 @@ private fun SearchBar(
     ) {
         IconPill(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
-            description = "Back",
+            description = stringResource(Res.string.search_bar_back),
             onClick = onBack,
         )
         Spacer(Modifier.width(Euro.spacing.s))
@@ -120,7 +127,7 @@ private fun SearchBar(
             Box(modifier = Modifier.weight(1f)) {
                 if (query.isEmpty()) {
                     Text(
-                        text = "Search indicators",
+                        text = stringResource(Res.string.search_bar_placeholder),
                         style = Euro.typography.bodyLarge,
                         color = Euro.colors.muted,
                     )
@@ -140,7 +147,7 @@ private fun SearchBar(
                 Spacer(Modifier.width(Euro.spacing.s))
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Clear query",
+                    contentDescription = stringResource(Res.string.search_bar_clear),
                     tint = Euro.colors.muted,
                     modifier = Modifier
                         .size(18.dp)
@@ -164,9 +171,8 @@ private fun SearchResults(
             onOpen = onOpen,
         )
         content.results.isEmpty() -> EmptyState(
-            headline = "No matches",
-            body = "No indicator matches “${content.query.trim()}”. " +
-                "Try a broader term like “inflation” or “emissions”.",
+            headline = stringResource(Res.string.search_empty_headline),
+            body = stringResource(Res.string.search_empty_body, content.query.trim()),
         )
         else -> ResultsList(
             results = content.results,
@@ -234,7 +240,7 @@ private fun SectionHeader(module: SearchModule) {
                 .background(accent, CircleShape),
         )
         Text(
-            text = module.displayName.uppercase(),
+            text = stringResource(module.titleRes).uppercase(),
             style = Euro.typography.eyebrow,
             color = accent,
         )
@@ -289,7 +295,7 @@ private fun IndicatorRow(entry: IndicatorEntry, onClick: () -> Unit) {
 private fun ModuleChip(module: SearchModule) {
     val accent = Euro.moduleAccents.forModule(module.accentKey)
     Text(
-        text = module.displayName.uppercase(),
+        text = stringResource(module.titleRes).uppercase(),
         style = Euro.typography.labelSmall,
         color = accent,
         modifier = Modifier

@@ -56,12 +56,42 @@ import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
+import myeurostatapp.feature_economy.generated.resources.Res
+import myeurostatapp.feature_economy.generated.resources.economy_axis_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_axis_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_axis_inflation
+import myeurostatapp.feature_economy.generated.resources.economy_chart_axis_index
+import myeurostatapp.feature_economy.generated.resources.economy_chart_axis_year
+import myeurostatapp.feature_economy.generated.resources.economy_chart_empty_body
+import myeurostatapp.feature_economy.generated.resources.economy_chart_empty_headline
+import myeurostatapp.feature_economy.generated.resources.economy_delta_unit_pp
+import myeurostatapp.feature_economy.generated.resources.economy_empty_body
+import myeurostatapp.feature_economy.generated.resources.economy_empty_headline
+import myeurostatapp.feature_economy.generated.resources.economy_error_headline
+import myeurostatapp.feature_economy.generated.resources.economy_footer_staleness_fresh
+import myeurostatapp.feature_economy.generated.resources.economy_footer_staleness_stale
+import myeurostatapp.feature_economy.generated.resources.economy_metric_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_metric_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_metric_inflation
+import myeurostatapp.feature_economy.generated.resources.economy_module_tagline
+import myeurostatapp.feature_economy.generated.resources.economy_module_title
+import myeurostatapp.feature_economy.generated.resources.economy_subtitle_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_subtitle_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_subtitle_inflation
+import myeurostatapp.feature_economy.generated.resources.economy_tile_deficit_label
+import myeurostatapp.feature_economy.generated.resources.economy_tile_deficit_unit
+import myeurostatapp.feature_economy.generated.resources.economy_tile_gdp_delta
+import myeurostatapp.feature_economy.generated.resources.economy_tile_inflation_delta
+import myeurostatapp.feature_economy.generated.resources.economy_tile_inflation_label
+import myeurostatapp.feature_economy.generated.resources.economy_toggle_absolute
+import myeurostatapp.feature_economy.generated.resources.economy_toggle_indexed
+import myeurostatapp.feature_economy.generated.resources.economy_unit_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_unit_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_unit_inflation
+import org.jetbrains.compose.resources.stringResource
 
 private const val M_TO_B: Long = 1_000L
 private const val PERCENT: Double = 100.0
-
-/** [PillToggle] labels for the chart scale: absolute values vs. index rebased to 100. */
-private val NormalizationLabels: List<String> = listOf("Absolute", "Indexed 100")
 
 /**
  * Editorial Economy feature screen. Bound to [EconomyComponent.state]:
@@ -88,8 +118,8 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Economy",
-            tagline = "Macro",
+            title = stringResource(Res.string.economy_module_title),
+            tagline = stringResource(Res.string.economy_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -108,11 +138,11 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
                         modifier = Modifier.padding(Euro.spacing.base),
                     )
                     is EconomyUiState.Empty -> EmptyState(
-                        headline = "no data",
-                        body = "No economy data for the selected filters.",
+                        headline = stringResource(Res.string.economy_empty_headline),
+                        body = stringResource(Res.string.economy_empty_body),
                     )
                     is EconomyUiState.Error -> ErrorState(
-                        headline = "Couldn't load economy",
+                        headline = stringResource(Res.string.economy_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(EconomyIntent.Retry) }
@@ -130,7 +160,11 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
         }
         SourceFooter(
             dataset = "nama_10_gdp · +2",
-            staleness = if ((state as? EconomyUiState.Content)?.isStale == true) "stale" else "fresh",
+            staleness = if ((state as? EconomyUiState.Content)?.isStale == true) {
+                stringResource(Res.string.economy_footer_staleness_stale)
+            } else {
+                stringResource(Res.string.economy_footer_staleness_fresh)
+            },
             stale = (state as? EconomyUiState.Content)?.isStale == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -156,7 +190,13 @@ private fun EconomyContent(
     component: EconomyComponent,
 ) {
     val timeSeries = state.timeSeries
-    val metricLabels = remember { listOf("GDP", "Inflation", "Deficit") }
+    // stringResource is @Composable — resolved here (not inside remember{}) and
+    // combined into a plain List<String> for the segmented control.
+    val metricLabels = listOf(
+        stringResource(Res.string.economy_metric_gdp),
+        stringResource(Res.string.economy_metric_inflation),
+        stringResource(Res.string.economy_metric_deficit),
+    )
     val metrics = remember { listOf(EconomyMetric.Gdp, EconomyMetric.Inflation, EconomyMetric.Deficit) }
 
     // selectedMetric and displayYearRange are owned by the component — survives rotation.
@@ -222,7 +262,10 @@ private fun EconomyContent(
         EuroCard {
             Column {
                 PillToggle(
-                    options = NormalizationLabels,
+                    options = listOf(
+                        stringResource(Res.string.economy_toggle_absolute),
+                        stringResource(Res.string.economy_toggle_indexed),
+                    ),
                     selectedIndex = if (state.normalized) 1 else 0,
                     onSelect = { component.onIntent(EconomyIntent.SetNormalized(it == 1)) },
                     activeColor = accent,
@@ -240,17 +283,17 @@ private fun EconomyContent(
                         contentAlignment = Alignment.Center,
                     ) {
                         EmptyState(
-                            headline = "no data",
-                            body = "No series available for the selected metric and year range.",
+                            headline = stringResource(Res.string.economy_chart_empty_headline),
+                            body = stringResource(Res.string.economy_chart_empty_body),
                         )
                     }
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = "Year"),
+                        xAxis = ChartAxis(label = stringResource(Res.string.economy_chart_axis_year)),
                         yAxis = ChartAxis(
                             label = if (state.normalized) {
-                                "Index (first year = 100)"
+                                stringResource(Res.string.economy_chart_axis_index)
                             } else {
                                 yAxisLabelFor(selectedMetric)
                             },
@@ -353,21 +396,29 @@ private fun HeadlineForMetric(
     val (valueText, unitText, baseSubtitle) = when (metric) {
         EconomyMetric.Gdp -> Triple(
             latest?.gdpEur?.let { formatBillions(it) } ?: "—",
-            "B €",
-            "GDP · current prices",
+            stringResource(Res.string.economy_unit_gdp),
+            stringResource(Res.string.economy_subtitle_gdp),
         )
         EconomyMetric.Inflation -> Triple(
             latest?.hicpIndex?.let { formatDecimal(it, 1) } ?: "—",
-            "idx",
-            "HICP · 2015 = 100",
+            stringResource(Res.string.economy_unit_inflation),
+            stringResource(Res.string.economy_subtitle_inflation),
         )
         EconomyMetric.Deficit -> Triple(
             latest?.deficitPctGdp?.let { formatSignedPercent(it) } ?: "—",
-            "% GDP",
-            "Gov. net lending / borrowing",
+            stringResource(Res.string.economy_unit_deficit),
+            stringResource(Res.string.economy_subtitle_deficit),
         )
     }
-    val deltaText = yoyDeltaText(metric, latest, previous)
+    // yoyDeltaText is a plain (non-@Composable) helper — its unit suffixes are
+    // resolved here, at the composable call site, and passed in.
+    val deltaText = yoyDeltaText(
+        metric = metric,
+        latest = latest,
+        previous = previous,
+        idxUnit = stringResource(Res.string.economy_unit_inflation),
+        ppUnit = stringResource(Res.string.economy_delta_unit_pp),
+    )
     val subtitle = if (deltaText != null) "$baseSubtitle · $deltaText" else baseSubtitle
     val yearLabel = latest?.year?.toString() ?: "—"
     MetricHeadline(
@@ -396,16 +447,16 @@ private fun SecondaryMetricTiles(
         others.forEach { metric ->
             when (metric) {
                 EconomyMetric.Gdp -> StatTile(
-                    label = "GDP",
+                    label = stringResource(Res.string.economy_metric_gdp),
                     value = latest?.gdpEur?.let { formatBillions(it) } ?: "—",
-                    delta = "B € · current prices",
+                    delta = stringResource(Res.string.economy_tile_gdp_delta),
                     bordered = true,
                     modifier = Modifier.weight(1f).alpha(0.55f),
                 )
                 EconomyMetric.Inflation -> StatTile(
-                    label = "HICP infl.",
+                    label = stringResource(Res.string.economy_tile_inflation_label),
                     value = latest?.hicpIndex?.let { formatDecimal(it, 1) } ?: "—",
-                    delta = "idx · 2015=100",
+                    delta = stringResource(Res.string.economy_tile_inflation_delta),
                     bordered = true,
                     modifier = Modifier.weight(1f).alpha(0.55f),
                 )
@@ -427,7 +478,7 @@ private fun DeficitTile(value: Double?, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(0.dp)) {
         Column(modifier = Modifier.padding(Euro.spacing.m)) {
             Text(
-                text = "deficit",
+                text = stringResource(Res.string.economy_tile_deficit_label),
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
             )
@@ -437,7 +488,7 @@ private fun DeficitTile(value: Double?, modifier: Modifier = Modifier) {
                 color = Euro.colors.warn,
             )
             Text(
-                text = "% of GDP",
+                text = stringResource(Res.string.economy_tile_deficit_unit),
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
             )
@@ -488,17 +539,24 @@ private fun buildChartSeries(
     )
 }
 
+@Composable
 private fun yAxisLabelFor(metric: EconomyMetric): String = when (metric) {
-    EconomyMetric.Gdp -> "GDP M€"
-    EconomyMetric.Inflation -> "HICP idx"
-    EconomyMetric.Deficit -> "% GDP"
+    EconomyMetric.Gdp -> stringResource(Res.string.economy_axis_gdp)
+    EconomyMetric.Inflation -> stringResource(Res.string.economy_axis_inflation)
+    EconomyMetric.Deficit -> stringResource(Res.string.economy_axis_deficit)
 }
 
-/** Year-over-year delta string, e.g. `"+6.2%"`, `"+1.2 idx"`, `"−0.4 pp"`. */
+/**
+ * Year-over-year delta string, e.g. `"+6.2%"`, `"+1.2 idx"`, `"−0.4 pp"`. Not
+ * composable — [idxUnit] and [ppUnit] are resolved via stringResource at the
+ * composable call site (see [HeadlineForMetric]) and passed in.
+ */
 private fun yoyDeltaText(
     metric: EconomyMetric,
     latest: EconomyDataPoint?,
     previous: EconomyDataPoint?,
+    idxUnit: String,
+    ppUnit: String,
 ): String? {
     if (latest == null || previous == null) return null
     return when (metric) {
@@ -512,12 +570,12 @@ private fun yoyDeltaText(
         EconomyMetric.Inflation -> {
             val l = latest.hicpIndex ?: return null
             val p = previous.hicpIndex ?: return null
-            "${signed(l - p)} idx"
+            "${signed(l - p)} $idxUnit"
         }
         EconomyMetric.Deficit -> {
             val l = latest.deficitPctGdp ?: return null
             val p = previous.deficitPctGdp ?: return null
-            "${signed(l - p)} pp"
+            "${signed(l - p)} $ppUnit"
         }
     }
 }

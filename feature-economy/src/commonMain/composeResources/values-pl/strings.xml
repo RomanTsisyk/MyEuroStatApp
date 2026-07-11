@@ -1,0 +1,50 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="economy_module_title">Gospodarka</string>
+    <string name="economy_module_tagline">Makro</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="economy_empty_headline">brak danych</string>
+    <string name="economy_empty_body">Brak danych gospodarczych dla wybranych filtrów.</string>
+
+    <!-- ErrorState -->
+    <string name="economy_error_headline">Nie udało się wczytać danych gospodarczych</string>
+
+    <!-- SegmentedControl metric switcher -->
+    <string name="economy_metric_gdp">PKB</string>
+    <string name="economy_metric_inflation">Inflacja</string>
+    <string name="economy_metric_deficit">Deficyt</string>
+
+    <!-- PillToggle chart scale -->
+    <string name="economy_toggle_absolute">Bezwzględne</string>
+    <string name="economy_toggle_indexed">Indeks = 100</string>
+
+    <!-- Chart card -->
+    <string name="economy_chart_empty_headline">brak danych</string>
+    <string name="economy_chart_empty_body">Brak serii danych dla wybranego wskaźnika i zakresu lat.</string>
+    <string name="economy_chart_axis_year">Rok</string>
+    <string name="economy_chart_axis_index">Indeks (pierwszy rok = 100)</string>
+    <string name="economy_axis_gdp">PKB mln €</string>
+    <string name="economy_axis_inflation">HICP wsk.</string>
+    <string name="economy_axis_deficit">% PKB</string>
+
+    <!-- MetricHeadline (units, subtitles, YoY delta unit) -->
+    <string name="economy_unit_gdp">mld €</string>
+    <string name="economy_subtitle_gdp">PKB · ceny bieżące</string>
+    <string name="economy_unit_inflation">wsk.</string>
+    <string name="economy_subtitle_inflation">HICP · 2015 = 100</string>
+    <string name="economy_unit_deficit">% PKB</string>
+    <string name="economy_subtitle_deficit">Saldo sektora instytucji rządowych i samorządowych</string>
+    <string name="economy_delta_unit_pp">p.p.</string>
+
+    <!-- Secondary metric tiles -->
+    <string name="economy_tile_gdp_delta">mld € · ceny bieżące</string>
+    <string name="economy_tile_inflation_label">Inflacja HICP</string>
+    <string name="economy_tile_inflation_delta">wsk. · 2015=100</string>
+    <string name="economy_tile_deficit_label">deficyt</string>
+    <string name="economy_tile_deficit_unit">% PKB</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="economy_footer_staleness_stale">nieaktualne</string>
+    <string name="economy_footer_staleness_fresh">aktualne</string>
+</resources>

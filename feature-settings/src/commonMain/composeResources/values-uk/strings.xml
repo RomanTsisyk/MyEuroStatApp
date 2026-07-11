@@ -1,0 +1,31 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="settings_module_title">Налаштування</string>
+
+    <!-- Theme row -->
+    <string name="settings_theme_label">Тема</string>
+    <string name="settings_theme_system">Системна</string>
+    <string name="settings_theme_light">Світла</string>
+    <string name="settings_theme_dark">Темна</string>
+
+    <!-- Language row (English/Polski/Українська are endonyms and stay
+         identical across all locales; only "System" translates) -->
+    <string name="settings_language_label">Мова</string>
+    <string name="settings_language_system">Системна</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_polski">Polski</string>
+    <string name="settings_language_ukrainska">Українська</string>
+
+    <!-- Default country row -->
+    <string name="settings_default_country_label">Країна за замовчуванням</string>
+
+    <!-- Clear cache row -->
+    <string name="settings_clear_cache_label">Очистити кеш</string>
+    <string name="settings_clear_cache_clearing">Очищення…</string>
+    <string name="settings_clear_cache_cleared">Кеш очищено</string>
+    <string name="settings_clear_cache_subtitle">Видалити всі завантажені статистичні дані</string>
+
+    <!-- About row -->
+    <string name="settings_about_label">Про застосунок</string>
+    <string name="settings_about_version">v%1$s · незалежний клієнт API Eurostat</string>
+</resources>

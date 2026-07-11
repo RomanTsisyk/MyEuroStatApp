@@ -1,0 +1,37 @@
+<resources>
+    <!-- HeaderBar -->
+    <string name="overview_header_title">EU Stats</string>
+    <string name="overview_header_tagline">European Statistics · open data</string>
+    <string name="overview_header_search_description">Search</string>
+    <string name="overview_header_settings_description">Settings</string>
+
+    <!-- Browse section label -->
+    <string name="overview_browse_label">BROWSE</string>
+
+    <!-- Hero block (Economy · GDP teaser); %1$s = headline country code, e.g. "DE" -->
+    <string name="overview_hero_unit">B €</string>
+    <string name="overview_hero_subtitle">GDP · %1$s · live</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="overview_footer_staleness_live">live open data</string>
+
+    <!-- BROWSE grid teaser titles (module names; order matches the Overview grid) -->
+    <string name="overview_module_title_population">Population</string>
+    <string name="overview_module_title_economy">Economy</string>
+    <string name="overview_module_title_environment">Environment</string>
+    <string name="overview_module_title_trade">Trade</string>
+    <string name="overview_module_title_transport">Transport</string>
+    <string name="overview_module_title_tourism">Tourism</string>
+    <string name="overview_module_title_social">Social</string>
+    <string name="overview_module_title_science">Science</string>
+
+    <!-- BROWSE grid teaser unit suffixes -->
+    <string name="overview_module_unit_population">people</string>
+    <string name="overview_module_unit_economy">B € · GDP</string>
+    <string name="overview_module_unit_environment">Mt CO₂e</string>
+    <string name="overview_module_unit_trade">B € · exports</string>
+    <string name="overview_module_unit_transport">passengers</string>
+    <string name="overview_module_unit_tourism">nights</string>
+    <string name="overview_module_unit_social">at-risk-of-poverty</string>
+    <string name="overview_module_unit_science">R&amp;D of GDP</string>
+</resources>

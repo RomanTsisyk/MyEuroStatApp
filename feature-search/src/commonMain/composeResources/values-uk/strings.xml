@@ -1,0 +1,20 @@
+<resources>
+    <!-- SearchBar -->
+    <string name="search_bar_placeholder">Пошук показників</string>
+    <string name="search_bar_back">Назад</string>
+    <string name="search_bar_clear">Очистити запит</string>
+
+    <!-- EmptyState (no matches) -->
+    <string name="search_empty_headline">Нічого не знайдено</string>
+    <string name="search_empty_body">Жоден показник не відповідає запиту «%1$s». Спробуйте ширший термін, наприклад «інфляція» або «викиди».</string>
+
+    <!-- Module names (SectionHeader eyebrow + ModuleChip label; order matches SearchModule) -->
+    <string name="search_module_population">Населення</string>
+    <string name="search_module_economy">Економіка</string>
+    <string name="search_module_environment">Довкілля</string>
+    <string name="search_module_trade">Торгівля</string>
+    <string name="search_module_transport">Транспорт</string>
+    <string name="search_module_tourism">Туризм</string>
+    <string name="search_module_social">Суспільство</string>
+    <string name="search_module_science">Наука</string>
+</resources>

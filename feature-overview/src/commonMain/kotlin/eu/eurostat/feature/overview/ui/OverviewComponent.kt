@@ -43,6 +43,23 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import myeurostatapp.feature_overview.generated.resources.Res
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_economy
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_environment
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_population
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_science
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_social
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_tourism
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_trade
+import myeurostatapp.feature_overview.generated.resources.overview_module_title_transport
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_economy
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_environment
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_population
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_science
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_social
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_tourism
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_trade
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_transport
 
 /**
  * Landing-screen component. Aggregates one at-a-glance teaser metric per feature
@@ -79,7 +96,7 @@ class DefaultOverviewComponent(
 
     private val scope = coroutineScope(SupervisorJob() + dispatchers.main)
 
-    private val _state = MutableStateFlow(OverviewUiState(BASE_TEASERS))
+    private val _state = MutableStateFlow(OverviewUiState(BASE_TEASERS, DEFAULT_COUNTRY))
     override val state: StateFlow<OverviewUiState> = _state.asStateFlow()
 
     private var countries = listOf("EU27_2020", DEFAULT_COUNTRY, "FR", "PL")
@@ -134,20 +151,25 @@ class DefaultOverviewComponent(
                 tourismRepo.observe(TourismQuery(countries, years)).map { it.toTourismTeaser() },
                 socialRepo.observe(SocialQuery(countries, years)).map { it.toSocialTeaser() },
                 scienceRepo.observe(ScienceQuery(countries, years)).map { it.toScienceTeaser() },
-            ) { teasers -> OverviewUiState(teasers.toList()) }
+            ) { teasers -> OverviewUiState(teasers.toList(), headlineCountry) }
                 .collect { _state.value = it }
         }
     }
 
     // -- Result -> teaser plumbing --------------------------------------------
 
-    private data class Headline(val value: String, val unit: String, val year: Int?)
+    /**
+     * A resolved headline value + year for one module. [ModuleTeaser.unitRes] is not
+     * carried here: the unit suffix is fixed per module (never data-dependent), so
+     * `base.copy(...)` below leaves it untouched instead of re-passing it through.
+     */
+    private data class Headline(val value: String, val year: Int?)
 
     private fun <T> Result<T>.teaser(base: ModuleTeaser, extract: (T) -> Headline?): ModuleTeaser =
         when (this) {
             is Result.Loading -> base.copy(status = TeaserStatus.Loading, value = "—")
             is Result.Success -> extract(data)?.let {
-                base.copy(status = TeaserStatus.Loaded, value = it.value, unit = it.unit, year = it.year)
+                base.copy(status = TeaserStatus.Loaded, value = it.value, year = it.year)
             } ?: base.copy(status = TeaserStatus.Empty, value = "—")
             is Result.Error -> base.copy(status = TeaserStatus.Error, value = "—")
         }
@@ -155,14 +177,14 @@ class DefaultOverviewComponent(
     private fun Result<PopulationData>.toPopulationTeaser() = teaser(BASE_POPULATION) { d ->
         val series = d.timeSeries.pickDefault { it.countryCode } ?: return@teaser null
         val point = series.points.lastOrNull() ?: return@teaser null
-        Headline(formatCompactNumber(point.totalPopulation.toDouble()), "people", point.year)
+        Headline(formatCompactNumber(point.totalPopulation.toDouble()), point.year)
     }
 
     private fun Result<List<EconomyTimeSeries>>.toEconomyTeaser() = teaser(BASE_ECONOMY) { d ->
         val series = d.pickDefault { it.countryCode } ?: return@teaser null
         val point = series.points.lastOrNull { it.gdpEur != null } ?: return@teaser null
         val gdp = point.gdpEur ?: return@teaser null
-        Headline(formatGrouped(gdp / 1000.0), "B € · GDP", point.year)
+        Headline(formatGrouped(gdp / 1000.0), point.year)
     }
 
     private fun Result<List<EnvironmentTimeSeries>>.toEnvironmentTeaser() = teaser(BASE_ENVIRONMENT) { d ->
@@ -170,14 +192,14 @@ class DefaultOverviewComponent(
         val point = series.points.lastOrNull { it.sector == EnvSector.Total && it.ghgMtCo2eq != null }
             ?: return@teaser null
         val ghg = point.ghgMtCo2eq ?: return@teaser null
-        Headline(formatGrouped(ghg), "Mt CO₂e", point.year)
+        Headline(formatGrouped(ghg), point.year)
     }
 
     private fun Result<List<TradeTimeSeries>>.toTradeTeaser() = teaser(BASE_TRADE) { d ->
         val series = d.pickDefault { it.countryCode } ?: return@teaser null
         val point = series.points.lastOrNull { it.exportsEur != null } ?: return@teaser null
         val exports = point.exportsEur ?: return@teaser null
-        Headline(formatGrouped(exports / 1000.0), "B € · exports", point.year)
+        Headline(formatGrouped(exports / 1000.0), point.year)
     }
 
     private fun Result<List<TransportTimeSeries>>.toTransportTeaser() = teaser(BASE_TRANSPORT) { d ->
@@ -185,28 +207,28 @@ class DefaultOverviewComponent(
         val point = series.points.lastOrNull { it.airPassengers != null || it.roadPassengers != null }
             ?: return@teaser null
         val passengers = point.airPassengers ?: point.roadPassengers ?: return@teaser null
-        Headline(formatCompactNumber(passengers.toDouble()), "passengers", point.year)
+        Headline(formatCompactNumber(passengers.toDouble()), point.year)
     }
 
     private fun Result<TourismData>.toTourismTeaser() = teaser(BASE_TOURISM) { d ->
         val series = d.timeSeries.pickDefault { it.countryCode } ?: return@teaser null
         val point = series.points.lastOrNull { it.totalNights != null } ?: return@teaser null
         val nights = point.totalNights ?: return@teaser null
-        Headline(formatCompactNumber(nights.toDouble()), "nights", point.year)
+        Headline(formatCompactNumber(nights.toDouble()), point.year)
     }
 
     private fun Result<List<SocialTimeSeries>>.toSocialTeaser() = teaser(BASE_SOCIAL) { d ->
         val series = d.pickDefault { it.countryCode } ?: return@teaser null
         val point = series.points.lastOrNull { it.povertyRate != null } ?: return@teaser null
         val rate = point.povertyRate ?: return@teaser null
-        Headline(formatPercent(rate, 1), "at-risk-of-poverty", point.year)
+        Headline(formatPercent(rate, 1), point.year)
     }
 
     private fun Result<List<ScienceTimeSeries>>.toScienceTeaser() = teaser(BASE_SCIENCE) { d ->
         val series = d.pickDefault { it.countryCode } ?: return@teaser null
         val point = series.points.lastOrNull { it.rdSpendPctGdp != null } ?: return@teaser null
         val rd = point.rdSpendPctGdp ?: return@teaser null
-        Headline(formatPercent(rd, 1), "R&D of GDP", point.year)
+        Headline(formatPercent(rd, 1), point.year)
     }
 
     /** Headline country's series, falling back to the first available. */
@@ -217,14 +239,14 @@ class DefaultOverviewComponent(
         /** Fallback headline country when no preference is set (matches feature defaults). */
         const val DEFAULT_COUNTRY = "DE"
 
-        private val BASE_POPULATION = ModuleTeaser(ChildConfig.Population, "population", "Population", "👥", "—", "people", null, TeaserStatus.Loading)
-        private val BASE_ECONOMY = ModuleTeaser(ChildConfig.Economy, "economy", "Economy", "💶", "—", "B € · GDP", null, TeaserStatus.Loading)
-        private val BASE_ENVIRONMENT = ModuleTeaser(ChildConfig.Environment, "environment", "Environment", "🌍", "—", "Mt CO₂e", null, TeaserStatus.Loading)
-        private val BASE_TRADE = ModuleTeaser(ChildConfig.Trade, "trade", "Trade", "📦", "—", "B € · exports", null, TeaserStatus.Loading)
-        private val BASE_TRANSPORT = ModuleTeaser(ChildConfig.Transport, "transport", "Transport", "🚆", "—", "passengers", null, TeaserStatus.Loading)
-        private val BASE_TOURISM = ModuleTeaser(ChildConfig.Tourism, "tourism", "Tourism", "🏨", "—", "nights", null, TeaserStatus.Loading)
-        private val BASE_SOCIAL = ModuleTeaser(ChildConfig.Social, "social", "Social", "🤝", "—", "at-risk-of-poverty", null, TeaserStatus.Loading)
-        private val BASE_SCIENCE = ModuleTeaser(ChildConfig.Science, "science", "Science", "🔬", "—", "R&D of GDP", null, TeaserStatus.Loading)
+        private val BASE_POPULATION = ModuleTeaser(ChildConfig.Population, "population", Res.string.overview_module_title_population, "👥", "—", Res.string.overview_module_unit_population, null, TeaserStatus.Loading)
+        private val BASE_ECONOMY = ModuleTeaser(ChildConfig.Economy, "economy", Res.string.overview_module_title_economy, "💶", "—", Res.string.overview_module_unit_economy, null, TeaserStatus.Loading)
+        private val BASE_ENVIRONMENT = ModuleTeaser(ChildConfig.Environment, "environment", Res.string.overview_module_title_environment, "🌍", "—", Res.string.overview_module_unit_environment, null, TeaserStatus.Loading)
+        private val BASE_TRADE = ModuleTeaser(ChildConfig.Trade, "trade", Res.string.overview_module_title_trade, "📦", "—", Res.string.overview_module_unit_trade, null, TeaserStatus.Loading)
+        private val BASE_TRANSPORT = ModuleTeaser(ChildConfig.Transport, "transport", Res.string.overview_module_title_transport, "🚆", "—", Res.string.overview_module_unit_transport, null, TeaserStatus.Loading)
+        private val BASE_TOURISM = ModuleTeaser(ChildConfig.Tourism, "tourism", Res.string.overview_module_title_tourism, "🏨", "—", Res.string.overview_module_unit_tourism, null, TeaserStatus.Loading)
+        private val BASE_SOCIAL = ModuleTeaser(ChildConfig.Social, "social", Res.string.overview_module_title_social, "🤝", "—", Res.string.overview_module_unit_social, null, TeaserStatus.Loading)
+        private val BASE_SCIENCE = ModuleTeaser(ChildConfig.Science, "science", Res.string.overview_module_title_science, "🔬", "—", Res.string.overview_module_unit_science, null, TeaserStatus.Loading)
 
         /** Initial teasers in display order (also the [combine] emission order). */
         private val BASE_TEASERS = listOf(

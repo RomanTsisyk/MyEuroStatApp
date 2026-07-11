@@ -53,6 +53,29 @@ import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.format.formatLargeNumberParts
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
+import myeurostatapp.feature_tourism.generated.resources.Res
+import myeurostatapp.feature_tourism.generated.resources.tourism_active_empty_body
+import myeurostatapp.feature_tourism.generated.resources.tourism_bar_caption
+import myeurostatapp.feature_tourism.generated.resources.tourism_chip_domestic
+import myeurostatapp.feature_tourism.generated.resources.tourism_chip_foreign
+import myeurostatapp.feature_tourism.generated.resources.tourism_chip_total
+import myeurostatapp.feature_tourism.generated.resources.tourism_empty_body
+import myeurostatapp.feature_tourism.generated.resources.tourism_empty_headline
+import myeurostatapp.feature_tourism.generated.resources.tourism_error_headline
+import myeurostatapp.feature_tourism.generated.resources.tourism_footer_staleness_fresh
+import myeurostatapp.feature_tourism.generated.resources.tourism_footer_staleness_stale
+import myeurostatapp.feature_tourism.generated.resources.tourism_headline_subtitle_domestic
+import myeurostatapp.feature_tourism.generated.resources.tourism_headline_subtitle_foreign
+import myeurostatapp.feature_tourism.generated.resources.tourism_headline_subtitle_total
+import myeurostatapp.feature_tourism.generated.resources.tourism_heatmap_caption
+import myeurostatapp.feature_tourism.generated.resources.tourism_legend_domestic
+import myeurostatapp.feature_tourism.generated.resources.tourism_legend_foreign
+import myeurostatapp.feature_tourism.generated.resources.tourism_module_title
+import myeurostatapp.feature_tourism.generated.resources.tourism_month_dec
+import myeurostatapp.feature_tourism.generated.resources.tourism_month_jan
+import myeurostatapp.feature_tourism.generated.resources.tourism_month_jul
+import myeurostatapp.feature_tourism.generated.resources.tourism_tagline
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Tourism feature screen. Renders the editorial Eurostat layout: hero metric +
@@ -84,8 +107,8 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Tourism",
-            tagline = "Leisure",
+            title = stringResource(Res.string.tourism_module_title),
+            tagline = stringResource(Res.string.tourism_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -105,7 +128,7 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
                     )
 
                     is TourismUiState.Error -> ErrorState(
-                        headline = "Couldn't load tourism",
+                        headline = stringResource(Res.string.tourism_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(TourismIntent.Retry) }
@@ -115,8 +138,8 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
                     )
 
                     is TourismUiState.Empty -> EmptyState(
-                        headline = "No data",
-                        body = "No tourism data for the selected filters.",
+                        headline = stringResource(Res.string.tourism_empty_headline),
+                        body = stringResource(Res.string.tourism_empty_body),
                     )
 
                     is TourismUiState.Content -> TourismContent(
@@ -133,10 +156,15 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
             }
         }
 
+        val isStale = contentState?.isStale == true
         SourceFooter(
             dataset = "tour_occ_ninat · tour_dem_tttot · tour_occ_nim",
-            staleness = if (state is TourismUiState.Content && (state as TourismUiState.Content).isStale) "stale" else "fresh",
-            stale = state is TourismUiState.Content && (state as TourismUiState.Content).isStale,
+            staleness = if (isStale) {
+                stringResource(Res.string.tourism_footer_staleness_stale)
+            } else {
+                stringResource(Res.string.tourism_footer_staleness_fresh)
+            },
+            stale = isStale,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),
@@ -163,8 +191,8 @@ private fun TourismContent(
         ?: content.timeSeries.firstOrNull()
     if (active == null) {
         EmptyState(
-            headline = "No data",
-            body = "No tourism data available for the selected country.",
+            headline = stringResource(Res.string.tourism_empty_headline),
+            body = stringResource(Res.string.tourism_active_empty_body),
         )
         return
     }
@@ -184,11 +212,27 @@ private fun TourismContent(
     val (headlineValue, headlineUnit) = formatNights(
         headlinePoint?.let { headlineMetric(it, content.highlightedResidence) },
     )
-    val headlineSubtitle = headlineSubtitleFor(content.highlightedResidence)
+    // stringResource is @Composable — resolve the per-residence subtitle here,
+    // at the composable call site, rather than in a non-composable helper.
+    val headlineSubtitle = when (content.highlightedResidence) {
+        TourismResidence.Domestic -> stringResource(Res.string.tourism_headline_subtitle_domestic)
+        TourismResidence.Foreign -> stringResource(Res.string.tourism_headline_subtitle_foreign)
+        TourismResidence.Total -> stringResource(Res.string.tourism_headline_subtitle_total)
+    }
     val headlineYear = if (content.selectedYear != 0) content.selectedYear.toString() else "—"
 
     val barChartHeight = adaptiveChartHeight(compact = 200.dp, medium = 260.dp, expanded = 320.dp)
     val heatmapHeight = adaptiveChartHeight(compact = 160.dp, medium = 220.dp, expanded = 280.dp)
+
+    // Localized chip labels keyed by residence, resolved here so both the
+    // ChipRow options and the reverse (tapped label -> residence) lookup use
+    // the same localized strings — matching against the English literal
+    // would break once PL/UK translations render different chip text.
+    val residenceLabels: Map<TourismResidence, String> = mapOf(
+        TourismResidence.Domestic to stringResource(Res.string.tourism_chip_domestic),
+        TourismResidence.Foreign to stringResource(Res.string.tourism_chip_foreign),
+        TourismResidence.Total to stringResource(Res.string.tourism_chip_total),
+    )
 
     var showCountryPicker by remember { mutableStateOf(false) }
 
@@ -206,9 +250,11 @@ private fun TourismContent(
     }
     val residenceChips: @Composable (Modifier) -> Unit = { modifier ->
         ChipRow(
-            options = ChipLabels,
-            selected = setOf(content.highlightedResidence.chipLabel),
-            onToggle = { label -> residenceForLabel(label)?.let(onResidenceToggle) },
+            options = residenceLabels.values.toList(),
+            selected = setOf(requireNotNull(residenceLabels[content.highlightedResidence])),
+            onToggle = { label ->
+                residenceLabels.entries.firstOrNull { it.value == label }?.key?.let(onResidenceToggle)
+            },
             modifier = modifier,
         )
     }
@@ -225,7 +271,7 @@ private fun TourismContent(
         EuroCard {
             Column(verticalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
                 Text(
-                    text = "nights · stacked by residence",
+                    text = stringResource(Res.string.tourism_bar_caption),
                     style = Euro.typography.bodySmall,
                     color = Euro.colors.muted,
                 )
@@ -246,7 +292,7 @@ private fun TourismContent(
         EuroCard {
             Column(verticalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
                 Text(
-                    text = "seasonality · months × yrs",
+                    text = stringResource(Res.string.tourism_heatmap_caption),
                     style = Euro.typography.bodySmall,
                     color = Euro.colors.muted,
                 )
@@ -326,35 +372,12 @@ private fun TourismContent(
 
 private const val BAR_ROWS_VISIBLE = 9
 
-/** Labels in source order — index matches [TourismResidence] declaration. */
-private val ChipLabels = listOf("Domestic", "Foreign", "Total")
-
-private val TourismResidence.chipLabel: String
-    get() = when (this) {
-        TourismResidence.Domestic -> "Domestic"
-        TourismResidence.Foreign -> "Foreign"
-        TourismResidence.Total -> "Total"
-    }
-
-private fun residenceForLabel(label: String): TourismResidence? = when (label) {
-    "Domestic" -> TourismResidence.Domestic
-    "Foreign" -> TourismResidence.Foreign
-    "Total" -> TourismResidence.Total
-    else -> null
-}
-
 private fun headlineMetric(point: TourismDataPoint, residence: TourismResidence): Long? =
     when (residence) {
         TourismResidence.Domestic -> point.domesticNights
         TourismResidence.Foreign -> point.foreignNights
         TourismResidence.Total -> point.totalNights
     }
-
-private fun headlineSubtitleFor(residence: TourismResidence): String = when (residence) {
-    TourismResidence.Domestic -> "domestic nights · accommodation"
-    TourismResidence.Foreign -> "foreign nights · accommodation"
-    TourismResidence.Total -> "total nights · accommodation"
-}
 
 /**
  * Format a raw nights count as a short value+unit pair, e.g. 31_700_000 -> "31.7" + "M".
@@ -376,8 +399,8 @@ private fun StackedBarLegend(accent: Color) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.base),
     ) {
-        LegendItem(label = "domestic", filled = true, color = accent)
-        LegendItem(label = "foreign", filled = false, color = accent)
+        LegendItem(label = stringResource(Res.string.tourism_legend_domestic), filled = true, color = accent)
+        LegendItem(label = stringResource(Res.string.tourism_legend_foreign), filled = false, color = accent)
     }
 }
 
@@ -415,11 +438,16 @@ private fun LegendItem(label: String, filled: Boolean, color: Color) {
 /** Three-anchor month axis (jan / jul / dec) rendered below the heatmap. */
 @Composable
 private fun MonthAxisLabels() {
+    val labels = listOf(
+        stringResource(Res.string.tourism_month_jan),
+        stringResource(Res.string.tourism_month_jul),
+        stringResource(Res.string.tourism_month_dec),
+    )
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        listOf("jan", "jul", "dec").forEach { label ->
+        labels.forEach { label ->
             Text(
                 text = label,
                 style = Euro.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),

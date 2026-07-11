@@ -54,6 +54,27 @@ import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.ln
 import kotlin.math.roundToInt
+import myeurostatapp.feature_transport.generated.resources.Res
+import myeurostatapp.feature_transport.generated.resources.transport_empty_body
+import myeurostatapp.feature_transport.generated.resources.transport_empty_headline
+import myeurostatapp.feature_transport.generated.resources.transport_error_headline
+import myeurostatapp.feature_transport.generated.resources.transport_footer_staleness_fresh
+import myeurostatapp.feature_transport.generated.resources.transport_footer_staleness_stale
+import myeurostatapp.feature_transport.generated.resources.transport_headline_label_passengers
+import myeurostatapp.feature_transport.generated.resources.transport_mode_label_road
+import myeurostatapp.feature_transport.generated.resources.transport_mode_toggle_air
+import myeurostatapp.feature_transport.generated.resources.transport_mode_toggle_all
+import myeurostatapp.feature_transport.generated.resources.transport_mode_toggle_road
+import myeurostatapp.feature_transport.generated.resources.transport_module_tagline
+import myeurostatapp.feature_transport.generated.resources.transport_module_title
+import myeurostatapp.feature_transport.generated.resources.transport_tile_label_air
+import myeurostatapp.feature_transport.generated.resources.transport_tile_label_sea
+import myeurostatapp.feature_transport.generated.resources.transport_tile_sea_delta
+import myeurostatapp.feature_transport.generated.resources.transport_tile_sea_value
+import myeurostatapp.feature_transport.generated.resources.transport_toggle_log_label
+import myeurostatapp.feature_transport.generated.resources.transport_unit_billion
+import myeurostatapp.feature_transport.generated.resources.transport_unit_million
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Transport feature screen — wired to live Eurostat data.
@@ -92,8 +113,8 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Transport",
-            tagline = "Mobility",
+            title = stringResource(Res.string.transport_module_title),
+            tagline = stringResource(Res.string.transport_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -110,7 +131,7 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
                 when (val s = state) {
                     is TransportUiState.Loading -> LoadingBody()
                     is TransportUiState.Error -> ErrorState(
-                        headline = "Couldn't load",
+                        headline = stringResource(Res.string.transport_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(TransportIntent.Retry) }
@@ -119,8 +140,8 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
                         },
                     )
                     is TransportUiState.Empty -> EmptyState(
-                        headline = "No data",
-                        body = "No transport data for the selected filters.",
+                        headline = stringResource(Res.string.transport_empty_headline),
+                        body = stringResource(Res.string.transport_empty_body),
                     )
                     is TransportUiState.Content -> ContentBody(
                         series = s.series,
@@ -196,13 +217,37 @@ private fun ContentBody(
     val airValue = selectedPoint?.airPassengers
     val headlineValue = roadValue?.let { formatBillionsValue(it) } ?: "—"
 
+    // stringResource is @Composable — resolve every label once here, then pass
+    // the resolved Strings down into the section lambdas, ModeAndLogRow, and
+    // buildPanels()/formatBillions()/formatMillions() (which are either plain
+    // lambdas capturing these as closures, or non-composable helpers that take
+    // them as parameters).
+    val roadModeLabel = stringResource(Res.string.transport_mode_toggle_road)
+    val airModeLabel = stringResource(Res.string.transport_mode_toggle_air)
+    val allModeLabel = stringResource(Res.string.transport_mode_toggle_all)
+    val billionUnit = stringResource(Res.string.transport_unit_billion)
+    val millionUnit = stringResource(Res.string.transport_unit_million)
+    val roadLabelLower = stringResource(Res.string.transport_mode_label_road)
+    val passengersLabel = stringResource(Res.string.transport_headline_label_passengers)
+    val airTileLabel = stringResource(Res.string.transport_tile_label_air)
+    val seaTileLabel = stringResource(Res.string.transport_tile_label_sea)
+    val seaValueText = stringResource(Res.string.transport_tile_sea_value)
+    val seaDeltaText = stringResource(Res.string.transport_tile_sea_delta)
+    val logLabel = stringResource(Res.string.transport_toggle_log_label)
+    val freshLabel = stringResource(Res.string.transport_footer_staleness_fresh)
+    val staleLabel = stringResource(Res.string.transport_footer_staleness_stale)
+    // "ROAD · bn" / "AIR · M" — small-multiples panel captions built from the
+    // same mode words as the PillToggle plus the localized unit suffix.
+    val roadPanelTitle = "$roadModeLabel · $billionUnit"
+    val airPanelTitle = "$airModeLabel · $millionUnit"
+
     // Sections shared between the compact (phone) ordering and the ≥840dp
     // two-pane split. Purely structural — all state stays on the component.
     val headlineSection: @Composable () -> Unit = {
         MetricHeadline(
             value = headlineValue,
-            unit = "bn",
-            subtitle = "road · passengers · ${active?.countryName ?: activeCountry}",
+            unit = billionUnit,
+            subtitle = "$roadLabelLower · $passengersLabel · ${active?.countryName ?: activeCountry}",
             year = selectedYear.toString(),
             accent = accent,
             modifier = Modifier.padding(top = Euro.spacing.s),
@@ -230,6 +275,10 @@ private fun ContentBody(
             logScale = logScale,
             onLogChange = { onLogScaleToggle() },
             accent = accent,
+            roadLabel = roadModeLabel,
+            airLabel = airModeLabel,
+            allLabel = allModeLabel,
+            logLabel = logLabel,
         )
     }
     val panelsSection: @Composable () -> Unit = {
@@ -240,6 +289,8 @@ private fun ContentBody(
                 logScale = logScale,
                 accent = accent,
                 warn = Euro.colors.warn,
+                roadTitle = roadPanelTitle,
+                airTitle = airPanelTitle,
             )
             EurostatSmallMultiples(
                 panels = panels,
@@ -251,21 +302,21 @@ private fun ContentBody(
     val tilesSection: @Composable () -> Unit = {
         Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
             StatTile(
-                label = "road",
-                value = roadValue?.let { formatBillions(it) } ?: "—",
+                label = roadLabelLower,
+                value = roadValue?.let { formatBillions(it, billionUnit) } ?: "—",
                 bordered = true,
                 modifier = Modifier.weight(1f),
             )
             StatTile(
-                label = "air",
-                value = airValue?.let { formatMillions(it) } ?: "—",
+                label = airTileLabel,
+                value = airValue?.let { formatMillions(it, millionUnit) } ?: "—",
                 bordered = true,
                 modifier = Modifier.weight(1f),
             )
             StatTile(
-                label = "sea",
-                value = "n/a",
-                delta = "port-based",
+                label = seaTileLabel,
+                value = seaValueText,
+                delta = seaDeltaText,
                 bordered = true,
                 modifier = Modifier.weight(1f),
             )
@@ -314,7 +365,7 @@ private fun ContentBody(
 
         SourceFooter(
             dataset = "road_pa_buscoa · avia_paoc",
-            staleness = if (isStale) "stale" else "fresh",
+            staleness = if (isStale) staleLabel else freshLabel,
             stale = isStale,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -341,8 +392,12 @@ private fun ModeAndLogRow(
     logScale: Boolean,
     onLogChange: (Boolean) -> Unit,
     accent: Color,
+    roadLabel: String,
+    airLabel: String,
+    allLabel: String,
+    logLabel: String,
 ) {
-    val options = listOf("ROAD", "AIR", "ALL")
+    val options = listOf(roadLabel, airLabel, allLabel)
     val selectedIdx = when (mode) {
         TransportPanelMode.ROAD -> 0
         TransportPanelMode.AIR -> 1
@@ -369,7 +424,7 @@ private fun ModeAndLogRow(
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "log",
+                text = logLabel,
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
                 modifier = Modifier.padding(end = Euro.spacing.xs),
@@ -401,15 +456,17 @@ private fun buildPanels(
     logScale: Boolean,
     accent: Color,
     warn: Color,
+    roadTitle: String,
+    airTitle: String,
 ): List<SmallMultiplePanel> {
     if (series == null) return emptyList()
     val panels = mutableListOf<SmallMultiplePanel>()
     if (mode == TransportPanelMode.ROAD || mode == TransportPanelMode.ALL) {
         val pts = series.points.toRoadChartPoints(logScale, scale = 1_000_000_000.0)
         if (pts.isNotEmpty()) {
-            panels += SmallMultiplePanel("ROAD · bn") {
+            panels += SmallMultiplePanel(roadTitle) {
                 PanelChart(
-                    series = ChartSeries(label = "ROAD · bn", color = accent, points = pts),
+                    series = ChartSeries(label = roadTitle, color = accent, points = pts),
                 )
             }
         }
@@ -417,9 +474,9 @@ private fun buildPanels(
     if (mode == TransportPanelMode.AIR || mode == TransportPanelMode.ALL) {
         val pts = series.points.toAirChartPoints(logScale, scale = 1_000_000.0)
         if (pts.isNotEmpty()) {
-            panels += SmallMultiplePanel("AIR · M") {
+            panels += SmallMultiplePanel(airTitle) {
                 PanelChart(
-                    series = ChartSeries(label = "AIR · M", color = warn, points = pts),
+                    series = ChartSeries(label = airTitle, color = warn, points = pts),
                 )
             }
         }
@@ -466,8 +523,12 @@ private fun List<TransportDataPoint>.toAirChartPoints(
 private fun transform(value: Double, log: Boolean): Double =
     if (log) ln(value + 1.0) else value
 
-/** Format an absolute count into the StatTile string e.g. `"4.1 bn"` or `"57.8 M"`. */
-private fun formatBillions(value: Long): String = "${formatBillionsValue(value)} bn"
+/**
+ * Format an absolute count into the StatTile string e.g. `"4.1 bn"` or
+ * `"57.8 M"`. [unit] is the localized unit suffix (resolved at the composable
+ * call site — this helper itself is not composable).
+ */
+private fun formatBillions(value: Long, unit: String): String = "${formatBillionsValue(value)} $unit"
 
 private fun formatBillionsValue(value: Long): String =
     formatDecimal(value.toDouble() / 1_000_000_000.0, decimals = 1)
@@ -475,13 +536,14 @@ private fun formatBillionsValue(value: Long): String =
 /**
  * Millions count with 1 decimal, e.g. `"57.8 M"` — but once the magnitude
  * reaches 100 M or more, drops the decimal to a whole number (e.g. `"142 M"`)
- * to keep the StatTile compact.
+ * to keep the StatTile compact. [unit] is the localized unit suffix (resolved
+ * at the composable call site — this helper itself is not composable).
  */
-private fun formatMillions(value: Long): String {
+private fun formatMillions(value: Long, unit: String): String {
     val v = value.toDouble() / 1_000_000.0
     return if (v >= 100.0) {
-        "${v.roundToInt()} M"
+        "${v.roundToInt()} $unit"
     } else {
-        "${formatDecimal(v, decimals = 1)} M"
+        "${formatDecimal(v, decimals = 1)} $unit"
     }
 }

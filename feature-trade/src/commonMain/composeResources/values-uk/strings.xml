@@ -1,0 +1,42 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="trade_module_title">Торгівля</string>
+    <string name="trade_module_tagline">Потоки</string>
+
+    <!-- ErrorState (screen-level) -->
+    <string name="trade_error_headline">Не вдалося завантажити дані про торгівлю</string>
+
+    <!-- Empty state (no series at all) -->
+    <string name="trade_empty_headline">Немає даних</string>
+    <string name="trade_empty_body">Немає даних для вибраних фільтрів.</string>
+
+    <!-- Content-level empty (active country has no series) -->
+    <string name="trade_content_empty_headline">Немає даних для %1$s</string>
+    <string name="trade_content_empty_body">Виберіть іншу країну зі списку нижче.</string>
+
+    <!-- Exports/Imports/Balance tabs -->
+    <string name="trade_tab_exports">Експорт</string>
+    <string name="trade_tab_imports">Імпорт</string>
+    <string name="trade_tab_balance">Баланс</string>
+
+    <!-- MetricHeadline subtitle: "{metric} · partner EU27 · {country}" -->
+    <string name="trade_subtitle_format">%1$s · партнер ЄС27 · %2$s</string>
+
+    <!-- Headline / KPI tile unit suffix -->
+    <string name="trade_unit_billion_eur">млрд €</string>
+
+    <!-- Diverging-bar chart caption -->
+    <string name="trade_chart_caption">експорт vs. імпорт · млн €</string>
+
+    <!-- KPI StatTile labels -->
+    <string name="trade_stat_exports_label">експорт</string>
+    <string name="trade_stat_imports_label">імпорт</string>
+
+    <!-- Chart legend labels -->
+    <string name="trade_legend_exports">експорт</string>
+    <string name="trade_legend_imports">імпорт</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="trade_footer_staleness_fresh">актуальні</string>
+    <string name="trade_footer_staleness_stale">застарілі</string>
+</resources>

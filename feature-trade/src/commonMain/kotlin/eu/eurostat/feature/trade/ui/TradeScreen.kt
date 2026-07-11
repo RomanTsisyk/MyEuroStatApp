@@ -48,8 +48,28 @@ import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.absoluteValue
+import myeurostatapp.feature_trade.generated.resources.Res
+import myeurostatapp.feature_trade.generated.resources.trade_chart_caption
+import myeurostatapp.feature_trade.generated.resources.trade_content_empty_body
+import myeurostatapp.feature_trade.generated.resources.trade_content_empty_headline
+import myeurostatapp.feature_trade.generated.resources.trade_empty_body
+import myeurostatapp.feature_trade.generated.resources.trade_empty_headline
+import myeurostatapp.feature_trade.generated.resources.trade_error_headline
+import myeurostatapp.feature_trade.generated.resources.trade_footer_staleness_fresh
+import myeurostatapp.feature_trade.generated.resources.trade_footer_staleness_stale
+import myeurostatapp.feature_trade.generated.resources.trade_legend_exports
+import myeurostatapp.feature_trade.generated.resources.trade_legend_imports
+import myeurostatapp.feature_trade.generated.resources.trade_module_tagline
+import myeurostatapp.feature_trade.generated.resources.trade_module_title
+import myeurostatapp.feature_trade.generated.resources.trade_stat_exports_label
+import myeurostatapp.feature_trade.generated.resources.trade_stat_imports_label
+import myeurostatapp.feature_trade.generated.resources.trade_subtitle_format
+import myeurostatapp.feature_trade.generated.resources.trade_tab_balance
+import myeurostatapp.feature_trade.generated.resources.trade_tab_exports
+import myeurostatapp.feature_trade.generated.resources.trade_tab_imports
+import myeurostatapp.feature_trade.generated.resources.trade_unit_billion_eur
+import org.jetbrains.compose.resources.stringResource
 
-private val TradeTabs = listOf("Exports", "Imports", "Balance")
 private const val MAX_VISIBLE_YEARS = 8
 
 /**
@@ -79,8 +99,8 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Trade",
-            tagline = "Flows",
+            title = stringResource(Res.string.trade_module_title),
+            tagline = stringResource(Res.string.trade_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -97,7 +117,7 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
                 when (val s = state) {
                     is TradeUiState.Loading -> LoadingBody()
                     is TradeUiState.Error -> ErrorState(
-                        headline = "Could not load Trade",
+                        headline = stringResource(Res.string.trade_error_headline),
                         body = s.message,
                         onRetry = if (s.canRetry) {
                             { component.onIntent(TradeIntent.Retry) }
@@ -106,8 +126,8 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
                         },
                     )
                     is TradeUiState.Empty -> ErrorState(
-                        headline = "No data",
-                        body = "No data for the selected filters.",
+                        headline = stringResource(Res.string.trade_empty_headline),
+                        body = stringResource(Res.string.trade_empty_body),
                     )
                     is TradeUiState.Content -> ContentBody(
                         accent = accent,
@@ -183,11 +203,21 @@ private fun ContentBody(
 
     if (activeSeries == null) {
         EmptyState(
-            headline = "No data for $activeCountry",
-            body = "Select a different country from the chips below.",
+            headline = stringResource(Res.string.trade_content_empty_headline, activeCountry),
+            body = stringResource(Res.string.trade_content_empty_body),
         )
         return
     }
+
+    // Resolved once here (ContentBody is @Composable) and captured by the
+    // section lambdas below — stringResource() cannot be called from the
+    // non-composable helpers (formatSignedBillions, formatBillions, etc.).
+    val tabLabels = listOf(
+        stringResource(Res.string.trade_tab_exports),
+        stringResource(Res.string.trade_tab_imports),
+        stringResource(Res.string.trade_tab_balance),
+    )
+    val unitBillionEur = stringResource(Res.string.trade_unit_billion_eur)
 
     val visiblePoints = remember(activeSeries) {
         activeSeries.points.takeLast(MAX_VISIBLE_YEARS)
@@ -205,25 +235,26 @@ private fun ContentBody(
     }
 
     val balanceText = latest?.balanceEur?.let(::formatSignedBillions) ?: "—"
-    val exportsText = latest?.exportsEur?.let { "${formatBillions(it)} B €" } ?: "—"
-    val importsText = latest?.importsEur?.let { "${formatBillions(it)} B €" } ?: "—"
+    val exportsText = latest?.exportsEur?.let { "${formatBillions(it)} $unitBillionEur" } ?: "—"
+    val importsText = latest?.importsEur?.let { "${formatBillions(it)} $unitBillionEur" } ?: "—"
     val latestYear = selectedYear.toString()
     val chartH = adaptiveChartHeight(compact = 180.dp, medium = 240.dp, expanded = 300.dp)
 
     // Sections shared between the compact (phone) ordering and the ≥840dp
     // two-pane split. Purely structural — all state stays on the component.
     val headlineSection: @Composable () -> Unit = {
+        val metricLower = (tabLabels.getOrNull(selectedTabIndex) ?: tabLabels.last()).lowercase()
         MetricHeadline(
             value = balanceText,
-            unit = "B €",
-            subtitle = subtitleFor(selectedTabIndex, activeCountry),
+            unit = unitBillionEur,
+            subtitle = stringResource(Res.string.trade_subtitle_format, metricLower, activeCountry),
             year = latestYear,
             accent = accent,
         )
     }
     val tabsSection: @Composable () -> Unit = {
         UnderlineTabs(
-            tabs = TradeTabs,
+            tabs = tabLabels,
             selectedIndex = selectedTabIndex,
             onSelect = { onSelectTab(it) },
             activeColor = accent,
@@ -245,7 +276,7 @@ private fun ContentBody(
                 verticalArrangement = Arrangement.spacedBy(Euro.spacing.s),
             ) {
                 Text(
-                    text = "exports vs imports · €M",
+                    text = stringResource(Res.string.trade_chart_caption),
                     style = Euro.typography.bodySmall,
                     color = Euro.colors.muted,
                 )
@@ -277,13 +308,13 @@ private fun ContentBody(
             horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
         ) {
             StatTile(
-                label = "exports",
+                label = stringResource(Res.string.trade_stat_exports_label),
                 value = exportsText,
                 bordered = true,
                 modifier = Modifier.weight(1f),
             )
             StatTile(
-                label = "imports",
+                label = stringResource(Res.string.trade_stat_imports_label),
                 value = importsText,
                 bordered = true,
                 modifier = Modifier.weight(1f),
@@ -337,7 +368,11 @@ private fun ContentBody(
 
         SourceFooter(
             dataset = "ext_lt_intratrd",
-            staleness = if (isStale) "stale" else "fresh",
+            staleness = if (isStale) {
+                stringResource(Res.string.trade_footer_staleness_stale)
+            } else {
+                stringResource(Res.string.trade_footer_staleness_fresh)
+            },
             stale = isStale,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -364,8 +399,8 @@ private fun LegendRow(accent: Color, warn: Color) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
     ) {
-        LegendItem(label = "exports", dot = accent)
-        LegendItem(label = "imports", dot = warn)
+        LegendItem(label = stringResource(Res.string.trade_legend_exports), dot = accent)
+        LegendItem(label = stringResource(Res.string.trade_legend_imports), dot = warn)
     }
 }
 
@@ -405,9 +440,4 @@ private fun formatSignedBillions(valueMEur: Long): String {
 private fun formatBillions(valueMEur: Long): String {
     val billions = valueMEur / 1000L
     return billions.absoluteValue.toString()
-}
-
-private fun subtitleFor(tabIndex: Int, country: String): String {
-    val metric = TradeTabs.getOrNull(tabIndex)?.lowercase() ?: "balance"
-    return "$metric · partner EU27 · $country"
 }

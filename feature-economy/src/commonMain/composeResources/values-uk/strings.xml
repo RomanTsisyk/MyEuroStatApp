@@ -1,0 +1,50 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="economy_module_title">Економіка</string>
+    <string name="economy_module_tagline">Макро</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="economy_empty_headline">немає даних</string>
+    <string name="economy_empty_body">Немає економічних даних для вибраних фільтрів.</string>
+
+    <!-- ErrorState -->
+    <string name="economy_error_headline">Не вдалося завантажити економічні дані</string>
+
+    <!-- SegmentedControl metric switcher -->
+    <string name="economy_metric_gdp">ВВП</string>
+    <string name="economy_metric_inflation">Інфляція</string>
+    <string name="economy_metric_deficit">Дефіцит</string>
+
+    <!-- PillToggle chart scale -->
+    <string name="economy_toggle_absolute">Абсолютні</string>
+    <string name="economy_toggle_indexed">Індекс = 100</string>
+
+    <!-- Chart card -->
+    <string name="economy_chart_empty_headline">немає даних</string>
+    <string name="economy_chart_empty_body">Немає рядів даних для вибраного показника та діапазону років.</string>
+    <string name="economy_chart_axis_year">Рік</string>
+    <string name="economy_chart_axis_index">Індекс (перший рік = 100)</string>
+    <string name="economy_axis_gdp">ВВП, млн €</string>
+    <string name="economy_axis_inflation">HICP, інд.</string>
+    <string name="economy_axis_deficit">% ВВП</string>
+
+    <!-- MetricHeadline (units, subtitles, YoY delta unit) -->
+    <string name="economy_unit_gdp">млрд €</string>
+    <string name="economy_subtitle_gdp">ВВП · поточні ціни</string>
+    <string name="economy_unit_inflation">інд.</string>
+    <string name="economy_subtitle_inflation">HICP · 2015 = 100</string>
+    <string name="economy_unit_deficit">% ВВП</string>
+    <string name="economy_subtitle_deficit">Сальдо сектору загального державного управління</string>
+    <string name="economy_delta_unit_pp">в.п.</string>
+
+    <!-- Secondary metric tiles -->
+    <string name="economy_tile_gdp_delta">млрд € · поточні ціни</string>
+    <string name="economy_tile_inflation_label">Інфляція HICP</string>
+    <string name="economy_tile_inflation_delta">інд. · 2015=100</string>
+    <string name="economy_tile_deficit_label">дефіцит</string>
+    <string name="economy_tile_deficit_unit">% ВВП</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="economy_footer_staleness_stale">застарілі</string>
+    <string name="economy_footer_staleness_fresh">актуальні</string>
+</resources>

@@ -53,6 +53,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
+import myeurostatapp.feature_overview.generated.resources.Res
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_economy
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_population
+import myeurostatapp.feature_overview.generated.resources.overview_module_unit_tourism
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -203,6 +207,7 @@ class OverviewComponentTest {
         val state = component.state.value
         assertEquals(8, state.teasers.size)
         assertTrue(state.teasers.all { it.status == TeaserStatus.Loading })
+        assertEquals(DefaultOverviewComponent.DEFAULT_COUNTRY, state.headlineCountryCode)
     }
 
     @Test
@@ -214,7 +219,7 @@ class OverviewComponentTest {
         val teaser = component.state.value.teaser(ChildConfig.Economy)
         assertEquals(TeaserStatus.Loaded, teaser.status)
         assertEquals(2023, teaser.year)
-        assertEquals("B € · GDP", teaser.unit)
+        assertEquals(Res.string.overview_module_unit_economy, teaser.unitRes)
         assertTrue(teaser.value != "—" && teaser.value.isNotBlank(), "value=${teaser.value}")
     }
 
@@ -242,12 +247,12 @@ class OverviewComponentTest {
 
         val pop = component.state.value.teaser(ChildConfig.Population)
         assertEquals(TeaserStatus.Loaded, pop.status)
-        assertEquals("people", pop.unit)
+        assertEquals(Res.string.overview_module_unit_population, pop.unitRes)
         assertTrue(pop.value != "—")
 
         val tour = component.state.value.teaser(ChildConfig.Tourism)
         assertEquals(TeaserStatus.Loaded, tour.status)
-        assertEquals("nights", tour.unit)
+        assertEquals(Res.string.overview_module_unit_tourism, tour.unitRes)
     }
 
     @Test
@@ -333,6 +338,9 @@ class OverviewComponentTest {
         val teaser = component.state.value.teaser(ChildConfig.Economy)
         assertEquals(TeaserStatus.Loaded, teaser.status)
         assertEquals(2022, teaser.year)
+
+        // The hero subtitle is built from the actual headline country, not a fixed one.
+        assertEquals("IT", component.state.value.headlineCountryCode)
     }
 
     @Test

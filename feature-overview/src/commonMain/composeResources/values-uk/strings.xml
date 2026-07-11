@@ -1,0 +1,37 @@
+<resources>
+    <!-- HeaderBar -->
+    <string name="overview_header_title">EU Stats</string>
+    <string name="overview_header_tagline">Європейська статистика · відкриті дані</string>
+    <string name="overview_header_search_description">Пошук</string>
+    <string name="overview_header_settings_description">Налаштування</string>
+
+    <!-- Browse section label -->
+    <string name="overview_browse_label">ПЕРЕГЛЯД</string>
+
+    <!-- Hero block (Economy · GDP teaser); %1$s = headline country code, e.g. "DE" -->
+    <string name="overview_hero_unit">млрд €</string>
+    <string name="overview_hero_subtitle">ВВП · %1$s · у реальному часі</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="overview_footer_staleness_live">актуальні відкриті дані</string>
+
+    <!-- BROWSE grid teaser titles (module names; order matches the Overview grid) -->
+    <string name="overview_module_title_population">Населення</string>
+    <string name="overview_module_title_economy">Економіка</string>
+    <string name="overview_module_title_environment">Довкілля</string>
+    <string name="overview_module_title_trade">Торгівля</string>
+    <string name="overview_module_title_transport">Транспорт</string>
+    <string name="overview_module_title_tourism">Туризм</string>
+    <string name="overview_module_title_social">Суспільство</string>
+    <string name="overview_module_title_science">Наука</string>
+
+    <!-- BROWSE grid teaser unit suffixes -->
+    <string name="overview_module_unit_population">осіб</string>
+    <string name="overview_module_unit_economy">млрд € · ВВП</string>
+    <string name="overview_module_unit_environment">Мт CO₂e</string>
+    <string name="overview_module_unit_trade">млрд € · експорт</string>
+    <string name="overview_module_unit_transport">пасажири</string>
+    <string name="overview_module_unit_tourism">ночівлі</string>
+    <string name="overview_module_unit_social">ризик бідності</string>
+    <string name="overview_module_unit_science">НДДКР % ВВП</string>
+</resources>

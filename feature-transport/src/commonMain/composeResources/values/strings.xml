@@ -1,0 +1,38 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="transport_module_title">Transport</string>
+    <string name="transport_module_tagline">Mobility</string>
+
+    <!-- ErrorState -->
+    <string name="transport_error_headline">Couldn't load</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="transport_empty_headline">No data</string>
+    <string name="transport_empty_body">No transport data for the selected filters.</string>
+
+    <!-- MetricHeadline subtitle -->
+    <string name="transport_mode_label_road">road</string>
+    <string name="transport_headline_label_passengers">passengers</string>
+
+    <!-- Unit suffixes (headline + stat tiles + panel captions) -->
+    <string name="transport_unit_billion">bn</string>
+    <string name="transport_unit_million">M</string>
+
+    <!-- Mode toggle (PillToggle) — also reused as the small-multiples panel caption prefix -->
+    <string name="transport_mode_toggle_road">ROAD</string>
+    <string name="transport_mode_toggle_air">AIR</string>
+    <string name="transport_mode_toggle_all">ALL</string>
+
+    <!-- Log-scale switch -->
+    <string name="transport_toggle_log_label">log</string>
+
+    <!-- Stat tiles -->
+    <string name="transport_tile_label_air">air</string>
+    <string name="transport_tile_label_sea">sea</string>
+    <string name="transport_tile_sea_value">n/a</string>
+    <string name="transport_tile_sea_delta">port-based</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="transport_footer_staleness_fresh">fresh</string>
+    <string name="transport_footer_staleness_stale">stale</string>
+</resources>
