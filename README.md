@@ -1,8 +1,8 @@
 # EU Stats Multiplatform
 
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/RomanTsisyk/MyEuroStatApp?include_prereleases&sort=semver)](https://github.com/RomanTsisyk/MyEuroStatApp/releases)
 [![Build](https://github.com/RomanTsisyk/MyEuroStatApp/actions/workflows/build.yml/badge.svg)](https://github.com/RomanTsisyk/MyEuroStatApp/actions/workflows/build.yml)
+[![Latest release](https://img.shields.io/github/v/release/RomanTsisyk/MyEuroStatApp?include_prereleases&sort=semver)](https://github.com/RomanTsisyk/MyEuroStatApp/releases)
 [![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/docs/multiplatform.html)
 [![F-Droid](https://img.shields.io/badge/F--Droid-pending%20submission-1976D2)](docs/FDROID.md)
 
@@ -12,9 +12,9 @@ Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windo
 
 **Phone · tablet · desktop** — single codebase, three form factors. Android handles phone + tablet via responsive layouts; iOS does iPhone + iPad; the JVM/Compose Desktop target packages a self-contained `.jar` (~99 MB) that runs on macOS/Linux/Windows.
 
-**Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS Xcode wrapper project is currently a placeholder stub** (KMP common code compiles for iOS targets but the wrapper needs to be regenerated locally — see [NEXT_STEPS.md](NEXT_STEPS.md) P0-2).
+**Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS app builds and launches on the iPhone 17 simulator, rendering live Eurostat data**, via a real XcodeGen-generated Xcode project (see [iosApp/README.md](iosApp/README.md)).
 
-**Known limitations:** iOS Xcode wrapper project needs regeneration; the Settings screen is a wired placeholder without persistence; no tablet master-detail layouts yet. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
+**Known limitations:** iOS has not yet been verified on a physical device or shipped via TestFlight; no native desktop installers yet (`.dmg`/`.msi`/`.deb` — runs via `java -jar`); a dedicated cross-module compare screen is still on the roadmap. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat dataset/filter table, and [`NEXT_STEPS.md`](NEXT_STEPS.md) for the prioritized roadmap.
 
@@ -90,12 +90,13 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 | Year scrubber / slider — trim or scrub time range | done | `YearScrubber` (range) + `Slider` (Population) in `core-ui/` |
 | Year picker — single-year dropdown on every module's headline | done | `YearDropdown` in `core-ui/component/` — pick any historical year, headline and stat tiles update without re-fetching |
 | 8 chart types on pure Compose Canvas | done | `core-charts/` — line, stacked-bar, pyramid, heatmap, diverging-bar, radar, small-multiples, multi-line-highlighted |
-| Responsive layout — phone, tablet, desktop | partial | Compact / Medium / Expanded breakpoints in `core-ui/layout/`; explicit tablet master-detail layouts planned — see `NEXT_STEPS.md` |
-| Multi-country comparison overlay | planned | `NEXT_STEPS.md` Phase 5 |
+| Responsive layout — phone, tablet, desktop | done | `AdaptiveTwoPane` in `core-ui/layout/` — three-slot master-detail wrapper (exact phone ordering below 840dp; 320dp controls pane + content pane at ≥840dp), adopted by all 8 feature screens |
+| Multi-country comparison overlay | done | Economy screen — index-stable `SeriesPalette` colors for any number of countries + "Absolute / Indexed 100" toggle (`core-charts/model/SeriesPalette`); a dedicated cross-module compare screen is still planned — see `NEXT_STEPS.md` |
 | Overview dashboard screen | done | `feature-overview` — landing screen aggregating one live teaser metric per module (`OverviewScreen` hero + tile grid); on-device visual check pending |
-| Search & Settings screens | planned | `NEXT_STEPS.md` Phase 5 |
-| Real flag rendering | planned | `NEXT_STEPS.md` Phase 5 |
-| iOS builds verified on simulator | planned | `NEXT_STEPS.md` P0-2 — xcrun exits 72; KMP common code compiles for iOS targets |
+| Search & Settings screens | done | `feature-search` (27-indicator compiled-in index, tiered ranking, browse-by-module) + `feature-settings` (theme/language/default-country persisted via SQLDelight, functional clear-cache) |
+| Real flag rendering | done | Unicode-emoji `flagFor()` in `core-common` |
+| KMP-level PL/UK localization, all modules | done | Compose Resources `strings.xml` (EN/PL/UK) in every module; the Settings language picker switches the UI language at runtime (`LocalAppLocale`) |
+| iOS app — builds & runs with live data | done | `iosApp/` — real XcodeGen-generated Xcode project (see [`iosApp/README.md`](iosApp/README.md)); builds and launches on the iPhone 17 simulator rendering live Eurostat data; physical-device / TestFlight verification still pending |
 | Android verified on physical device | planned | `NEXT_STEPS.md` P0 smoke-test |
 
 ---
@@ -115,7 +116,7 @@ For the visual design language (typography, spacing, color tokens, switcher patt
 | **Android — F-Droid** | Pending submission to [fdroiddata](https://gitlab.com/fdroid/fdroiddata). The build recipe is already in [`metadata/eu.eurostat.app.yml`](metadata/eu.eurostat.app.yml). See [docs/FDROID.md](docs/FDROID.md) for status. |
 | **Android — GitHub release** | Download `composeApp-release.apk` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), enable "Install from unknown sources" for your browser, open the file. |
 | **Desktop (macOS / Linux / Windows)** | Download `composeApp-{os}-{arch}-0.4.0.jar` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), run `java -jar composeApp-*.jar` (Java 17+). Native `.dmg` / `.msi` / `.deb` installers are on the v1.0 roadmap. |
-| **iOS** | Not yet shipped. The KMP common code compiles for all three iOS targets but the Xcode wrapper project needs regeneration locally (tracked in [NEXT_STEPS.md](NEXT_STEPS.md) P0-2). |
+| **iOS** | No TestFlight/App Store distribution yet. Build from source and run on the simulator — see [Quick start](#quick-start-build-from-source) below and [`iosApp/README.md`](iosApp/README.md); physical-device verification is still pending. |
 
 The app needs no account, no permissions beyond `INTERNET`, and ships
 no analytics or tracking. See [SECURITY.md](SECURITY.md) for the
@@ -134,7 +135,16 @@ vulnerability-disclosure policy.
 ./gradlew :composeApp:installDebug
 ```
 
-iOS: the `iosApp/iosApp.xcodeproj` is currently a placeholder. To enable iOS builds, regenerate the project via `kotlin("multiplatform")` Xcode integration or `cocoapods` plugin, then open in Xcode 15+ and run on a simulator. Tracked in [NEXT_STEPS.md](NEXT_STEPS.md) P0-2.
+iOS: a real `iosApp/iosApp.xcodeproj` is checked in (generated from `iosApp/project.yml` via XcodeGen). Open it in Xcode 15+ and run on a simulator, or build from the command line:
+
+```bash
+cd iosApp
+xcodebuild -project iosApp.xcodeproj -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
+  CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES build
+```
+
+See [`iosApp/README.md`](iosApp/README.md) for toolchain gotchas (JAVA_HOME pinning, `-lsqlite3`, etc.).
 
 ```bash
 # Desktop (macOS / Linux / Windows)
@@ -146,7 +156,7 @@ java -jar composeApp/build/compose/jars/composeApp-*.jar
 ./gradlew :composeApp:desktopRun
 ```
 
-Tablet: same APK / iOS app — the Compose UI is responsive. Phone-layout currently primary; explicit tablet layouts (wide-screen master-detail) on the roadmap (see [NEXT_STEPS.md](NEXT_STEPS.md)).
+Tablet: same APK / iOS app — the Compose UI is responsive, with a shared `AdaptiveTwoPane` master-detail layout (320dp controls pane + content pane at ≥840dp) adopted by all 8 feature screens.
 
 Tests:
 ```bash
@@ -173,13 +183,16 @@ feature-{population, economy, environment, trade,
          transport, tourism, social, science}
                  Each module owns: ApiService → CellMapper → Cache → Repository
                                    → Component (Decompose) → UiState → Screen
-feature-settings Placeholder Settings screen (wired into navigation; no persistence yet)
+feature-settings Settings screen: theme/language/default-country persisted
+                 via SQLDelight AppPreferences; functional clear-cache
 feature-overview Overview dashboard landing screen; aggregates one live teaser
                  metric per feature into a hero + tile grid (bound to ChildConfig.Home)
 
 composeApp       App shell: AdaptiveScaffold + Decompose stack; HomeScreen module
                  grid is the landing screen (BottomTabBar exists but is not rendered)
-iosApp           Xcode wrapper around ComposeUIViewController (placeholder stub; not a Gradle module)
+iosApp           Real XcodeGen-generated Xcode project (not a Gradle module);
+                 builds + launches on the iOS simulator with live Eurostat
+                 data — see iosApp/README.md
 ```
 
 **Tech stack:** Compose Multiplatform · Decompose · Coroutines + Flow + StateFlow · Ktor (Darwin/OkHttp) · kotlinx.serialization · SQLDelight · Koin · pure Compose Canvas charts.
