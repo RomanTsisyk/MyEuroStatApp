@@ -4,9 +4,15 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — v0.7 development (branch `develop-v0.7`)
+## [Unreleased] — v0.7 development (branches `develop-v0.7`, `develop-v0.8`)
 
 ### Added
+
+- Tag-triggered release workflow (`.github/workflows/release.yml`):
+  pushing a `v*` tag builds the release APK (real signature when the
+  keystore secrets are configured, debug-signed fallback otherwise) and
+  the three native desktop installers on a macOS/Windows/Ubuntu matrix,
+  attaching everything to the GitHub Release for the tag
 
 - feature-compare: a dedicated cross-module comparison screen — pick one
   of 8 headline indicators (population, GDP, GHG, exports, air
@@ -59,15 +65,12 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   parallel MockEngine requests into an unsynchronized list; now guarded
   by a `Mutex`-backed recorder
 
-### Planned for v0.7 / v1.0
+### Planned for v0.8 / v1.0
 
-- Bundled SVG flags via Compose Resources (currently Unicode-emoji flags)
 - Verified launch on a physical iPhone (TestFlight); on-device Android
   smoke run; interactive 8-tab walk-through → `RUN_REPORT.md`
 - Real Android release signing key (currently debug-keystore fallback);
-  Msi/Deb installers verified via CI (only Dmg verified locally so far);
-  tag-triggered release workflow that uploads native installers as
-  GitHub Release artifacts
+  Msi/Deb installers verified via CI (only Dmg verified locally so far)
 - F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
 
 ## [0.5.0] — 2026-07-07

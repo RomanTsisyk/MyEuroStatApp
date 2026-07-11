@@ -110,9 +110,15 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
    git tag -s vX.Y.Z -m "EU Stats Multiplatform vX.Y.Z"
    git push origin vX.Y.Z
    ```
-8. Create a GitHub release for the tag and attach the APK. Paste the
-   `versionCode` changelog plus the SHA-256 hash from step 6 into the
-   release notes.
+8. Pushing the tag triggers
+   [`.github/workflows/release.yml`](../.github/workflows/release.yml),
+   which creates the GitHub release and attaches the release APK plus the
+   three native desktop installers (`.dmg`/`.msi`/`.deb`) automatically.
+   Paste the `versionCode` changelog plus the SHA-256 hash from step 6 into
+   the release notes. The APK is signed with the real key only when the
+   `KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`
+   repository secrets are configured; otherwise it is debug-signed (same
+   fallback as local builds).
 9. If this is a new public release: open a merge request against
    [fdroiddata](https://gitlab.com/fdroid/fdroiddata) updating
    `metadata/eu.eurostat.app.yml` to point at the new tag. See
@@ -129,7 +135,12 @@ added so the maintainer's actual working branches are covered, not just
 falling back to the debug keystore without secrets), `desktop`
 (smoke-tests `packageUberJarForCurrentOS` on Ubuntu), and `ios-test` (runs
 the real `iosSimulatorArm64Test` suite — not just a compile — gated behind
-`android` since macOS runners bill roughly 10x an Ubuntu runner). The
-release workflow that builds and uploads the signed APK plus the native
-desktop installers to a GitHub release on tag push is still on the
-v1.0 roadmap (see [NEXT_STEPS.md](../NEXT_STEPS.md)).
+`android` since macOS runners bill roughly 10x an Ubuntu runner).
+
+[`release.yml`](../.github/workflows/release.yml) runs on `v*` tag pushes:
+an `android` job assembles the release APK (real signature when the
+keystore secrets are set, debug-signed otherwise) and a three-OS matrix
+packages the native installers; every job attaches its artifact to the
+GitHub release for the tag. Installers ship unsigned for now —
+Gatekeeper/SmartScreen warnings are expected until signing certificates
+are budgeted (post-grant item).
