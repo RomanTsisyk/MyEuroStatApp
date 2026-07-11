@@ -1,15 +1,13 @@
-package eu.eurostat.feature.economy.ui
+package eu.eurostat.core.charts.model
 
 import androidx.compose.ui.graphics.Color
-import eu.eurostat.core.charts.model.ChartPoint
-import eu.eurostat.core.charts.model.ChartSeries
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
  * Tests for [rebaseToIndex] — the pure index-rebasing step behind the
- * Economy chart's "Indexed 100" comparison mode.
+ * "Indexed 100" comparison mode (Economy screen + Compare screen).
  */
 class SeriesNormalizationTest {
 

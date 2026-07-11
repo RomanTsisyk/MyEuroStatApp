@@ -23,6 +23,7 @@ fun createRootComponent(componentContext: ComponentContext): RootComponent {
         ChildConfig.Social::class,
         ChildConfig.Science::class,
         ChildConfig.Settings::class,
+        ChildConfig.Compare::class,
     ).associate { cls ->
         val key = requireNotNull(cls.qualifiedName)
         key to koin.get<ComponentFactory<Any>>(qualifier = named(key))

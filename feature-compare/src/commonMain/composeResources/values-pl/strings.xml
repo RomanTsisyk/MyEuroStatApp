@@ -1,0 +1,54 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="compare_module_title">Porównanie</string>
+    <string name="compare_module_tagline">Między krajami</string>
+
+    <!-- Indicator selector (MetricDropdown) -->
+    <string name="compare_selector_label">wskaźnik</string>
+
+    <!-- Indicator names (one headline metric per module) -->
+    <string name="compare_indicator_population">Ludność</string>
+    <string name="compare_indicator_gdp">PKB</string>
+    <string name="compare_indicator_ghg">Gazy cieplarniane</string>
+    <string name="compare_indicator_exports">Eksport wewnątrz UE</string>
+    <string name="compare_indicator_air">Pasażerowie lotniczy</string>
+    <string name="compare_indicator_tourism">Noclegi turystyczne</string>
+    <string name="compare_indicator_poverty">Stopa zagrożenia ubóstwem</string>
+    <string name="compare_indicator_rd">Wydatki na B+R</string>
+
+    <!-- Indicator unit labels (y-axis / header) -->
+    <string name="compare_unit_population">osób</string>
+    <string name="compare_unit_gdp">mld €</string>
+    <string name="compare_unit_ghg">Mt CO₂e</string>
+    <string name="compare_unit_exports">mld €</string>
+    <string name="compare_unit_air">pasażerowie</string>
+    <string name="compare_unit_tourism">noclegi</string>
+    <string name="compare_unit_poverty">%</string>
+    <string name="compare_unit_rd">% PKB</string>
+
+    <!-- PillToggle chart scale -->
+    <string name="compare_toggle_absolute">Bezwzględne</string>
+    <string name="compare_toggle_indexed">Indeks = 100</string>
+
+    <!-- Chart axes -->
+    <string name="compare_chart_axis_year">Rok</string>
+    <string name="compare_chart_axis_index">Indeks (pierwszy rok = 100)</string>
+
+    <!-- CountryPickerSheet title -->
+    <string name="compare_add_country">Dodaj kraje</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="compare_empty_headline">brak danych</string>
+    <string name="compare_empty_body">Brak danych dla wybranego wskaźnika i krajów.</string>
+
+    <!-- ErrorState -->
+    <string name="compare_error_headline">Nie udało się wczytać porównania</string>
+
+    <!-- Chart card empty -->
+    <string name="compare_chart_empty_headline">brak danych</string>
+    <string name="compare_chart_empty_body">Brak serii danych dla wybranego wskaźnika i zakresu lat.</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="compare_footer_staleness_fresh">aktualne</string>
+    <string name="compare_footer_staleness_stale">nieaktualne</string>
+</resources>

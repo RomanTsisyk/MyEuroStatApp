@@ -14,6 +14,8 @@ import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.core.navigation.RootComponent
+import eu.eurostat.feature.compare.ui.CompareComponent
+import eu.eurostat.feature.compare.ui.CompareScreen
 import eu.eurostat.feature.economy.ui.EconomyComponent
 import eu.eurostat.feature.economy.ui.EconomyScreen
 import eu.eurostat.feature.environment.ui.EnvironmentComponent
@@ -134,6 +136,10 @@ private fun AppContent(root: RootComponent, darkTheme: Boolean) {
                         onBack = { root.onBack() },
                     )
                     is SearchComponent      -> SearchScreen(
+                        component = c,
+                        onBack = { root.onBack() },
+                    )
+                    is CompareComponent     -> CompareScreen(
                         component = c,
                         onBack = { root.onBack() },
                     )

@@ -25,6 +25,7 @@ class ChildConfigSerializationTest {
         ChildConfig.Science,
         ChildConfig.Settings,
         ChildConfig.Search,
+        ChildConfig.Compare,
     )
 
     @Test

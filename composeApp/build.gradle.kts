@@ -74,6 +74,7 @@ kotlin {
                 implementation(projects.featureSettings)
                 implementation(projects.featureOverview)
                 implementation(projects.featureSearch)
+                implementation(projects.featureCompare)
                 implementation(libs.koin.core)
                 implementation(libs.decompose.core)
                 implementation(libs.decompose.extensions.compose)

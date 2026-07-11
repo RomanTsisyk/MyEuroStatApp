@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SsidChart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import eu.eurostat.ui.theme.LocalEuroWindowWidth
 import myeurostatapp.feature_overview.generated.resources.Res
 import myeurostatapp.feature_overview.generated.resources.overview_browse_label
 import myeurostatapp.feature_overview.generated.resources.overview_footer_staleness_live
+import myeurostatapp.feature_overview.generated.resources.overview_header_compare_description
 import myeurostatapp.feature_overview.generated.resources.overview_header_search_description
 import myeurostatapp.feature_overview.generated.resources.overview_header_settings_description
 import myeurostatapp.feature_overview.generated.resources.overview_header_tagline
@@ -82,6 +84,7 @@ fun OverviewScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             HeaderBar(
                 onSearch = { onModuleSelected(ChildConfig.Search) },
+                onCompare = { onModuleSelected(ChildConfig.Compare) },
                 onSettings = { onModuleSelected(ChildConfig.Settings) },
             )
         }
@@ -116,7 +119,7 @@ fun OverviewScreen(
 }
 
 @Composable
-private fun HeaderBar(onSearch: () -> Unit, onSettings: () -> Unit) {
+private fun HeaderBar(onSearch: () -> Unit, onCompare: () -> Unit, onSettings: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -146,6 +149,11 @@ private fun HeaderBar(onSearch: () -> Unit, onSettings: () -> Unit) {
             onClick = onSearch,
         )
         HeaderIconPill(
+            icon = Icons.Default.SsidChart,
+            description = stringResource(Res.string.overview_header_compare_description),
+            onClick = onCompare,
+        )
+        HeaderIconPill(
             icon = Icons.Default.Settings,
             description = stringResource(Res.string.overview_header_settings_description),
             onClick = onSettings,
@@ -156,8 +164,8 @@ private fun HeaderBar(onSearch: () -> Unit, onSettings: () -> Unit) {
 /**
  * Circular icon affordance on the header's ink band — mirrors the 36dp
  * icon pill inside a 48dp tap target used by ModuleAppBar, tinted for the
- * dark band. Used for the Search (ChildConfig.Search) and Settings
- * (ChildConfig.Settings) entry points.
+ * dark band. Used for the Search (ChildConfig.Search), Compare
+ * (ChildConfig.Compare) and Settings (ChildConfig.Settings) entry points.
  */
 @Composable
 private fun HeaderIconPill(

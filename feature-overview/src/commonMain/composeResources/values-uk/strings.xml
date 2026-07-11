@@ -34,4 +34,5 @@
     <string name="overview_module_unit_tourism">ночівлі</string>
     <string name="overview_module_unit_social">ризик бідності</string>
     <string name="overview_module_unit_science">НДДКР % ВВП</string>
+    <string name="overview_header_compare_description">Порівняти країни</string>
 </resources>

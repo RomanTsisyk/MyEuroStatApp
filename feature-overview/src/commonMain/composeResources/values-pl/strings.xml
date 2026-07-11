@@ -34,4 +34,5 @@
     <string name="overview_module_unit_tourism">noclegi</string>
     <string name="overview_module_unit_social">zagrożenie ubóstwem</string>
     <string name="overview_module_unit_science">B+R % PKB</string>
+    <string name="overview_header_compare_description">Porównaj kraje</string>
 </resources>

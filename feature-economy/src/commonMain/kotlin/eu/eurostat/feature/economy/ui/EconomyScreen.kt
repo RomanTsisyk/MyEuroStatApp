@@ -32,6 +32,7 @@ import eu.eurostat.core.charts.model.ChartAxis
 import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 import eu.eurostat.core.charts.model.SeriesPalette
+import eu.eurostat.core.charts.model.rebaseToIndex
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyMetric

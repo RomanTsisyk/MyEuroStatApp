@@ -34,4 +34,5 @@
     <string name="overview_module_unit_tourism">nights</string>
     <string name="overview_module_unit_social">at-risk-of-poverty</string>
     <string name="overview_module_unit_science">R&amp;D of GDP</string>
+    <string name="overview_header_compare_description">Compare countries</string>
 </resources>

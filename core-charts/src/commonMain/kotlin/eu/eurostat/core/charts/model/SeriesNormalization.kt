@@ -1,6 +1,4 @@
-package eu.eurostat.feature.economy.ui
-
-import eu.eurostat.core.charts.model.ChartSeries
+package eu.eurostat.core.charts.model
 
 /** Index-rebasing base: the first visible observation of each series scales to 100. */
 private const val INDEX_BASE: Double = 100.0
@@ -11,8 +9,8 @@ private const val INDEX_BASE: Double = 100.0
  * comparable across countries with very different absolute levels.
  *
  * The caller passes series already filtered to the visible year range and
- * sorted ascending by x (year) — exactly what `buildChartSeries` produces —
- * so "first point" means "first observation inside the visible range".
+ * sorted ascending by x (year), so "first point" means "first observation
+ * inside the visible range".
  *
  * Series that cannot be rebased are dropped from the result rather than
  * rendered on the wrong (absolute) scale:
@@ -22,8 +20,11 @@ private const val INDEX_BASE: Double = 100.0
  *
  * `null` gaps after the first point are preserved as gaps. Labels and colors
  * are carried over unchanged.
+ *
+ * Shared by the Economy screen's "Indexed 100" mode and the cross-module
+ * Compare screen.
  */
-internal fun rebaseToIndex(series: List<ChartSeries>): List<ChartSeries> =
+fun rebaseToIndex(series: List<ChartSeries>): List<ChartSeries> =
     series.mapNotNull { s ->
         val base = s.points.firstOrNull()?.y
         if (base == null || base == 0.0) {
