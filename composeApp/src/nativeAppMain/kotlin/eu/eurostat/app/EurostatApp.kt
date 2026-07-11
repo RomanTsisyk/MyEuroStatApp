@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
+import eu.eurostat.app.locale.AppLocaleEnvironment
 import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.core.navigation.ChildConfig
@@ -47,9 +48,12 @@ import org.koin.mp.KoinPlatform
  *
  * Observes the persisted theme preference ([AppPreferences.themePreference])
  * and re-themes live when the user changes it on the Settings screen;
- * [ThemePreference.SYSTEM] follows [isSystemInDarkTheme]. Koin is resolved
- * lazily here because every platform entry point starts Koin before composing
- * this function.
+ * [ThemePreference.SYSTEM] follows [isSystemInDarkTheme]. The persisted
+ * language preference ([AppPreferences.language]) is applied the same way:
+ * [AppLocaleEnvironment] overrides the resource locale app-wide, so picking
+ * a language in Settings re-renders every screen in it immediately
+ * (`"system"` follows the OS locale). Koin is resolved lazily here because
+ * every platform entry point starts Koin before composing this function.
  *
  * The [BottomTabBar] component file is preserved for potential future use but
  * is no longer rendered here.
@@ -64,6 +68,20 @@ fun EurostatApp(root: RootComponent) {
         ThemePreference.LIGHT -> false
         ThemePreference.DARK -> true
     }
+    val language by preferences.language
+        .collectAsState(initial = AppPreferences.DEFAULT_LANGUAGE)
+    val languageTag = language.takeUnless { it == AppPreferences.DEFAULT_LANGUAGE }
+    AppLocaleEnvironment(languageTag) {
+        AppContent(root = root, darkTheme = darkTheme)
+    }
+}
+
+/**
+ * Themed navigation shell, split out of [EurostatApp] so the locale wrapper
+ * has a single child to rebuild on language switches.
+ */
+@Composable
+private fun AppContent(root: RootComponent, darkTheme: Boolean) {
     EurostatTheme(darkTheme = darkTheme) {
         AdaptiveScaffold(modifier = Modifier.fillMaxSize()) { _ ->
             Children(
