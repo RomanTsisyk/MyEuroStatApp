@@ -14,7 +14,7 @@ Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windo
 
 **Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS app builds and launches on the iPhone 17 simulator, rendering live Eurostat data**, via a real XcodeGen-generated Xcode project (see [iosApp/README.md](iosApp/README.md)).
 
-**Known limitations:** iOS has not yet been verified on a physical device or shipped via TestFlight; no native desktop installers yet (`.dmg`/`.msi`/`.deb` — runs via `java -jar`); a dedicated cross-module compare screen is still on the roadmap. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
+**Known limitations:** iOS has not yet been verified on a physical device or shipped via TestFlight; native desktop installers (`.dmg`/`.msi`/`.deb`) are configured and `.dmg` is verified locally, but they are unsigned and not yet published via CI. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat dataset/filter table, and [`NEXT_STEPS.md`](NEXT_STEPS.md) for the prioritized roadmap.
 
@@ -91,7 +91,7 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 | Year picker — single-year dropdown on every module's headline | done | `YearDropdown` in `core-ui/component/` — pick any historical year, headline and stat tiles update without re-fetching |
 | 8 chart types on pure Compose Canvas | done | `core-charts/` — line, stacked-bar, pyramid, heatmap, diverging-bar, radar, small-multiples, multi-line-highlighted |
 | Responsive layout — phone, tablet, desktop | done | `AdaptiveTwoPane` in `core-ui/layout/` — three-slot master-detail wrapper (exact phone ordering below 840dp; 320dp controls pane + content pane at ≥840dp), adopted by all 8 feature screens |
-| Multi-country comparison overlay | done | Economy screen — index-stable `SeriesPalette` colors for any number of countries + "Absolute / Indexed 100" toggle (`core-charts/model/SeriesPalette`); a dedicated cross-module compare screen is still planned — see `NEXT_STEPS.md` |
+| Multi-country comparison overlay | done | Economy screen — index-stable `SeriesPalette` colors for any number of countries + "Absolute / Indexed 100" toggle (`core-charts/model/SeriesPalette`); plus a dedicated `feature-compare` screen (8 headline indicators, 2-5 countries, same palette + Indexed-100 toggle) reachable from a compare pill on the Overview header |
 | Overview dashboard screen | done | `feature-overview` — landing screen aggregating one live teaser metric per module (`OverviewScreen` hero + tile grid); on-device visual check pending |
 | Search & Settings screens | done | `feature-search` (27-indicator compiled-in index, tiered ranking, browse-by-module) + `feature-settings` (theme/language/default-country persisted via SQLDelight, functional clear-cache) |
 | Real flag rendering | done | Unicode-emoji `flagFor()` in `core-common` |
@@ -115,7 +115,7 @@ For the visual design language (typography, spacing, color tokens, switcher patt
 |---|---|
 | **Android — F-Droid** | Pending submission to [fdroiddata](https://gitlab.com/fdroid/fdroiddata). The build recipe is already in [`metadata/eu.eurostat.app.yml`](metadata/eu.eurostat.app.yml). See [docs/FDROID.md](docs/FDROID.md) for status. |
 | **Android — GitHub release** | Download `composeApp-release.apk` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), enable "Install from unknown sources" for your browser, open the file. |
-| **Desktop (macOS / Linux / Windows)** | Download `composeApp-{os}-{arch}-0.4.0.jar` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), run `java -jar composeApp-*.jar` (Java 17+). Native `.dmg` / `.msi` / `.deb` installers are on the v1.0 roadmap. |
+| **Desktop (macOS / Linux / Windows)** | Download `composeApp-{os}-{arch}-0.4.0.jar` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), run `java -jar composeApp-*.jar` (Java 17+). Native `.dmg` / `.msi` / `.deb` installers are configured (`./gradlew :composeApp:packageDmg` / `packageMsi` / `packageDeb`) and `.dmg` is verified locally — they are **unsigned** (macOS Gatekeeper / Windows SmartScreen will warn) and not yet published as release artifacts; see [`docs/RELEASING.md`](docs/RELEASING.md). |
 | **iOS** | No TestFlight/App Store distribution yet. Build from source and run on the simulator — see [Quick start](#quick-start-build-from-source) below and [`iosApp/README.md`](iosApp/README.md); physical-device verification is still pending. |
 
 The app needs no account, no permissions beyond `INTERNET`, and ships
@@ -151,6 +151,11 @@ See [`iosApp/README.md`](iosApp/README.md) for toolchain gotchas (JAVA_HOME pinn
 ./gradlew :composeApp:packageUberJarForCurrentOS
 # → composeApp/build/compose/jars/composeApp-{os}-{arch}-0.4.0.jar (self-contained, ~99 MB)
 java -jar composeApp/build/compose/jars/composeApp-*.jar
+
+# OR a native installer for your OS (unsigned; packageDmg verified locally)
+./gradlew :composeApp:packageDmg    # macOS
+./gradlew :composeApp:packageMsi    # Windows
+./gradlew :composeApp:packageDeb    # Linux
 
 # OR run in dev mode
 ./gradlew :composeApp:desktopRun

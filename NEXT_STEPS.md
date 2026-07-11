@@ -230,21 +230,19 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ---
 
-## P2 · Linux Flatpak + Windows installer + macOS .dmg packaging
+## 🟡 MOSTLY DONE · Linux Flatpak + Windows installer + macOS .dmg packaging
 
 **Why:** `packageUberJarForCurrentOS` only outputs `.jar`. For distribution to non-dev users, we need native installers.
 
-**Steps:**
-1. Use `compose.desktop { application { nativeDistributions { targetFormats(Dmg, Msi, Deb) } } }`.
-2. Wire up GitHub Actions matrix build: `runs-on: [macos-latest, ubuntu-latest, windows-latest]`.
-3. Sign macOS `.dmg` (requires Apple Developer cert) and Windows `.msi` (requires Windows code-signing cert) — optional, deferred until budget exists.
-4. Publish artifacts to GitHub Releases on tag.
+**Status:** `composeApp/build.gradle.kts` now has a `nativeDistributions` block (`targetFormats(Dmg, Msi, Deb)`, package name "EU Stats", bundleID `eu.eurostat.app`, AGPL `LICENSE` bundled) with per-OS icons generated from the store icon (`app.icns` via `sips`+`iconutil`, `app.ico` via Pillow, `app.png` for Linux) in `composeApp/icons/`. `:composeApp:packageDmg` verified locally → `EU Stats-1.0.0.dmg` (122 MB). Local gotcha: Android Studio's bundled JBR has no `jpackage` — point `JAVA_HOME` at a full JDK (e.g. the Gradle-provisioned Temurin under `~/.gradle/jdks`) for any `package*` task.
 
-**Files involved:** `composeApp/build.gradle.kts` (nativeDistributions block), `.github/workflows/release.yml` (new).
+**Steps still open:**
+1. Verify `packageMsi` / `packageDeb` — these only build on their native OS, so they need a CI matrix run (not yet added) rather than the maintainer's single macOS machine.
+2. Sign macOS `.dmg` (requires Apple Developer cert) and Windows `.msi` (requires Windows code-signing cert) — deferred to post-grant per `NLNET_SUBMISSION/03-milestones.md`.
+3. Publish artifacts to GitHub Releases on tag (see the CI release-workflow item above).
+4. Flatpak manifest for Flathub — not started.
 
-**Acceptance:** push a tag → CI produces 3 native installers as release artifacts.
-
-**Effort:** ~4-6 hours (excluding cert procurement).
+**Acceptance:** push a tag → CI produces native installers as release artifacts. (Dmg build + icons verified locally; Msi/Deb + the tag-triggered publish step remain.)
 
 ---
 
@@ -252,7 +250,7 @@ This is a maintenance landmine. Pick one convergent approach.
 
 **Status:** ✅ Done (in-module variant). The economy hero chart overlays every picked country (CountryPickerSheet) with index-stable `SeriesPalette` colors + legend, and gains an "Absolute / Indexed 100" normalization toggle — each series rebased to 100 at its first point inside the visible year range (pure `rebaseToIndex()`, 9 tests; zero/missing-first series dropped, gaps preserved). Acceptance met: DE/FR/PL GDP on one chart with distinct colors and legend.
 
-**Dedicated cross-module compare screen (backlog):** a `feature-compare/` data+domain layer was scaffolded (a `CompareIndicator` adapter abstraction + one adapter per module mapping each module's headline metric to per-country year/value series, a catalog, models) but reverted from the branch because the UI half never landed — no component/state/intent/screen, no `ChildConfig.Compare` wiring, no tests. To finish: build the Component/UiState/Intent + screen (indicator dropdown, `CountryPickerSheet` 2–3 countries, `EurostatLineChart` overlay with `SeriesPalette` + generalized `rebaseToIndex`, `PillToggle` Absolute/Indexed-100), wire `ChildConfig.Compare` like `feature-search`, add an Overview header pill. The scaffolded adapters are recoverable from git history if wanted.
+**Dedicated cross-module compare screen — ✅ DELIVERED.** `feature-compare` ships a full Component/UiState/Intent/Screen: pick one of 8 headline indicators (population, GDP, GHG, exports, air passengers, tourism nights, at-risk-of-poverty, R&D %GDP) and 2-5 countries via `CountryPickerSheet`; `CompareDataSource` adapts all 8 feature repositories to one `CompareSeries` shape (transport is strictly air-only — no road fallback, unlike the Overview teaser); one palette-colored line per country overlaid on `EurostatLineChart` with the `rebaseToIndex` Absolute/Indexed-100 toggle (now public in `core-charts`; feature-economy's internal duplicate deleted). Selection order is preserved so `SeriesPalette` colors stay stable as countries are added/removed; `ChildConfig.Compare` is wired like `feature-search`; entry is a compare pill on the Overview header. EN/PL/UK localized (31 keys). Built by an agent, adversarially reviewed through 4 lenses (data correctness, lifecycle, UI/l10n, Native safety) with all 9 findings fixed. Unit-tested including `iosSimulatorArm64Test`.
 
 Original notes below.
 
@@ -275,7 +273,7 @@ Original notes below.
 
 **Status:** Both done. Settings: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header; **default-country now seeds all 9 components' first query** (read once before the first fetch; mid-session changes apply on next start). Search: `feature-search` module — compiled-in index of 27 indicators across the 8 modules with tiered ranking (label prefix > word prefix > substring > keyword > description) and browse-by-module on blank query; search pill on the Overview header; opening a result brings the target module to front. 17 ranking/component tests.
 
-**Remaining follow-up:** apply the *language* preference once KMP string resources exist (below).
+**Remaining follow-up:** none — the *language* preference is now applied at runtime (see the Translations section below).
 
 **Why:** wireframes (`design/screens-system.jsx`) define both. Settings exposes theme/language/default-country preferences; Search lets users find indicators across all 8 modules. Both are referenced in `ModuleAppBar` (search icon dispatches nowhere).
 
@@ -312,18 +310,15 @@ Original notes below.
 
 ---
 
-## 🟡 IN PROGRESS · Translations: PL + UK strings
+## ✅ DONE · Translations: PL + UK strings
 
-**Why:** `CLAUDE.md` lists EN/DE/FR/PL/UK. Eurostat returns EN/DE/FR labels natively. PL + UK need our translation. Currently most strings are hardcoded literals in Kotlin.
+**Why:** `CLAUDE.md` lists EN/DE/FR/PL/UK. Eurostat returns EN/DE/FR labels natively. PL + UK need our translation. Previously most strings were hardcoded literals in Kotlin.
 
-**Status (started):** the Compose Resources pattern is established and proven — per-module `composeResources/values{,-pl,-uk}/strings.xml` with a plugin-derived `Res` package (NO gradle changes needed). **Landed:** core-ui shared components (CountryPickerSheet, EmptyState/ErrorState, StaleBanner, YearDropdown, CountryChip(sRow)) + `feature-population` + `feature-science`, all with EN/PL/UK, screens resolving via `stringResource(...)`; compile + tests green.
+**Status:** ✅ Done. All 9 remaining modules (economy, environment, trade, transport, tourism, social, settings, search, overview) extracted the same way as core-ui/population/science — per-module `composeResources/values{,-pl,-uk}/strings.xml` with a plugin-derived `Res` package, screens resolving via `stringResource(...)`. Every module was adversarially reviewed for translation quality and key parity. `feature-search`'s `SearchModule.displayName` and `feature-overview`'s `ModuleTeaser.title/unit` moved from plain `String` to `StringResource` so they localize too. AppError messages also localize now (`AppError.localizedMessage()` in core-ui, EN/PL/UK; the old English-only `AppError.toUserMessage()` is deleted). The *language* preference (`AppPreferences.language`) is now applied at runtime via a `LocalAppLocale` expect/actual (Android Configuration swap, desktop JVM-locale composition local, iOS `AppleLanguages` override in `NSUserDefaults`) — `EurostatApp` observes the preference and `key()`-rebuilds the themed subtree, so the Settings language picker switches the UI language immediately, no restart needed.
 
-**Remaining (clean backlog — next weekly commits):**
-1. Extract the other 6 feature screens the same way: `economy` (~34 strings), `transport` (~23), `environment`, `trade`, `tourism`, `social`. Reference implementations: `feature-population` / `feature-science`. Pattern gotchas: hoist `stringResource` out of `buildString`/non-composable helpers to the call site; escape `'` in PL/UK XML.
-2. Apply the *language* preference (`AppPreferences.language`, already persisted by Settings) at runtime — set the Compose `LocaleList`/resource locale from the stored code so the Settings language picker actually switches UI language.
-3. Consider localizing the shared `SourceFooter` "fresh/stale" word (currently hardcoded EN in every module) as a single core-ui change.
+**Acceptance met:** language switcher in Settings changes UI language across all screens immediately.
 
-**Acceptance:** language switcher in Settings changes UI language across all screens.
+**Still open:** localizing the shared `SourceFooter` "fresh/stale" word is a nice-to-have, not blocking; native-speaker PL review of the author's own-knowledge translations is still worth doing before v1.0.
 
 ---
 
@@ -346,7 +341,7 @@ Original notes below.
 
 ## ✅ DONE · Better error messages
 
-**Status:** ✅ Done. One shared `AppError.toUserMessage()` in core-common (plain string — localization comes with KMP string resources later) with per-subtype copy (NoNetwork / 5xx vs other HTTP / Parse / CacheEmpty / Unknown), used by all 8 feature components (six of which previously surfaced raw `cause.toString()`); mapping unit-tested.
+**Status:** ✅ Done, and since localized. Originally shipped as a shared `AppError.toUserMessage()` in core-common (plain English string) with per-subtype copy (NoNetwork / 5xx vs other HTTP / Parse / CacheEmpty / Unknown), used by all 8 feature components (six of which previously surfaced raw `cause.toString()`). Now superseded: UI states carry the raw `AppError`, and a `@Composable AppError.localizedMessage()` in core-ui (EN/PL/UK) resolves the copy at the `ErrorState` call site, so error text follows runtime language switches; `AppError.toUserMessage()` is deleted as dead code.
 
 ---
 
@@ -356,21 +351,22 @@ Original notes below.
 
 ---
 
-## P3 · CI
+## 🟡 MOSTLY DONE · CI
 
-**Steps:**
-1. GitHub Actions workflow on push: `./gradlew assembleDebug allTests`.
-2. iOS smoke build on macOS runner if budget allows.
+**Status:** `.github/workflows/build.yml` now also triggers on push to `develop-v*` (previously only `main`/`master`) with three jobs: `android` (`assembleDebug` + `allTests` + `assembleRelease`, exercising the real R8/proguard pass, falling back to the debug keystore without secrets), `desktop` (`packageUberJarForCurrentOS` smoke test on Ubuntu), and `ios-test` (the real `iosSimulatorArm64Test` suite, not a compile-only gate — gated behind `android` since macOS runners bill ~10x). Remaining: a tag-triggered release workflow that builds and uploads the native installers (APK, Dmg, Msi, Deb) as GitHub Release artifacts.
+
+**Steps still open:**
+1. Release workflow on tag push (`v*`): build signed APK + all desktop installers, attach to the GitHub Release.
 
 ---
 
-## P3 · Release config
+## 🟡 MOSTLY DONE · Release config
 
-**Steps:**
-1. Signing config for Android release.
-2. Proguard/R8 rules — likely needs additions for Decompose, Ktor, kotlinx.serialization.
-3. iOS deployment target review.
-4. App icons + adaptive icon for Android.
+**Status:** iOS app icon (`AppIcon.appiconset`, single-size 1024 no-alpha, wired via `project.yml`/XcodeGen) and desktop per-OS icons (`.icns`/`.ico`/`.png` generated from the store icon) are done; version sync landed (`versionCode` 60 / `versionName` 0.6.0 across Android, the Settings About screen, and iOS `Info.plist`); Proguard/R8 is now exercised in CI via `assembleRelease` on every push (see CI above), not just a manual step.
+
+**Steps still open:**
+1. Real Android release signing keystore (currently the documented debug-keystore fallback in `docs/RELEASING.md`).
+2. iOS deployment target review.
 
 ---
 
@@ -388,7 +384,7 @@ Original notes below.
 3. ⏳ All 8 feature tabs render real Eurostat data on first open (needs the on-device smoke run).
 4. ✅ Refresh button + pull-to-refresh both work (pull-to-refresh on all 8 screens).
 5. ✅ Offline state shows cached data with stale indicator (incl. cohort pyramid + tourism heatmap via the blob cache).
-6. ✅ Error states recover via retry button, with per-subtype messages (`AppError.toUserMessage()`).
+6. ✅ Error states recover via retry button, with per-subtype localized messages (`AppError.localizedMessage()`, EN/PL/UK).
 7. ✅ Landing is the Overview dashboard (hero + live per-module teasers).
 8. ✅ Country picker opens from `+ add`; multi-selection overlays the economy chart (distinct `SeriesPalette` colors + Indexed-100 toggle).
 9. ✅ Settings persist across restart (SQLDelight `PreferenceEntity`; theme applied app-wide).

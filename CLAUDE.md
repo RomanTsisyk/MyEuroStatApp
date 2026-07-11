@@ -6,7 +6,7 @@
 ## What this is
 
 Kotlin Multiplatform app (Android · iOS · macOS · Linux · Windows desktop) that visualizes public European statistical data.
-Multi-module Clean Architecture. **Phase 5 essentially complete; Phase 6 (release) in progress** — all 8 feature modules ship real public-API data through the design-system UI. Landed: Overview/landing dashboard, searchable country picker (`CountryPickerSheet`) + Unicode flags, bundled Inter + IBM Plex Mono fonts, cache-strategy convergence (JSON-blob `MultiDimCache` + SQLDelight migrations, schema v3), Settings persistence (theme applied app-wide; default-country now seeds every component's first query), comparison mode (economy: `SeriesPalette` + Indexed-100 toggle), shared locale-aware number formatting (`eu.eurostat.ui.format`), pull-to-refresh, shared `AppError.toUserMessage()`, **Search screen** (`feature-search`, 27-indicator index + ranking), **responsive master-detail** on all 8 screens (`AdaptiveTwoPane`), and **PL/UK Compose-Resources localization** started (core-ui + population + science). Still ahead: the remaining 6 localization screens + applying the stored language preference, a dedicated cross-module compare screen, bundled SVG flags, and on-device/simulator interactive verification. iOS builds work via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when `xcode-select` points at CommandLineTools (permanent fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`). **NOTE for KMP changes: verify with `iosSimulatorArm64Test`, not just `compileKotlinIosSimulatorArm64` — a `\p{L}` regex passed JVM tests but crashed on Native.** See `NEXT_STEPS.md`.
+Multi-module Clean Architecture. **Phase 5 complete; Phase 6 (release) in progress** — all 8 feature modules ship real public-API data through the design-system UI. Landed: Overview/landing dashboard, searchable country picker (`CountryPickerSheet`) + Unicode flags, bundled Inter + IBM Plex Mono fonts, cache-strategy convergence (JSON-blob `MultiDimCache` + SQLDelight migrations, schema v3), Settings persistence (theme applied app-wide; default-country now seeds every component's first query), comparison mode (economy in-chart overlay: `SeriesPalette` + Indexed-100 toggle), a **dedicated cross-module compare screen** (`feature-compare`: 8 headline indicators, 2-5 countries, palette-stable overlay, Absolute/Indexed-100, reachable from an Overview header pill), shared locale-aware number formatting (`eu.eurostat.ui.format`), pull-to-refresh, localized `AppError.localizedMessage()` (EN/PL/UK, resolved in core-ui), **Search screen** (`feature-search`, 27-indicator index + ranking), **responsive master-detail** on all 8 screens (`AdaptiveTwoPane`), and **PL/UK Compose-Resources localization across every module** with the stored language preference now **applied at runtime** (`LocalAppLocale`; the Settings picker switches the UI language immediately). Still ahead: bundled SVG flags, on-device/simulator interactive verification, and a real Android release signing key. iOS builds work via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` when `xcode-select` points at CommandLineTools (permanent fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`). **NOTE for KMP changes: verify with `iosSimulatorArm64Test`, not just `compileKotlinIosSimulatorArm64` — a `\p{L}` regex passed JVM tests but crashed on Native.** See `NEXT_STEPS.md`.
 
 ## Architecture
 
@@ -57,8 +57,9 @@ feature-settings  → real Settings screen (theme / language / default country /
                    core-database). Theme drives EurostatTheme app-wide; the
                    Overview header gear navigates here. Default-country seeds
                    every component's first query (read once at start; changes
-                   apply on next launch). Language persisted, applied once
-                   KMP string resources exist (Phase 5 remainder).
+                   apply on next launch). Language persisted AND applied at
+                   runtime via LocalAppLocale — the picker switches the UI
+                   language immediately, no restart needed.
 feature-search    → Search screen: compiled-in index of 27 indicators across the
                    8 modules (labels, dataset codes, keywords), pure tiered
                    ranking, browse-by-module on blank query; synchronous
@@ -69,6 +70,16 @@ feature-overview  → Overview dashboard (the landing screen). DefaultOverviewCo
                    repositories concurrently (Koin singletons) and combine()-ing them
                    into OverviewUiState; each teaser degrades independently. Depends on
                    all 8 feature domain layers. Bound to ChildConfig.Home.
+feature-compare   → Dedicated cross-module comparison screen. CompareDataSource adapts
+                   all 8 feature repositories to one CompareSeries shape (one of 8
+                   headline indicators at a time); CompareComponent lets the user pick
+                   2-5 countries (selection-order-stable SeriesPalette colors, default-
+                   country-seeded) and overlays them on one EurostatLineChart with the
+                   shared (now core-charts-public) rebaseToIndex Absolute/Indexed-100
+                   toggle. Transport indicator is strictly air-only (no road fallback,
+                   unlike the Overview teaser). Depends on all 8 feature domain layers +
+                   core-charts. Bound to ChildConfig.Compare; entry via a pill on the
+                   Overview header.
 
 composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
                    Landing is the Overview dashboard (ChildConfig.Home → OverviewScreen:
@@ -151,12 +162,12 @@ composeApp        → app shell: AdaptiveScaffold + Decompose Children stack.
 - [x] Phase 4 — **composeApp** wired to new `EurostatTheme`; HomeScreen 8-card grid + Decompose stack (BottomTabBar preserved but not rendered). APK assembles (19 MB).
 - [x] **Phase 5** — Overview dashboard / landing screen (`feature-overview`: `DefaultOverviewComponent` aggregates 8 live per-module teaser metrics → `OverviewScreen` hero + tile grid, bound to `ChildConfig.Home`; unit-tested. On-device visual check pending.)
 - [~] **Phase 5** — Country picker (searchable `CountryPickerSheet` ships inline on feature screens; tap-the-map variant deferred)
-- [x] **Phase 5** — Comparison mode (economy multi-country overlay: `SeriesPalette` index-stable colors + "Absolute / Indexed 100" rebasing toggle, pure tested `rebaseToIndex()`)
+- [x] **Phase 5** — Comparison mode (economy in-chart multi-country overlay: `SeriesPalette` index-stable colors + "Absolute / Indexed 100" rebasing toggle, pure tested `rebaseToIndex()`) AND the dedicated cross-module compare screen (`feature-compare`: 8 headline indicators, 2-5 countries, `rebaseToIndex` now public in core-charts, Overview header pill entry)
 - [x] **Phase 5** — Search & Settings screens (Settings: SQLDelight-persisted theme/language/default-country + functional clear-cache, theme applied app-wide, default-country now seeds all 9 components' first query; Search: `feature-search` with a 27-indicator compiled-in index, tiered ranking, browse-by-module, entry pill on the Overview header)
 - [x] **Phase 5** — Cache strategy convergence (`MultiDimCache` JSON-blob table + `JsonBlobCache<T>` in core-common + `.sqm` migrations; population cohorts cached, tourism off the sentinel table; desktop driver schema-managed)
 - [x] **Phase 5** — Bundle Inter + IBM Plex Mono fonts (loaded from `composeResources/font/`)
 - [x] **Phase 5** — Real flag rendering (`flagFor()` Unicode emoji in core-common) + Android PL/UK string resources
-- [~] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting (formatting DONE in `eu.eurostat.ui.format`; Compose-Resources strings STARTED — pattern proven, core-ui + population + science extracted EN/PL/UK; 6 feature screens + applying the language preference still ahead)
+- [x] **Phase 5** — KMP-level (Compose Resources) PL/UK localization + locale-aware number formatting (formatting DONE in `eu.eurostat.ui.format`; Compose-Resources strings extracted EN/PL/UK for every module including AppError messages; the stored language preference is now applied at runtime via `LocalAppLocale` — the Settings picker switches UI language immediately)
 - [x] **Phase 5** — iOS toolchain + app: real `iosApp.xcodeproj` generated from `iosApp/project.yml` (XcodeGen); builds green via `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (permanent fix: `sudo xcode-select -s`); app launches on the iPhone 17 simulator and renders live Eurostat data. Gotchas documented in `iosApp/README.md` (JAVA_HOME pinning, `-lsqlite3`, `CADisableMinimumFrameDurationOnPhone`, `doInitKoinIos`). Interactive 8-tab walk-through pending (Phase 6).
 - [ ] **Phase 6** — Verified on Android device + iOS simulator; CI; release config; signing
 

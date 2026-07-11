@@ -4,33 +4,49 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — v0.6 development (branch `develop-v0.6`)
+## [Unreleased] — v0.7 development (branch `develop-v0.7`)
 
 ### Added
 
-- Search screen (`feature-search`): a compiled-in index of 27 indicators
-  across the 8 modules (labels, dataset codes, natural-language keywords)
-  with pure tiered ranking (label prefix > word prefix > substring >
-  keyword > description) and browse-by-module on a blank query; reachable
-  from a search pill on the Overview header, and opening a result brings
-  the target module to front
-- The persisted default-country preference now seeds every feature
-  component's (and the Overview's) first query — read once before the
-  first fetch, no double-fetch, no wrong-country flash; mid-session
-  changes apply on next start
-- Tablet/desktop responsive master-detail via a shared three-slot
-  `AdaptiveTwoPane` in core-ui: exact phone ordering below 840 dp, a
-  320 dp controls pane beside a content pane at ≥ 840 dp; adopted by all
-  8 feature screens; desktop window opens at 1280×800 (visually verified
-  at 400/1280 dp on the desktop target)
-- KMP-level PL/UK localization, started: per-module Compose Resources
-  `strings.xml` (EN/PL/UK) for the shared core-ui components and the
-  population + science screens, resolving via `stringResource(...)`
-  (pattern proven; the other 6 screens + applying the language
-  preference are next)
-- CI: a compile-only iOS gate on `macos-latest`
-  (`:composeApp:compileKotlinIosSimulatorArm64`, gated behind the Linux
-  job) so iOS-only breakage is caught without spending simulator minutes
+- feature-compare: a dedicated cross-module comparison screen — pick one
+  of 8 headline indicators (population, GDP, GHG, exports, air
+  passengers, tourism nights, at-risk-of-poverty, R&D %GDP) and 2-5
+  countries; one palette-colored line per country overlaid on a single
+  chart with an Absolute / Indexed-100 toggle. `rebaseToIndex` is now
+  public in `core-charts` (feature-economy's internal duplicate deleted);
+  reachable via a compare pill on the Overview header; EN/PL/UK
+  localized; unit-tested including `iosSimulatorArm64Test`
+- KMP-level PL/UK localization now covers **all** modules: Compose
+  Resources `strings.xml` (EN/PL/UK) extracted for the remaining 9
+  modules (economy, environment, trade, transport, tourism, social,
+  settings, search, overview), completing the pattern started on core-ui
+  + population + science
+- Runtime language switching: `LocalAppLocale` expect/actual
+  (Android/desktop/iOS) following the official Compose
+  resource-environment pattern; `EurostatApp` observes
+  `AppPreferences.language` and rebuilds the themed subtree on change —
+  the Settings language picker now actually switches the UI language
+  immediately, not just on next launch
+- AppError messages now localize: UI states carry the raw `AppError`;
+  a new `@Composable AppError.localizedMessage()` in core-ui (EN/PL/UK)
+  resolves it at the `ErrorState` call site so error copy follows
+  runtime language switches; the old English-only
+  `core-common/AppError.toUserMessage()` is deleted
+- iOS app icon: a single-size 1024×1024 no-alpha `AppIcon.appiconset`
+  (upscaled from the 512 px fastlane store icon), wired through
+  `project.yml` and regenerated via XcodeGen
+- Desktop native installers: `nativeDistributions` (`Dmg`/`Msi`/`Deb`)
+  with per-OS icons (`.icns`/`.ico`/`.png` generated from the store
+  icon), package name "EU Stats"; `packageDmg` verified locally
+  (`EU Stats-1.0.0.dmg`, 122 MB)
+- CI: push trigger now includes `develop-v*`; the iOS job runs the real
+  `iosSimulatorArm64Test` suite instead of a compile-only gate; the
+  Android job also runs `assembleRelease` (exercises R8/proguard,
+  falls back to the debug keystore); a new Ubuntu `desktop` job smoke-tests
+  `packageUberJarForCurrentOS`
+- Version sync: `versionCode` 60 / `versionName` 0.6.0 across Android,
+  the Settings About screen (no longer hardcoded to 0.4.0), and the iOS
+  `Info.plist`
 
 ### Fixed
 
@@ -43,18 +59,16 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   parallel MockEngine requests into an unsynchronized list; now guarded
   by a `Mutex`-backed recorder
 
-### Planned for v0.6 / v1.0
+### Planned for v0.7 / v1.0
 
-- Finish PL/UK localization: the remaining 6 feature screens + apply the
-  stored language preference at runtime so the Settings picker switches
-  UI language
-- Bundled SVG flags via Compose Resources; dedicated cross-module compare
-  screen (data-layer scaffold recoverable from git history)
+- Bundled SVG flags via Compose Resources (currently Unicode-emoji flags)
 - Verified launch on a physical iPhone (TestFlight); on-device Android
   smoke run; interactive 8-tab walk-through → `RUN_REPORT.md`
-- Native Windows / macOS installers (`.msi`, `.dmg`) from Compose Desktop
+- Real Android release signing key (currently debug-keystore fallback);
+  Msi/Deb installers verified via CI (only Dmg verified locally so far);
+  tag-triggered release workflow that uploads native installers as
+  GitHub Release artifacts
 - F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
-- GitHub Actions release workflow with reproducible signed APK
 
 ## [0.5.0] — 2026-07-07
 
