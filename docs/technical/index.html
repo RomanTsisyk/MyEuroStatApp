@@ -4,12 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>EU Stats Multiplatform — Technical Reference</title>
-  <meta name="description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 18 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 499 unit tests." />
+  <meta name="description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 20 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 600+ unit tests." />
   <meta name="theme-color" content="#003399" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0B101C" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta property="og:title" content="EU Stats Multiplatform — Technical Reference" />
-  <meta property="og:description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 18 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 499 unit tests." />
+  <meta property="og:description" content="Architecture, data flow, and conventions of the EU Stats Multiplatform project. 20 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 600+ unit tests." />
   <meta property="og:type" content="article" />
   <meta property="og:image" content="../gifs/overview.gif" />
   <meta property="og:url" content="https://romantsisyk.github.io/MyEuroStatApp/technical/" />
@@ -30,9 +30,9 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "EU Stats Multiplatform — Architecture & Technical Reference",
-    "description": "Architecture, data flow, and conventions of the EU Stats Multiplatform project. 18 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 499 unit tests.",
+    "description": "Architecture, data flow, and conventions of the EU Stats Multiplatform project. 20 Gradle modules, JSON-stat parser, stale-while-revalidate caching, 8 chart types on pure Compose Canvas, 600+ unit tests.",
     "author": { "@type": "Person", "name": "Roman Tsisyk" },
-    "dateModified": "2026-05-25",
+    "dateModified": "2026-07-12",
     "mainEntityOfPage": { "@type": "WebPage", "@id": "https://romantsisyk.github.io/MyEuroStatApp/technical/" },
     "url": "https://romantsisyk.github.io/MyEuroStatApp/technical/",
     "inLanguage": "en",
@@ -711,7 +711,7 @@
           <span>Technical Reference</span>
         </div>
         <h1>Architecture &amp;<br/>Technical Reference</h1>
-        <p class="lede">How EU Stats Multiplatform is put together &mdash; the contracts, the data flow, the conventions that make 18 Gradle modules ship the same product on Android, iOS, and desktop.</p>
+        <p class="lede">How EU Stats Multiplatform is put together &mdash; the contracts, the data flow, the conventions that make 20 Gradle modules ship the same product on Android, iOS, and desktop.</p>
       </div>
     </header>
 
@@ -720,7 +720,7 @@
       <div class="wrap">
         <div class="section-head">
           <div class="section-eyebrow">Module graph</div>
-          <h2>18 Gradle modules, three tiers</h2>
+          <h2>20 Gradle modules, three tiers</h2>
           <p>Core modules define reusable contracts. Feature modules own their data flow end-to-end. The app shell wires everything together.</p>
         </div>
 
@@ -826,10 +826,10 @@
             <text x="285" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--mod-science)" font-weight="600" text-anchor="middle">science</text>
             <text x="285" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">rd · isoc · edat</text>
 
-            <!-- feature-settings (planned) -->
-            <rect x="344" y="278" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3" filter="url(#bshadow)"/>
-            <text x="395" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--muted)" font-weight="600" text-anchor="middle">settings</text>
-            <text x="395" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">Phase 5 planned</text>
+            <!-- feature-settings (shipped v0.5, runtime locale switch v0.7) -->
+            <rect x="344" y="278" width="102" height="38" rx="8" fill="var(--paper-alt)" stroke="var(--accent)" stroke-width="1.5" filter="url(#bshadow)"/>
+            <text x="395" y="293" font-family="var(--font-mono)" font-size="9" fill="var(--accent)" font-weight="600" text-anchor="middle">settings</text>
+            <text x="395" y="308" font-family="var(--font-mono)" font-size="8.5" fill="var(--muted)" text-anchor="middle">prefs · locale</text>
 
             <!-- ================= TIER 3: APP SHELL ================= -->
             <!-- composeApp -->
@@ -849,11 +849,11 @@
             <text x="572" y="264" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">core module</text>
             <rect x="540" y="273" width="26" height="14" rx="4" fill="var(--paper-alt)" stroke="var(--mod-economy)" stroke-width="1.5"/>
             <text x="572" y="284" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">feature module</text>
-            <rect x="540" y="293" width="26" height="14" rx="4" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/>
-            <text x="572" y="304" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">planned (Phase 5)</text>
+            <rect x="540" y="293" width="26" height="14" rx="4" fill="var(--paper-alt)" stroke="var(--border-strong)" stroke-width="1"/>
+            <text x="572" y="304" font-family="var(--font-mono)" font-size="9" fill="var(--ink-subtle)">app shell</text>
           </svg>
         </div>
-        <p class="diagram-caption">Multi-module Clean Architecture. Cores are reusable contracts; feature modules own their data flow end-to-end; <code>composeApp</code> wires them together.</p>
+        <p class="diagram-caption">Multi-module Clean Architecture. Cores are reusable contracts; feature modules own their data flow end-to-end; <code>composeApp</code> wires them together. Since v0.5&ndash;v0.7 the feature tier also hosts <code>feature-overview</code>, <code>feature-search</code> and <code>feature-compare</code> (kept off the diagram for legibility &mdash; overview and compare depend on all eight data modules).</p>
       </div>
     </section>
 
@@ -1496,13 +1496,13 @@
       <div class="wrap">
         <div class="section-head">
           <div class="section-eyebrow">Testing</div>
-          <h2>499 unit tests. Zero failures.</h2>
+          <h2>600+ unit tests. Zero failures.</h2>
         </div>
 
         <div class="stats-strip" style="margin-bottom: var(--s-8);">
           <div class="stat-card">
-            <div class="value num">499</div>
-            <div class="label">unit tests, 0 failures, 0 skipped</div>
+            <div class="value num">600+</div>
+            <div class="label">unit tests incl. schema migrations, 0 failures, 0 skipped</div>
           </div>
           <div class="stat-card">
             <div class="value num">100%</div>
