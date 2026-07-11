@@ -322,14 +322,9 @@ Original notes below.
 
 ---
 
-## P3 · Detail modal on chart tap
+## ✅ DONE · Detail modal on chart tap
 
-**Why:** per brief: "Tap a chart point → modal with exact value, year, units, source citation". Charts currently don't respond to taps.
-
-**Steps:**
-1. Add `onPointClick: ((ChartPoint) -> Unit)?` param to each chart type in `core-charts`.
-2. Detect tap → calculate nearest data point in canvas coordinates.
-3. Pop a `ModalBottomSheet` showing year + value + unit + dataset code.
+**Status:** ✅ Done (line charts), scoped to Economy + Compare. `EurostatLineChart` gained an opt-in `onPointTap: ((ChartSeries, ChartPoint) -> Unit)? = null` — null attaches no pointer input, so existing call sites are unchanged. A `Modifier.pointerInput` reuses the *exact* draw-pass value→pixel projection (hoisted into shared `mapXpx`/`mapYpx`) and calls a pure, unit-tested `nearestChartPoint(...)` in `core-charts/model` that picks the closest point within a 24.dp radius, skipping `null` gaps with a deterministic tie-break (10 test cases: nearest wins, threshold excludes far taps, null gaps skipped, empty input, non-identity projection, ties). Tapping opens `core-ui`'s new `ChartPointDetailSheet` (Material3 `ModalBottomSheet`) showing series label, year, formatted value, unit and dataset code — labels localized EN/PL/UK (`ui_chart_detail_*`), values pre-formatted by the feature module. Wired on the Economy hero chart and the Compare chart, both resolving the true **absolute** value for the tapped country+year even in Indexed-100 mode. Left unwired by design: Social (uses `EurostatMultiLineHighlighted`, a separate composable that does not share the line chart's internals) and Science (only a decorative 28dp `hideAxis` sparkline; its primary chart is the radar); bar/pyramid/heatmap/radar are out of scope. **Not yet wired, despite also being plain `EurostatLineChart` instances:** Environment's hero chart and Transport's small-multiples panel charts (`hideAxis = true`) — both are structurally tap-capable but were left out of this pass, which targeted Economy/Compare only. Follow-up to extend parity across all `EurostatLineChart` call sites, or explicitly re-scope this item to "Economy + Compare" if that's the intended final state.
 
 ---
 

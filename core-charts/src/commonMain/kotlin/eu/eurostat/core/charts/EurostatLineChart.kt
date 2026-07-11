@@ -2,6 +2,7 @@ package eu.eurostat.core.charts
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
@@ -11,7 +12,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -21,11 +24,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.internal.ChartDefaults
 import eu.eurostat.core.charts.model.ChartAxis
 import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
+import eu.eurostat.core.charts.model.nearestChartPoint
 
 /**
  * Precomputed axis bounds + tick positions for [EurostatLineChart], derived once per
@@ -43,6 +48,21 @@ private data class LineChartBounds(
 )
 
 /**
+ * Projects a data-point x-value to a pixel X inside a chart of pixel width [w].
+ * Single source of truth shared by the draw pass and the tap hit-test so the
+ * drawn line and the tappable targets can never drift apart.
+ */
+private fun mapXpx(x: Double, xMin: Float, xSpan: Float, w: Float): Float =
+    (x.toFloat() - xMin) / xSpan * w
+
+/**
+ * Projects a data-point (non-null) y-value to a pixel Y inside a chart of pixel
+ * height [h]. Y grows downward, so larger values map nearer the top. See [mapXpx].
+ */
+private fun mapYpx(y: Double, yMin: Float, ySpan: Float, h: Float): Float =
+    h - (y.toFloat() - yMin) / ySpan * h
+
+/**
  * Editorial multi-series line chart rendered on Compose Canvas.
  *
  * Renders dashed horizontal gridlines with tabular axis labels.
@@ -55,6 +75,12 @@ private data class LineChartBounds(
  * @param hideAxis When true, suppresses axis labels and gutter.
  * @param showGaps When true, null y values break the line.
  * @param modifier Layout modifier.
+ * @param onPointTap Optional tap callback. When non-null, tapping within
+ *   [ChartDefaults.TapHitThresholdDp] of a rendered data point invokes it with the
+ *   owning [ChartSeries] and the tapped [ChartPoint], reusing the exact same
+ *   value → pixel projection as the draw pass (see [nearestChartPoint]). Null gaps
+ *   are not tappable. Defaults to `null`, which attaches no pointer input and
+ *   leaves behaviour unchanged.
  */
 @Composable
 fun EurostatLineChart(
@@ -64,6 +90,7 @@ fun EurostatLineChart(
     hideAxis: Boolean = false,
     showGaps: Boolean = true,
     modifier: Modifier = Modifier,
+    onPointTap: ((ChartSeries, ChartPoint) -> Unit)? = null,
 ) {
     if (series.isEmpty() || series.all { it.points.isEmpty() }) {
         Box(modifier = modifier)
@@ -101,11 +128,40 @@ fun EurostatLineChart(
     // Hoist Path allocation outside Canvas to avoid per-frame GC pressure.
     val paths = remember(series.size) { List(series.size) { Path() } }
 
+    // Keep the latest tap callback without restarting pointerInput on every
+    // recomposition — its lambda identity churns, but the projection inputs
+    // (series/axes) are the real keys.
+    val currentOnPointTap by rememberUpdatedState(onPointTap)
+
     Box(modifier = modifier) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = gutter, bottom = gutter)
+                .then(
+                    if (onPointTap != null) {
+                        // pointerInput sits *after* padding, so its `size` and
+                        // coordinate origin match the Canvas content box the draw
+                        // pass uses — the tap projection is identical to the line's.
+                        Modifier.pointerInput(series, xAxis, yAxis) {
+                            val thresholdPx = ChartDefaults.TapHitThresholdDp.toPx()
+                            detectTapGestures { tap ->
+                                val w = size.width.toFloat()
+                                val h = size.height.toFloat()
+                                val hit = nearestChartPoint(
+                                    series = series,
+                                    tap = tap,
+                                    mapX = { xv -> mapXpx(xv, xMin, xSpan, w) },
+                                    mapY = { yv -> mapYpx(yv, yMin, ySpan, h) },
+                                    thresholdPx = thresholdPx,
+                                )
+                                if (hit != null) currentOnPointTap?.invoke(hit.first, hit.second)
+                            }
+                        }
+                    } else {
+                        Modifier
+                    },
+                )
         ) {
             val w = size.width
             val h = size.height
@@ -137,8 +193,8 @@ fun EurostatLineChart(
                         if (showGaps) started = false
                         return@forEach
                     }
-                    val x = (p.x.toFloat() - xMin) / xSpan * w
-                    val y = h - (yv.toFloat() - yMin) / ySpan * h
+                    val x = mapXpx(p.x, xMin, xSpan, w)
+                    val y = mapYpx(yv, yMin, ySpan, h)
                     if (!started) {
                         path.moveTo(x, y)
                         started = true

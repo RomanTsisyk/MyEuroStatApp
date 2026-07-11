@@ -25,4 +25,11 @@
 
     <!-- YearDropdown -->
     <string name="ui_year_dropdown_label">рік:</string>
+
+    <!-- ChartPointDetailSheet (tap a chart point) -->
+    <string name="ui_chart_detail_year">Рік</string>
+    <string name="ui_chart_detail_value">Значення</string>
+    <string name="ui_chart_detail_unit">Одиниця</string>
+    <string name="ui_chart_detail_dataset">Набір даних</string>
+    <string name="ui_chart_detail_close">Закрити</string>
 </resources>

@@ -8,6 +8,16 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Real SVG-derived flags: 33 circle-flags (HatScripts, MIT) bundled as
+  Compose vector drawables in core-ui; new `CountryFlag` composable
+  (circle-cropped `Image`, emoji fallback for flagless aggregates like
+  EA20) now renders in `CountryChip`, `CountryPickerSheet` and the
+  Settings default-country row — replaces the Unicode-emoji flags
+- Detail modal on chart tap: tapping near a point on the line chart opens
+  a bottom sheet with country, year, formatted value, unit and dataset
+  code (localized EN/PL/UK); pure `nearestChartPoint` hit-test in
+  core-charts (unit-tested) shares the exact draw-pass coordinate
+  mapping, wired on the Economy hero chart and the Compare screen
 - Tag-triggered release workflow (`.github/workflows/release.yml`):
   pushing a `v*` tag builds the release APK (real signature when the
   keystore secrets are configured, debug-signed fallback otherwise) and

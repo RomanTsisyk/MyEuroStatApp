@@ -36,6 +36,7 @@ import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.charts.model.rebaseToIndex
 import eu.eurostat.feature.compare.domain.CompareIndicator
 import eu.eurostat.feature.compare.domain.CompareSeries
+import eu.eurostat.ui.component.ChartPointDetailSheet
 import eu.eurostat.ui.component.CountryChipsRow
 import eu.eurostat.ui.component.CountryPickerSheet
 import eu.eurostat.ui.component.EuroCard
@@ -173,6 +174,9 @@ private fun CompareContent(
     val unitLabel = stringResource(state.indicator.unitRes)
 
     var showCountryPicker by remember { mutableStateOf(false) }
+    // Tapped chart point → detail sheet: (country code, point). Cleared on
+    // dismiss. Transient, so intentionally not rememberSaveable.
+    var tappedPoint by remember { mutableStateOf<Pair<String, ChartPoint>?>(null) }
 
     val chartHeight = adaptiveChartHeight(compact = 180.dp, medium = 240.dp, expanded = 300.dp)
 
@@ -288,6 +292,7 @@ private fun CompareContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(chartHeight),
+                        onPointTap = { s, p -> tappedPoint = s.label to p },
                     )
                 }
                 Spacer(Modifier.height(Euro.spacing.s))
@@ -336,6 +341,32 @@ private fun CompareContent(
             },
             onDismiss = { showCountryPicker = false },
             title = stringResource(Res.string.compare_add_country),
+        )
+    }
+
+    // Detail sheet for a tapped chart point. The chart may be Indexed-100, so
+    // resolve the true absolute value for the tapped country+year from the
+    // underlying series. The lookup can miss if a stale-while-revalidate
+    // refresh replaces `orderedSeries` while the sheet is open — in that
+    // race, only fall back to the raw chart y when the chart is in Absolute
+    // mode (where point.y already is the absolute value); in Indexed-100
+    // mode point.y is a rebased index and would render with the wrong unit,
+    // so fall through to the em-dash instead.
+    tappedPoint?.let { (label, point) ->
+        val year = point.x.toInt()
+        val absolute = orderedSeries
+            .firstOrNull { it.countryCode == label }
+            ?.points?.firstOrNull { it.year == year }
+            ?.value
+        val resolvedValue = absolute ?: point.y.takeUnless { state.normalized }
+        val valueText = resolvedValue?.let { state.indicator.formatValue(it) } ?: "—"
+        ChartPointDetailSheet(
+            seriesLabel = label,
+            year = year.toString(),
+            value = valueText,
+            unit = unitLabel,
+            datasetCode = state.indicator.datasetCode,
+            onDismiss = { tappedPoint = null },
         )
     }
 }

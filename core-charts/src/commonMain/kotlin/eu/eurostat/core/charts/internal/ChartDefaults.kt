@@ -39,6 +39,9 @@ internal object ChartDefaults {
     val AxisGutterDp = 36.dp
     val AxisLabelGapDp = 4.dp
 
+    /** Finger-friendly tap radius for chart hit-testing (see model `nearestChartPoint`). */
+    val TapHitThresholdDp = 24.dp
+
     /** Axis tick label style with tabular numerals so digits align column-wise. */
     val AxisLabelStyle: TextStyle = TextStyle(
         color = Muted,

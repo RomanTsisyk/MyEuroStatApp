@@ -25,4 +25,11 @@
 
     <!-- YearDropdown -->
     <string name="ui_year_dropdown_label">rok:</string>
+
+    <!-- ChartPointDetailSheet (tap a chart point) -->
+    <string name="ui_chart_detail_year">Rok</string>
+    <string name="ui_chart_detail_value">Wartość</string>
+    <string name="ui_chart_detail_unit">Jednostka</string>
+    <string name="ui_chart_detail_dataset">Zbiór danych</string>
+    <string name="ui_chart_detail_close">Zamknij</string>
 </resources>

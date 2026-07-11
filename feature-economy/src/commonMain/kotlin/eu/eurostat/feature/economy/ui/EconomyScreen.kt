@@ -37,6 +37,7 @@ import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
+import eu.eurostat.ui.component.ChartPointDetailSheet
 import eu.eurostat.ui.component.CountryChipsRow
 import eu.eurostat.ui.component.CountryPickerSheet
 import eu.eurostat.ui.component.EuroCard
@@ -224,6 +225,9 @@ private fun EconomyContent(
     val prevPoint: EconomyDataPoint? = sortedPoints.firstOrNull { it.year == state.selectedYear - 1 }
 
     var showCountryPicker by remember { mutableStateOf(false) }
+    // Tapped chart point → detail sheet. Holds the (series label, point) pair;
+    // cleared on dismiss. Intentionally not rememberSaveable — a transient sheet.
+    var tappedPoint by remember { mutableStateOf<Pair<String, ChartPoint>?>(null) }
 
     val chartHeight = adaptiveChartHeight(compact = 160.dp, medium = 220.dp, expanded = 280.dp)
 
@@ -303,6 +307,7 @@ private fun EconomyContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(chartHeight),
+                        onPointTap = { s, p -> tappedPoint = s.label to p },
                     )
                 }
                 Spacer(Modifier.height(Euro.spacing.s))
@@ -380,6 +385,32 @@ private fun EconomyContent(
                 showCountryPicker = false
             },
             onDismiss = { showCountryPicker = false },
+        )
+    }
+
+    // Detail sheet for a tapped chart point. The chart may be in Indexed-100
+    // mode, so resolve the true *absolute* value for the tapped country+year
+    // from the underlying series rather than reading the (possibly rebased)
+    // chart point's y. The lookup can miss if a stale-while-revalidate
+    // refresh replaces `timeSeries` while the sheet is open — in that race,
+    // only fall back to the raw chart y when the chart is in Absolute mode
+    // (where point.y already is the absolute value); in Indexed-100 mode
+    // point.y is a rebased index and would render with the wrong unit
+    // (e.g. "108 B€" for GDP), so show an em dash instead.
+    tappedPoint?.let { (label, point) ->
+        val year = point.x.toInt()
+        val absolute = timeSeries
+            .firstOrNull { it.countryCode == label }
+            ?.points?.firstOrNull { it.year == year }
+            ?.fieldFor(selectedMetric)
+        val resolvedValue = absolute ?: point.y.takeUnless { state.normalized }
+        ChartPointDetailSheet(
+            seriesLabel = label,
+            year = year.toString(),
+            value = metricValueText(selectedMetric, resolvedValue),
+            unit = metricUnitText(selectedMetric),
+            datasetCode = metricDatasetCode(selectedMetric),
+            onDismiss = { tappedPoint = null },
         )
     }
 }
@@ -546,6 +577,39 @@ private fun yAxisLabelFor(metric: EconomyMetric): String = when (metric) {
     EconomyMetric.Gdp -> stringResource(Res.string.economy_axis_gdp)
     EconomyMetric.Inflation -> stringResource(Res.string.economy_axis_inflation)
     EconomyMetric.Deficit -> stringResource(Res.string.economy_axis_deficit)
+}
+
+/**
+ * Formats a metric [value] (in its native unit — GDP million EUR, HICP index,
+ * deficit % of GDP) for the chart-tap detail sheet, reusing this screen's
+ * headline formatters. Null (missing observation) renders as an em dash.
+ * Not composable — the delegated formatters are plain functions.
+ */
+private fun metricValueText(metric: EconomyMetric, value: Double?): String {
+    if (value == null) return "—"
+    return when (metric) {
+        EconomyMetric.Gdp -> formatBillions(value.toLong())
+        EconomyMetric.Inflation -> formatDecimal(value, 1)
+        EconomyMetric.Deficit -> formatSignedPercent(value)
+    }
+}
+
+/** Localized short unit label for the tapped metric, matching the headline unit. */
+@Composable
+private fun metricUnitText(metric: EconomyMetric): String = when (metric) {
+    EconomyMetric.Gdp -> stringResource(Res.string.economy_unit_gdp)
+    EconomyMetric.Inflation -> stringResource(Res.string.economy_unit_inflation)
+    EconomyMetric.Deficit -> stringResource(Res.string.economy_unit_deficit)
+}
+
+/**
+ * Eurostat dataset code backing each metric, cited in the tap detail sheet.
+ * Kept in sync with the codes in `CLAUDE.md` and the domain [EconomyMetric] KDoc.
+ */
+private fun metricDatasetCode(metric: EconomyMetric): String = when (metric) {
+    EconomyMetric.Gdp -> "nama_10_gdp"
+    EconomyMetric.Inflation -> "prc_hicp_aind"
+    EconomyMetric.Deficit -> "gov_10dd_edpt1"
 }
 
 /**
