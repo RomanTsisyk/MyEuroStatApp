@@ -48,6 +48,19 @@ cd iosApp && xcodegen generate
 - **`KoinIOSKt.doInitKoinIos()`** (not `initKoinIos`): Kotlin/Native prefixes
   `init*` functions with `do` in the ObjC/Swift export.
 
+## App icon
+
+`iosApp/Assets.xcassets/AppIcon.appiconset` holds a single 1024×1024,
+no-alpha `AppIcon1024.png` (the modern single-size App Icon format —
+Xcode/App Store Connect derive every smaller size from it, so no other
+slots are needed). Source: `fastlane/metadata/android/en-US/images/icon.png`
+(512×512, already alpha-free), upscaled to 1024×1024 with `sips`.
+Wired via `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` in `project.yml`
+(both Debug and Release); the catalog itself needs no explicit `sources`
+entry since it lives inside the `iosApp` source path XcodeGen already scans.
+Regenerate with `xcodegen generate` after touching either the catalog or
+`project.yml`.
+
 ## File layout
 
 ```
@@ -58,6 +71,7 @@ iosApp/
 ├── iosApp/
 │   ├── iOSApp.swift           # @main entry — calls doInitKoinIos()
 │   ├── ContentView.swift      # SwiftUI wrapper over MainViewController()
-│   └── Info.plist
+│   ├── Info.plist
+│   └── Assets.xcassets/       # AppIcon.appiconset/AppIcon1024.png (1024x1024, no alpha)
 └── iosApp.xcodeproj/          # Generated — regenerate via xcodegen
 ```
