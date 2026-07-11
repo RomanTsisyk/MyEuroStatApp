@@ -3,11 +3,13 @@ package eu.eurostat.feature.settings.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -19,10 +21,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.core.common.prefs.ThemePreference
+import eu.eurostat.ui.component.CountryFlag
 import eu.eurostat.ui.component.CountryPickerSheet
 import eu.eurostat.ui.component.MetricDropdown
 import eu.eurostat.ui.component.ModuleAppBar
@@ -122,6 +127,9 @@ private fun SettingsContent(
             SettingsListItem(
                 headline = defaultCountryLabel,
                 supporting = countryLabel(content.defaultCountry),
+                supportingLeading = {
+                    CountryFlag(code = content.defaultCountry, size = 16.dp)
+                },
                 onClick = { showCountryPicker = true },
             )
         }
@@ -259,6 +267,7 @@ private fun SettingsDivider() {
 private fun SettingsListItem(
     headline: String,
     supporting: String? = null,
+    supportingLeading: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
 ) {
     ListItem(
@@ -271,11 +280,17 @@ private fun SettingsListItem(
         },
         supportingContent = if (supporting != null) {
             {
-                Text(
-                    text = supporting,
-                    style = Euro.typography.bodySmall,
-                    color = Euro.colors.muted,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (supportingLeading != null) {
+                        supportingLeading()
+                        Spacer(Modifier.width(Euro.spacing.xs))
+                    }
+                    Text(
+                        text = supporting,
+                        style = Euro.typography.bodySmall,
+                        color = Euro.colors.muted,
+                    )
+                }
             }
         } else {
             null
@@ -287,8 +302,8 @@ private fun SettingsListItem(
     )
 }
 
-/** Flag + name + code line for the default-country row. */
+/** Name + code line for the default-country row (the flag renders separately via [CountryFlag]). */
 private fun countryLabel(code: String): String {
     val country = EurostatCountries.byCode(code) ?: return code
-    return "${country.flag} ${country.name} · ${country.code}"
+    return "${country.name} · ${country.code}"
 }

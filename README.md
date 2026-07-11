@@ -20,6 +20,8 @@ See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat datase
 
 **License:** AGPL-3.0-or-later (see [LICENSE](LICENSE)).
 
+**Flag icons:** country flags are bundled from [HatScripts/circle-flags](https://github.com/HatScripts/circle-flags) (MIT license).
+
 ---
 
 ## Screens & demos

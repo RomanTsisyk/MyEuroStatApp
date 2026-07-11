@@ -20,8 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import eu.eurostat.core.common.flagFor
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.core_ui.generated.resources.Res
 import myeurostatapp.core_ui.generated.resources.ui_chip_remove_country
@@ -30,10 +28,9 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Pill-shaped country selector chip.
  *
- * Renders the Unicode flag emoji for the country (via [flagFor]) followed by
- * the country code label. When selected the chip is filled with ink; when not,
- * it uses an outlined treatment. An optional close button appears at the trailing
- * edge.
+ * Renders the country's flag (via [CountryFlag]) followed by the country code
+ * label. When selected the chip is filled with ink; when not, it uses an
+ * outlined treatment. An optional close button appears at the trailing edge.
  *
  * @param code Eurostat country code (e.g. `"DE"`, `"EL"`, `"EU27_2020"`).
  * @param selected whether the chip is in the selected state.
@@ -53,7 +50,6 @@ fun CountryChip(
     val bg = if (selected) Euro.colors.ink else Euro.colors.paperAlt
     val fg = if (selected) Euro.colors.paper else Euro.colors.ink
     val borderColor = if (selected) Euro.colors.ink else Euro.colors.border
-    val flag = flagFor(code)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -65,11 +61,7 @@ fun CountryChip(
             .defaultMinSize(minHeight = 48.dp)
             .padding(horizontal = Euro.spacing.m, vertical = Euro.spacing.xs),
     ) {
-        Text(
-            text = flag,
-            fontSize = 14.sp,
-            lineHeight = 14.sp,
-        )
+        CountryFlag(code = code)
         Spacer(Modifier.width(Euro.spacing.s))
         Text(
             text = code.uppercase(),

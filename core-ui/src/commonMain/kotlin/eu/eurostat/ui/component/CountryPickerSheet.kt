@@ -1,5 +1,6 @@
 package eu.eurostat.ui.component
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.dp
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.core_ui.generated.resources.Res
@@ -125,13 +128,20 @@ fun CountryPickerSheet(
                             ),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Flag / code badge
-                        Text(
-                            text = country.flag,
-                            style = Euro.typography.bodySmall,
-                            color = if (atLimit) Euro.colors.muted else Euro.colors.ink,
+                        // Flag / code badge — fixed-width column so rows stay aligned
+                        // even when a code falls back to the variable-width text glyph
+                        // (e.g. "EA20" has no bundled circle-flag artwork). The circle
+                        // itself is centered inside that column, not stretched to fill it.
+                        Box(
                             modifier = Modifier.width(Euro.spacing.xl),
-                        )
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CountryFlag(
+                                code = country.code,
+                                modifier = if (atLimit) Modifier.alpha(0.5f) else Modifier,
+                                size = 20.dp,
+                            )
+                        }
 
                         Spacer(Modifier.width(Euro.spacing.s))
 
