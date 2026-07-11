@@ -7,6 +7,14 @@
     <!-- ErrorState -->
     <string name="ui_error_retry">повторити</string>
 
+    <!-- AppError user-facing messages (AppErrorText.kt) -->
+    <string name="ui_error_no_network">Немає з\'єднання — перевірте мережу</string>
+    <string name="ui_error_http_5xx">Сервери Eurostat тимчасово недоступні (HTTP %1$d)</string>
+    <string name="ui_error_http">Запит до Eurostat не вдався (HTTP %1$d)</string>
+    <string name="ui_error_parse">Отримано неочікувані дані від Eurostat</string>
+    <string name="ui_error_cache_empty">Кешованих даних ще немає</string>
+    <string name="ui_error_unknown">Щось пішло не так</string>
+
     <!-- StaleBanner -->
     <string name="ui_stale_banner_message">кешовані дані · оновлення…</string>
 

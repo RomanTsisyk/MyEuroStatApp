@@ -50,6 +50,7 @@ import eu.eurostat.ui.component.YearScrubber
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatGrouped
 import eu.eurostat.ui.layout.AdaptiveTwoPane
@@ -143,7 +144,7 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
                     )
                     is EconomyUiState.Error -> ErrorState(
                         headline = stringResource(Res.string.economy_error_headline),
-                        body = s.message,
+                        body = s.error.localizedMessage(),
                         onRetry = if (s.canRetry) {
                             { component.onIntent(EconomyIntent.Retry) }
                         } else {

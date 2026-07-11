@@ -7,6 +7,14 @@
     <!-- ErrorState -->
     <string name="ui_error_retry">spróbuj ponownie</string>
 
+    <!-- AppError user-facing messages (AppErrorText.kt) -->
+    <string name="ui_error_no_network">Brak połączenia — sprawdź sieć</string>
+    <string name="ui_error_http_5xx">Serwery Eurostatu są tymczasowo niedostępne (HTTP %1$d)</string>
+    <string name="ui_error_http">Żądanie do Eurostatu nie powiodło się (HTTP %1$d)</string>
+    <string name="ui_error_parse">Otrzymano nieoczekiwane dane z Eurostatu</string>
+    <string name="ui_error_cache_empty">Brak danych w pamięci podręcznej</string>
+    <string name="ui_error_unknown">Coś poszło nie tak</string>
+
     <!-- StaleBanner -->
     <string name="ui_stale_banner_message">dane z pamięci podręcznej · odświeżanie…</string>
 

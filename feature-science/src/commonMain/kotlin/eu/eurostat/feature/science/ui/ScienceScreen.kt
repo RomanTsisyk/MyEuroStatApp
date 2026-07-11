@@ -49,6 +49,7 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.feature_science.generated.resources.Res
@@ -121,7 +122,7 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
                     )
                     is ScienceUiState.Error -> ErrorState(
                         headline = stringResource(Res.string.science_error_headline),
-                        body = s.message,
+                        body = s.error.localizedMessage(),
                         onRetry = if (s.canRetry) {
                             { component.onIntent(ScienceIntent.Retry) }
                         } else {

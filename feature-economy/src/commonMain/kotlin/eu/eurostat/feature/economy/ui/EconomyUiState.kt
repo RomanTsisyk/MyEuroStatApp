@@ -1,5 +1,6 @@
 package eu.eurostat.feature.economy.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
@@ -11,7 +12,7 @@ import eu.eurostat.feature.economy.domain.EconomyTimeSeries
  * - [Content] merged time series (GDP + HICP + deficit) ready to render;
  *   the screen picks which metric to plot from a local selection.
  * - [Empty]   no data returned for the active query.
- * - [Error]   terminal failure with a user-facing message and retry hint.
+ * - [Error]   terminal failure carrying the raw cause and a retry hint.
  */
 sealed interface EconomyUiState {
     data object Loading : EconomyUiState
@@ -45,5 +46,14 @@ sealed interface EconomyUiState {
     ) : EconomyUiState
 
     data class Empty(val query: EconomyQuery) : EconomyUiState
-    data class Error(val message: String, val canRetry: Boolean) : EconomyUiState
+
+    /**
+     * Error branch.
+     *
+     * @property error Raw [AppError] cause — the screen resolves user-facing
+     *   text via [eu.eurostat.ui.component.states.localizedMessage], so the
+     *   copy follows the app locale (including runtime language switches).
+     * @property canRetry Whether the [EconomyIntent.Retry] action should be offered.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : EconomyUiState
 }

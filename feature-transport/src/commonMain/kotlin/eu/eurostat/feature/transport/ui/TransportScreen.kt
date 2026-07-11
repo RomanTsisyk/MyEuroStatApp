@@ -48,6 +48,7 @@ import eu.eurostat.ui.component.StatTile
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
@@ -132,7 +133,7 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
                     is TransportUiState.Loading -> LoadingBody()
                     is TransportUiState.Error -> ErrorState(
                         headline = stringResource(Res.string.transport_error_headline),
-                        body = s.message,
+                        body = s.error.localizedMessage(),
                         onRetry = if (s.canRetry) {
                             { component.onIntent(TransportIntent.Retry) }
                         } else {

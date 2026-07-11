@@ -7,6 +7,14 @@
     <!-- ErrorState -->
     <string name="ui_error_retry">retry</string>
 
+    <!-- AppError user-facing messages (AppErrorText.kt) -->
+    <string name="ui_error_no_network">No connection — check your network</string>
+    <string name="ui_error_http_5xx">Eurostat servers are temporarily unavailable (HTTP %1$d)</string>
+    <string name="ui_error_http">Eurostat request failed (HTTP %1$d)</string>
+    <string name="ui_error_parse">Got unexpected data from Eurostat</string>
+    <string name="ui_error_cache_empty">No cached data yet</string>
+    <string name="ui_error_unknown">Something went wrong</string>
+
     <!-- StaleBanner -->
     <string name="ui_stale_banner_message">showing cached data · refreshing…</string>
 

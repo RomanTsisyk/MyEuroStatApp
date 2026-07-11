@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
 import eu.eurostat.core.common.prefs.AppPreferences
-import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.trade.domain.GetTradeTimeSeriesUseCase
 import eu.eurostat.feature.trade.domain.TradeQuery
 import eu.eurostat.feature.trade.domain.TradeTimeSeries
@@ -144,7 +143,7 @@ class DefaultTradeComponent(
                 }
             }
             is Result.Error -> TradeUiState.Error(
-                message = cause.toUserMessage(),
+                error = cause,
                 canRetry = true,
             )
         }

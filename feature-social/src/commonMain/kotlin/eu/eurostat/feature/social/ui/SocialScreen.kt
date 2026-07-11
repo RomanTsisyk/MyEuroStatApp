@@ -46,6 +46,7 @@ import eu.eurostat.ui.component.YearScrubber
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
@@ -123,7 +124,7 @@ fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
                     )
                     is SocialUiState.Error -> ErrorState(
                         headline = stringResource(Res.string.social_error_headline),
-                        body = s.message,
+                        body = s.error.localizedMessage(),
                         onRetry = if (s.canRetry) {
                             { component.onIntent(SocialIntent.Retry) }
                         } else {

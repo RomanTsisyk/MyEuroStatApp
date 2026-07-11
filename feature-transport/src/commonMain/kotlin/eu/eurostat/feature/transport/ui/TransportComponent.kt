@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
 import eu.eurostat.core.common.prefs.AppPreferences
-import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.transport.domain.GetTransportTimeSeriesUseCase
 import eu.eurostat.feature.transport.domain.TransportMode
 import eu.eurostat.feature.transport.domain.TransportQuery
@@ -144,7 +143,7 @@ class DefaultTransportComponent(
                 buildContent(data, isStale, query)
             }
             is Result.Error -> TransportUiState.Error(
-                message = cause.toUserMessage(),
+                error = cause,
                 canRetry = true,
             )
         }

@@ -207,6 +207,7 @@ class TransportComponentTest {
         val state = component.state.value
         assertIs<TransportUiState.Error>(state)
         assertTrue(state.canRetry)
+        assertEquals(AppError.NoNetwork, state.error)
     }
 
     @Test

@@ -44,6 +44,7 @@ import eu.eurostat.ui.component.StaleBanner
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatLargeNumber
 import eu.eurostat.ui.format.formatLargeNumberParts
@@ -120,7 +121,7 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
                     )
                     is PopulationUiState.Error -> ErrorState(
                         headline = stringResource(Res.string.population_error_headline),
-                        body = s.message,
+                        body = s.error.localizedMessage(),
                         onRetry = if (s.canRetry) {
                             { component.onIntent(PopulationIntent.Retry) }
                         } else {

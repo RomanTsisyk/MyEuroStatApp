@@ -1,5 +1,6 @@
 package eu.eurostat.feature.social.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.social.domain.SocialQuery
 import eu.eurostat.feature.social.domain.SocialTimeSeries
 
@@ -26,5 +27,10 @@ sealed interface SocialUiState {
         val availableYears: List<Int> = emptyList(),
     ) : SocialUiState
     data class Empty(val query: SocialQuery) : SocialUiState
-    data class Error(val message: String, val canRetry: Boolean) : SocialUiState
+    /**
+     * The screen resolves user-facing text via [AppError.localizedMessage]
+     * (`eu.eurostat.ui.component.states`), so error copy localizes and
+     * follows runtime language switches.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : SocialUiState
 }

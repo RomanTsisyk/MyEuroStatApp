@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
 import eu.eurostat.core.common.prefs.AppPreferences
-import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
@@ -148,7 +147,7 @@ class DefaultEconomyComponent(
                 buildContent(data, isStale, query)
             }
             is Result.Error -> EconomyUiState.Error(
-                message = cause.toUserMessage(),
+                error = cause,
                 canRetry = true,
             )
         }

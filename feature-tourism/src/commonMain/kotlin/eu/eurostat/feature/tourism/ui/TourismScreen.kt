@@ -50,6 +50,7 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatLargeNumberParts
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
@@ -129,7 +130,7 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
 
                     is TourismUiState.Error -> ErrorState(
                         headline = stringResource(Res.string.tourism_error_headline),
-                        body = s.message,
+                        body = s.error.localizedMessage(),
                         onRetry = if (s.canRetry) {
                             { component.onIntent(TourismIntent.Retry) }
                         } else {

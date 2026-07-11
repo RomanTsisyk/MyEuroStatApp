@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
 import eu.eurostat.core.common.prefs.AppPreferences
-import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.environment.domain.EnvMetric
 import eu.eurostat.feature.environment.domain.EnvSector
 import eu.eurostat.feature.environment.domain.EnvironmentQuery
@@ -231,7 +230,7 @@ private fun Result<List<EnvironmentTimeSeries>>.toUiState(
         )
     }
     is Result.Error -> EnvironmentUiState.Error(
-        message = cause.toUserMessage(),
+        error = cause,
         canRetry = true,
     )
 }

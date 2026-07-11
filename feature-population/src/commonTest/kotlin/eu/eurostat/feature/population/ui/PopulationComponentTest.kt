@@ -198,6 +198,7 @@ class PopulationComponentTest {
 
         val state = component.state.value
         assertIs<PopulationUiState.Error>(state)
+        assertEquals(AppError.NoNetwork, state.error)
         assertTrue(state.canRetry)
     }
 

@@ -5,7 +5,6 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
 import eu.eurostat.core.common.prefs.AppPreferences
-import eu.eurostat.core.common.toUserMessage
 import eu.eurostat.feature.population.domain.GetPopulationTimeSeriesUseCase
 import eu.eurostat.feature.population.domain.PopulationData
 import eu.eurostat.feature.population.domain.PopulationQuery
@@ -134,7 +133,7 @@ class DefaultPopulationComponent(
                 buildContent(data, isStale, query)
             }
             is Result.Error -> PopulationUiState.Error(
-                message = cause.toUserMessage(),
+                error = cause,
                 canRetry = true,
             )
         }

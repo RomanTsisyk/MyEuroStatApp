@@ -180,6 +180,7 @@ class EconomyComponentTest {
 
         val state = component.state.value
         assertIs<EconomyUiState.Error>(state)
+        assertEquals(AppError.NoNetwork, state.error)
         assertTrue(state.canRetry)
     }
 

@@ -193,6 +193,7 @@ class SocialComponentTest {
 
         val state = component.state.value
         assertIs<SocialUiState.Error>(state)
+        assertEquals(AppError.NoNetwork, state.error)
         assertTrue(state.canRetry)
     }
 

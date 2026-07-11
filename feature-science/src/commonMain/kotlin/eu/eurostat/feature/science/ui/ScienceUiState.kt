@@ -1,5 +1,6 @@
 package eu.eurostat.feature.science.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.science.domain.ScienceQuery
 import eu.eurostat.feature.science.domain.ScienceTimeSeries
 
@@ -19,5 +20,10 @@ sealed interface ScienceUiState {
         val availableYears: List<Int>,
     ) : ScienceUiState
     data class Empty(val query: ScienceQuery) : ScienceUiState
-    data class Error(val message: String, val canRetry: Boolean) : ScienceUiState
+    /**
+     * Carries the raw [AppError] rather than a pre-resolved message string so the
+     * screen can resolve user-facing text via `AppError.localizedMessage()`,
+     * keeping error copy localized and reactive to runtime language switches.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : ScienceUiState
 }
