@@ -674,7 +674,9 @@ section { padding-top: var(--s-24); padding-bottom: var(--s-24); }
 html[data-theme="dark"] .ghost-num { opacity: .13; }
 @media (max-width: 720px) { .ghost-num { display: none; } }
 .module-copy::before {
-  content: "Module " counter(mod, decimal-leading-zero) " / 08";
+  /* locale pages override the word via --kicker-label on .modules
+     (e.g. style="--kicker-label: 'Modulo '") */
+  content: var(--kicker-label, "Module ") counter(mod, decimal-leading-zero) " / 08";
   display: block;
   font-family: var(--font-mono);
   font-size: 11px;

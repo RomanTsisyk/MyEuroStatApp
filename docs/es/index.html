@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>EU Stats Multiplatform — Datos de Eurostat, en cada pantalla.</title>
-  <meta name="description" content="Un cliente móvil y de escritorio de código abierto e independiente para la API pública de Eurostat. Ocho módulos temáticos — economía, población, medio ambiente, comercio, transporte, turismo, social, ciencia — sobre una única base de código Kotlin Multiplatform." />
-  <meta name="theme-color" content="#003399" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0B101C" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="Un cliente móvil y de escritorio de código abierto e independiente para la API pública de Eurostat. Ocho módulos temáticos, comparación entre países y búsqueda de indicadores — sobre una única base de código Kotlin Multiplatform para Android, iOS, macOS, Linux y Windows." />
+  <meta name="theme-color" content="#004494" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B1120" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta property="og:title" content="EU Stats Multiplatform" />
   <meta property="og:description" content="Datos de Eurostat, en cada pantalla. Cliente de código abierto para la API pública de Eurostat, construido con Kotlin Multiplatform." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="../gifs/overview.gif" />
+  <meta property="og:image" content="https://romantsisyk.github.io/MyEuroStatApp/assets/og.png" />
   <meta property="og:url" content="https://romantsisyk.github.io/MyEuroStatApp/es/" />
   <meta property="og:locale" content="es_ES" />
   <meta property="og:locale:alternate" content="en_GB" />
@@ -24,8 +24,8 @@
   <meta property="og:locale:alternate" content="uk_UA" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="EU Stats Multiplatform" />
-  <meta name="twitter:description" content="Cliente de código abierto Kotlin Multiplatform para la API pública de Eurostat. 8 módulos · Android · iOS · Desktop." />
-  <meta name="twitter:image" content="../gifs/overview.gif" />
+  <meta name="twitter:description" content="Cliente de código abierto Kotlin Multiplatform para la API pública de Eurostat. 8 módulos · Comparar · Buscar · Android · iOS · Desktop." />
+  <meta name="twitter:image" content="https://romantsisyk.github.io/MyEuroStatApp/assets/og.png" />
   <link rel="canonical" href="https://romantsisyk.github.io/MyEuroStatApp/es/" />
   <link rel="alternate" hreflang="en" href="https://romantsisyk.github.io/MyEuroStatApp/" />
   <link rel="alternate" hreflang="de" href="https://romantsisyk.github.io/MyEuroStatApp/de/" />
@@ -38,6 +38,7 @@
   <link rel="alternate" hreflang="uk" href="https://romantsisyk.github.io/MyEuroStatApp/uk/" />
   <link rel="alternate" hreflang="x-default" href="https://romantsisyk.github.io/MyEuroStatApp/" />
   <link rel="sitemap" type="application/xml" href="../sitemap.xml" />
+  <link rel="stylesheet" href="../assets/site.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -47,11 +48,11 @@
         "name": "EU Stats Multiplatform",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Android, iOS, macOS, Linux, Windows",
-        "description": "Cliente de código abierto independiente en Kotlin Multiplatform para la API pública de Eurostat. Visualiza datos estadísticos europeos en ocho módulos temáticos: economía, población, medio ambiente, comercio, transporte, turismo, social, ciencia.",
+        "description": "Cliente de código abierto independiente en Kotlin Multiplatform para la API pública de Eurostat. Visualiza datos estadísticos europeos en ocho módulos temáticos — economía, población, medio ambiente, comercio, transporte, turismo, social, ciencia — con comparación entre países, búsqueda de indicadores y una interfaz en inglés/polaco/ucraniano conmutable en tiempo de ejecución.",
         "url": "https://romantsisyk.github.io/MyEuroStatApp/",
         "license": "https://www.gnu.org/licenses/agpl-3.0.html",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-        "softwareVersion": "0.4.0",
+        "softwareVersion": "0.7.0-dev",
         "inLanguage": ["en", "de", "fr", "it", "es", "pl", "nl", "pt", "uk"],
         "author": { "@type": "Person", "name": "Roman Tsisyk" },
         "isAccessibleForFree": true,
@@ -69,887 +70,6 @@
     ]
   }
   </script>
-  <style>
-    /* ============================================================
-       EU STATS MULTIPLATFORM — "Institutional Modern"
-       EU blue band · white content · gold accents · grid discipline
-       Self-hosted: system grotesque stack, no external requests.
-       ============================================================ */
-
-    /* -------- tokens (light) -------- */
-    :root {
-      --bg: #FFFFFF;
-      --surface: #FFFFFF;
-      --surface-2: #F2F5FA;
-      --ink: #131C2B;
-      --ink-subtle: #39445A;
-      --muted: #5A6478;
-      --blue: #003399;          /* EU corporate blue */
-      --blue-deep: #002266;
-      --band: #003399;          /* header band */
-      --band-deep: #001F5C;     /* footer band */
-      --gold: #FFCC00;          /* star gold — decorative + CTAs only */
-      --gold-hover: #FFD633;
-      --blue-tint: #EDF2FB;
-      --blue-line: #C7D6F0;
-      --border: #DFE4EE;
-      --border-strong: #C3CCDC;
-      --ok: #1A7F37;
-      --focus: #003399;
-      --btn-primary-bg: #003399;
-      --btn-primary-ink: #FFFFFF;
-      --gridline: rgba(0, 51, 153, .08);
-      --paper: #FAF7F0;          /* warm paper band behind #modules */
-      --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px rgba(16, 24, 40, .06);
-
-      /* module accents (light) */
-      --mod-economy: #003399;
-      --mod-population: #0F766E;
-      --mod-environment: #2E7D32;
-      --mod-trade: #8C5A16;
-      --mod-transport: #4A5568;
-      --mod-tourism: #C2410C;
-      --mod-social: #6D4E9C;
-      --mod-science: #1E6091;
-
-      /* spacing scale (inline styles in markup reference these) */
-      --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
-      --s-6: 24px; --s-8: 32px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
-
-      /* radii — deliberately crisp */
-      --r-card: 6px;
-      --r-hero: 10px;
-      --r-pill: 4px;
-
-      /* type — clean grotesque, self-hosted/system only */
-      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-    }
-
-    /* -------- tokens (dark) -------- */
-    html[data-theme="dark"] {
-      --bg: #0B101C;
-      --surface: #111828;
-      --surface-2: #1A2336;
-      --ink: #EBF0F9;
-      --ink-subtle: #C6CEDF;
-      --muted: #96A1B9;
-      --blue: #8FB2F2;
-      --blue-deep: #B3CBF7;
-      --band: #0E1E48;
-      --band-deep: #0A1530;
-      --gold: #FFCC00;
-      --gold-hover: #FFD633;
-      --blue-tint: #15203A;
-      --blue-line: #2B3D66;
-      --border: rgba(255, 255, 255, .10);
-      --border-strong: rgba(255, 255, 255, .20);
-      --ok: #69C983;
-      --focus: #FFCC00;
-      --btn-primary-bg: #3E68CF;
-      --btn-primary-ink: #FFFFFF;
-      --gridline: rgba(143, 178, 242, .10);
-      --paper: #191A17;          /* dark equivalent of the warm paper band */
-      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .4);
-
-      --mod-economy: #8FB2F2;
-      --mod-population: #45B8AC;
-      --mod-environment: #7BC47F;
-      --mod-trade: #D9A441;
-      --mod-transport: #A9B4CC;
-      --mod-tourism: #EF9464;
-      --mod-social: #C09FE0;
-      --mod-science: #6FB1DC;
-    }
-
-    /* -------- base -------- */
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    html, body { overflow-x: clip; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--font-sans);
-      font-size: 16px;
-      line-height: 1.65;
-      font-weight: 400;
-      counter-reset: sec;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      transition: background-color .25s ease, color .25s ease;
-    }
-    a { color: inherit; text-decoration: none; }
-    h1, h2, h3, h4 {
-      font-family: var(--font-sans);
-      color: var(--ink);
-      letter-spacing: -0.015em;
-      line-height: 1.12;
-      margin: 0;
-      font-weight: 700;
-    }
-    p { margin: 0; color: var(--ink-subtle); }
-    code, .mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
-    code {
-      font-size: 13px;
-      color: var(--ink);
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      padding: 1px 6px;
-      border-radius: 3px;
-    }
-    .num { font-variant-numeric: tabular-nums; }
-
-    .wrap {
-      max-width: 1160px;
-      margin: 0 auto;
-      /* horizontal-only longhands: section/.hero own their vertical
-         padding, and mobile gutters (24px) can never be zeroed by a
-         later shorthand. */
-      padding-left: var(--s-6);
-      padding-right: var(--s-6);
-    }
-
-    /* -------- a11y -------- */
-    :focus-visible {
-      outline: 3px solid var(--focus);
-      outline-offset: 2px;
-      border-radius: 2px;
-    }
-    .nav :focus-visible,
-    .nlnet :focus-visible,
-    footer :focus-visible { outline-color: var(--gold); }
-    .skip {
-      position: absolute; left: -9999px; top: 0; z-index: 100;
-      background: var(--gold); color: #002266;
-      padding: 10px 16px; font-weight: 600; font-size: 14px;
-    }
-    .skip:focus-visible { left: 8px; top: 8px; }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-      html { scroll-behavior: auto; }
-    }
-
-    /* -------- nav: flat EU blue band, gold keyline -------- */
-    .nav {
-      position: sticky; top: 0; z-index: 50;
-      background: var(--band);
-      border-bottom: 3px solid var(--gold);
-    }
-    .nav-inner {
-      display: flex; align-items: center; justify-content: space-between;
-      height: 62px;
-    }
-    .brand { display: flex; align-items: baseline; gap: 9px; }
-    .brand::before {
-      content: "★" / "";
-      color: var(--gold);
-      font-size: 14px;
-      align-self: center;
-      transform: translateY(-1px);
-    }
-    .brand-mark {
-      font-size: 17px; font-weight: 700; letter-spacing: 0;
-      color: #FFFFFF;
-    }
-    .brand-sub {
-      font-size: 12px; color: rgba(255, 255, 255, .68);
-      font-family: var(--font-mono); font-weight: 400;
-    }
-    .nav-links { display: flex; align-items: center; gap: var(--s-4); }
-    .nav-links a {
-      color: rgba(255, 255, 255, .88);
-      font-size: 14px;
-      font-weight: 500;
-      padding: 4px 2px;
-      border-bottom: 2px solid transparent;
-      transition: color .15s ease, border-color .15s ease;
-    }
-    .nav-links a:hover { color: #FFFFFF; border-bottom-color: var(--gold); }
-    .nav-links .gh {
-      padding: 6px 14px;
-      border-radius: var(--r-pill);
-      border: 1px solid rgba(255, 255, 255, .55);
-      color: #FFFFFF;
-    }
-    .nav-links .gh:hover { background: rgba(255, 255, 255, .12); border-color: #FFFFFF; }
-    .theme-toggle {
-      width: 36px; height: 36px;
-      display: inline-grid; place-items: center;
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, .45);
-      border-radius: var(--r-pill);
-      color: rgba(255, 255, 255, .9);
-      cursor: pointer;
-      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-    }
-    .theme-toggle:hover { background: rgba(255, 255, 255, .12); color: #FFFFFF; }
-    .theme-toggle svg { width: 16px; height: 16px; }
-    html[data-theme="light"] .icon-moon { display: block; }
-    html[data-theme="light"] .icon-sun  { display: none; }
-    html[data-theme="dark"]  .icon-moon { display: none; }
-    html[data-theme="dark"]  .icon-sun  { display: block; }
-    /* Language switcher — native <select> styled for the blue band */
-    .lang-switch {
-      appearance: none; -webkit-appearance: none; -moz-appearance: none;
-      height: 36px;
-      padding: 0 28px 0 12px;
-      background:
-        transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%23FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
-      border: 1px solid rgba(255, 255, 255, .45);
-      border-radius: var(--r-pill);
-      color: #FFFFFF;
-      font: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      transition: background-color .15s ease, border-color .15s ease;
-    }
-    .lang-switch:hover { background-color: rgba(255, 255, 255, .12); border-color: #FFFFFF; }
-    .lang-switch option { color: #131C2B; background: #FFFFFF; }
-    @media (max-width: 720px) {
-      .nav-links a:not(.gh) { display: none; }
-    }
-    @media (max-width: 460px) {
-      .nav-links { gap: var(--s-2); }
-      .brand-sub { display: none; }
-    }
-
-    /* -------- hero -------- */
-    .hero {
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: var(--s-12);
-      align-items: center;
-      /* vertical longhands only — .wrap supplies the horizontal gutters */
-      padding-top: var(--s-16);
-      padding-bottom: var(--s-12);
-    }
-    @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; padding-top: var(--s-12); padding-bottom: var(--s-12); gap: var(--s-8); }
-    }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 6px 12px;
-      border: 1px solid var(--blue-line);
-      border-radius: 3px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--blue);
-      background: var(--blue-tint);
-      margin-bottom: var(--s-6);
-    }
-    .eyebrow .dot {
-      width: 8px; height: 8px; border-radius: 1px;
-      background: var(--gold);
-      display: inline-block;
-    }
-    .hero h1 {
-      font-size: clamp(38px, 5.8vw, 64px);
-      font-weight: 800;
-      letter-spacing: -0.025em;
-      line-height: 1.05;
-      color: var(--blue);
-      margin-bottom: var(--s-6);
-    }
-    /* star-gold highlighter swipe across the lower third of the second
-       headline line. Painted behind the glyphs; deep blue on gold is
-       ~8.3:1 in light mode, and dark mode uses translucent gold so the
-       light-blue glyphs keep >3:1 (large-text AA). */
-    .hero h1 .hl-swipe {
-      background-image: linear-gradient(180deg,
-        transparent 64%,
-        var(--swipe-gold, var(--gold)) 64%,
-        var(--swipe-gold, var(--gold)) 92%,
-        transparent 92%);
-    }
-    html[data-theme="dark"] .hero h1 .hl-swipe { --swipe-gold: rgba(255, 204, 0, .30); }
-    .hero .lede {
-      font-size: clamp(17px, 1.4vw, 19px);
-      color: var(--ink-subtle);
-      max-width: 56ch;
-      line-height: 1.6;
-      margin-bottom: var(--s-8);
-    }
-    .cta-row {
-      display: flex; flex-wrap: wrap; gap: var(--s-3);
-      margin-bottom: var(--s-6);
-    }
-    .btn {
-      display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 12px 22px;
-      border-radius: var(--r-pill);
-      font-size: 15px; font-weight: 600;
-      transition: background-color .15s ease, border-color .15s ease, color .15s ease;
-      cursor: pointer; border: 1px solid transparent;
-    }
-    .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-ink); }
-    .btn-primary:hover { background: var(--blue-deep); }
-    html[data-theme="dark"] .btn-primary:hover { background: #4E77DB; }
-    .btn-secondary {
-      background: transparent;
-      color: var(--blue);
-      border-color: var(--blue);
-    }
-    .btn-secondary:hover { background: var(--blue-tint); }
-    html[data-theme="dark"] .btn-secondary { border-color: var(--blue); }
-    .btn svg { width: 16px; height: 16px; }
-
-    /* disclaimer — styled as an official-notice box, kept prominent */
-    .disclaimer {
-      display: flex; align-items: flex-start; gap: 4px;
-      font-size: 13.5px; line-height: 1.55;
-      color: var(--ink-subtle);
-      max-width: 56ch;
-      background: var(--blue-tint);
-      border: 1px solid var(--blue-line);
-      border-left: 4px solid var(--blue);
-      border-radius: 3px;
-      padding: 10px 14px;
-    }
-    .disclaimer .flag { margin-right: 6px; }
-
-    /* hero visual + 12-star motif watermark */
-    .hero-visual {
-      position: relative;
-      display: grid;
-      place-items: center;
-      min-height: 300px;
-    }
-    .stars {
-      pointer-events: none;
-      user-select: none;
-    }
-    .stars-hero {
-      position: absolute;
-      width: min(540px, 100%);
-      height: auto;
-      color: var(--blue);
-      opacity: .09;
-      z-index: 0;
-    }
-    html[data-theme="dark"] .stars-hero { opacity: .16; }
-    img.hero-frame, img.module-frame {
-      position: relative;
-      z-index: 1;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: 540px;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-      background: var(--surface);
-      border: 1px solid var(--border-strong);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      padding: 0;
-    }
-    img.hero-frame { max-height: 600px; }
-    @media (max-width: 880px) {
-      img.hero-frame, img.module-frame { max-height: 480px; }
-    }
-
-    /* -------- at-a-glance: statistical-table strip -------- */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: var(--s-6);
-      border-top: 3px solid var(--ink);
-      border-bottom: 1px solid var(--border-strong);
-    }
-    @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 420px) { .stats { grid-template-columns: 1fr; } }
-    .stat .value {
-      display: inline-block;
-      white-space: nowrap; /* "AGPL-3.0" must never break across lines */
-      font-size: 34px;
-      font-weight: 750;
-      letter-spacing: -0.02em;
-      font-variant-numeric: tabular-nums;
-      color: var(--blue);
-      line-height: 1.1;
-      border-bottom: 3px solid var(--gold);
-      padding-bottom: 5px;
-    }
-    .stat .label {
-      margin-top: 8px;
-      font-size: 12.5px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    /* -------- section common -------- */
-    section { padding-top: var(--s-24); padding-bottom: var(--s-24); }
-    @media (max-width: 720px) { section { padding-top: var(--s-16); padding-bottom: var(--s-16); } }
-    .section-head { max-width: 720px; margin-bottom: var(--s-12); }
-    .section-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--blue);
-      margin-bottom: var(--s-4);
-    }
-    .section-eyebrow::before {
-      counter-increment: sec;
-      content: counter(sec, decimal-leading-zero) " — ";
-      color: var(--muted);
-    }
-    .section-head h2 {
-      font-size: clamp(26px, 3.4vw, 40px);
-      font-weight: 750;
-      letter-spacing: -0.022em;
-      margin-bottom: var(--s-4);
-    }
-    .section-head h2::before {
-      content: "";
-      display: block;
-      width: 48px; height: 4px;
-      background: var(--gold);
-      margin-bottom: var(--s-4);
-    }
-    .section-head p {
-      font-size: 17px;
-      color: var(--ink-subtle);
-      line-height: 1.6;
-    }
-
-    /* -------- features grid -------- */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 1000px) { .features { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
-    .feature-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top: 3px solid var(--border-strong);
-      border-radius: var(--r-card);
-      padding: var(--s-6);
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-    .feature-card:hover {
-      border-color: var(--border-strong);
-      border-top-color: var(--blue);
-      box-shadow: var(--shadow);
-    }
-    .feature-card .icon {
-      width: 38px; height: 38px;
-      display: grid; place-items: center;
-      border-radius: 4px;
-      background: var(--blue-tint);
-      border: 1px solid var(--blue-line);
-      color: var(--blue);
-      margin-bottom: var(--s-4);
-    }
-    .feature-card .icon svg { width: 18px; height: 18px; stroke-width: 1.7; }
-    .feature-card h3 {
-      font-size: 17px;
-      font-weight: 650;
-      margin-bottom: 6px;
-    }
-    .feature-card p {
-      font-size: 14.5px;
-      color: var(--ink-subtle);
-      line-height: 1.55;
-    }
-
-    /* -------- modules -------- */
-    /* full-bleed warm paper band: the shadow spreads the tint to the
-       viewport edges, the clip-path trims it back to the section's own
-       top/bottom edges. Breaks up the long white stretch. */
-    #modules {
-      background: var(--paper);
-      box-shadow: 0 0 0 100vmax var(--paper);
-      clip-path: inset(0 -100vmax);
-    }
-    .modules {
-      display: flex; flex-direction: column; gap: var(--s-24);
-      counter-reset: mod;
-    }
-    .module-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--s-12);
-      align-items: center;
-      counter-increment: mod;
-    }
-    .module-row.reverse .module-frame { order: 2; }
-    @media (max-width: 880px) {
-      .module-row, .module-row.reverse { grid-template-columns: 1fr; gap: var(--s-6); }
-      .module-row.reverse .module-frame { order: 0; }
-    }
-    .module-copy {
-      position: relative;
-      z-index: 0; /* stacking context so .ghost-num (z-index:-1) stays above the band bg but below the text */
-      border-left: 3px solid var(--mod-accent, var(--blue));
-      padding-left: clamp(var(--s-4), 3vw, var(--s-8));
-    }
-    /* giant ghost numerals 01–08: pure scan anchors, out of flow,
-       invisible to AT, hidden on small screens */
-    .ghost-num {
-      position: absolute;
-      z-index: -1;
-      top: -0.16em;
-      right: 0;
-      font-family: var(--font-mono);
-      font-size: clamp(96px, 13vw, 168px);
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -0.06em;
-      color: var(--mod-accent, var(--blue));
-      opacity: .08;
-      pointer-events: none;
-      user-select: none;
-    }
-    html[data-theme="dark"] .ghost-num { opacity: .13; }
-    @media (max-width: 720px) { .ghost-num { display: none; } }
-    .module-copy::before {
-      content: "Módulo " counter(mod, decimal-leading-zero) " / 08";
-      display: block;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: var(--s-2);
-    }
-    .module-copy h3 {
-      font-size: clamp(26px, 3vw, 34px);
-      font-weight: 750;
-      letter-spacing: -0.02em;
-      color: var(--mod-accent, var(--blue));
-      margin-bottom: var(--s-3);
-    }
-    .module-copy .datasets {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-      padding: 7px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      margin-bottom: var(--s-4);
-    }
-    .module-copy p {
-      font-size: 15.5px;
-      color: var(--ink-subtle);
-      line-height: 1.7;
-      margin-bottom: var(--s-4);
-    }
-    .pill-row {
-      display: flex; flex-wrap: wrap; gap: var(--s-2);
-    }
-    .pill {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--muted);
-      padding: 4px 10px;
-      border-radius: 3px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      letter-spacing: 0.02em;
-    }
-
-    /* -------- tech 3-col spec sheets -------- */
-    .tech-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 880px) { .tech-grid { grid-template-columns: 1fr; } }
-    .tech-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-8);
-    }
-    .tech-card h3 {
-      font-size: 17px;
-      font-weight: 650;
-      padding-bottom: var(--s-3);
-      border-bottom: 2px solid var(--blue);
-      margin-bottom: var(--s-4);
-    }
-    .tech-card ul {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-3);
-    }
-    .tech-card li {
-      /* block + absolute bullet (not flex): <code> chips flow inline and
-         wrap at spaces, so unbreakable tokens can't force the card wider
-         than the viewport at 375px. */
-      font-size: 14.5px;
-      color: var(--ink-subtle);
-      display: block;
-      position: relative;
-      padding-left: 16px;
-      min-width: 0;
-      line-height: 1.5;
-    }
-    .tech-card li::before {
-      content: "";
-      position: absolute;
-      left: 0; top: 8px;
-      width: 6px; height: 6px;
-      background: var(--gold);
-      outline: 1px solid var(--border-strong);
-    }
-    .tech-card li code { overflow-wrap: anywhere; }
-
-    /* -------- multi-platform -------- */
-    .devices {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.4fr;
-      gap: var(--s-8);
-      align-items: end;
-    }
-    @media (max-width: 880px) { .devices { grid-template-columns: 1fr; } }
-    .device-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--s-3); }
-    .device-label {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    .device-android {
-      width: 100%;
-      max-width: 210px;
-      aspect-ratio: 9 / 18.5;
-      border-radius: 30px;
-      border: 8px solid var(--ink);
-      background: var(--surface);
-      position: relative;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .device-android::before {
-      content: "";
-      position: absolute;
-      top: 10px; left: 50%;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--border-strong);
-      transform: translateX(-50%);
-      z-index: 2;
-    }
-    .device-ios {
-      width: 100%;
-      max-width: 210px;
-      aspect-ratio: 9 / 19.5;
-      border-radius: 36px;
-      border: 9px solid var(--ink);
-      background: var(--surface);
-      position: relative;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .device-ios::before {
-      content: "";
-      position: absolute;
-      top: 8px; left: 50%;
-      width: 70px; height: 22px;
-      border-radius: 14px;
-      background: var(--ink);
-      transform: translateX(-50%);
-      z-index: 2;
-    }
-    .device-desktop {
-      width: 100%;
-      max-width: 480px;
-      aspect-ratio: 16 / 10;
-      border-radius: 10px;
-      border: 1px solid var(--border-strong);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      display: flex; flex-direction: column;
-    }
-    .desktop-bar {
-      height: 28px;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 6px;
-      padding: 0 12px;
-      flex-shrink: 0;
-    }
-    .desktop-bar span {
-      width: 11px; height: 11px; border-radius: 50%;
-      background: var(--border-strong);
-    }
-    .desktop-bar span:nth-child(1) { background: #FF5F57; }
-    .desktop-bar span:nth-child(2) { background: #FEBC2E; }
-    .desktop-bar span:nth-child(3) { background: #28C840; }
-    .device-screen {
-      flex: 1;
-      background:
-        repeating-linear-gradient(0deg, var(--gridline) 0 1px, transparent 1px 14px),
-        repeating-linear-gradient(90deg, var(--gridline) 0 1px, transparent 1px 14px);
-      display: grid; place-items: center;
-      position: relative;
-    }
-    .device-screen .soon {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      background: var(--surface);
-    }
-    .devices-caption {
-      margin-top: var(--s-8);
-      text-align: center;
-      font-size: 14.5px;
-      color: var(--muted);
-    }
-
-    /* -------- roadmap -------- */
-    .roadmap-cols {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 960px) { .roadmap-cols { grid-template-columns: 1fr; } }
-    .roadmap-col {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top: 3px solid var(--blue);
-      border-radius: var(--r-card);
-      padding: var(--s-8);
-    }
-    .roadmap-col h3 {
-      font-size: 16px;
-      font-weight: 650;
-      letter-spacing: -0.01em;
-      margin-bottom: 4px;
-    }
-    .roadmap-col .col-sub {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      padding-bottom: var(--s-4);
-      border-bottom: 1px solid var(--border);
-      margin-bottom: var(--s-6);
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-    .roadmap-col ul {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-3);
-    }
-    .roadmap-col li {
-      display: grid;
-      grid-template-columns: 18px 1fr;
-      gap: 10px;
-      font-size: 14.5px;
-      line-height: 1.55;
-      color: var(--ink-subtle);
-    }
-    .roadmap-col li svg { width: 16px; height: 16px; margin-top: 3px; }
-    .roadmap-col li.done svg { color: var(--ok); }
-    .roadmap-col li.wait svg { color: var(--muted); }
-
-    /* -------- nlnet: the one blue panel, gold CTA, star watermark -------- */
-    .nlnet {
-      position: relative;
-      overflow: hidden;
-      background: var(--band);
-      border: none;
-      border-radius: var(--r-hero);
-      padding: clamp(var(--s-8), 5vw, var(--s-16));
-      text-align: center;
-      color: #FFFFFF;
-    }
-    html[data-theme="dark"] .nlnet { border: 1px solid var(--blue-line); }
-    .nlnet .section-eyebrow { color: var(--gold); }
-    .nlnet .section-eyebrow::before { color: rgba(255, 255, 255, .65); }
-    .nlnet h2 {
-      color: #FFFFFF;
-      font-size: clamp(26px, 3vw, 36px);
-      letter-spacing: -0.02em;
-      max-width: 22ch;
-      margin: 0 auto var(--s-4);
-    }
-    .nlnet p {
-      max-width: 60ch;
-      margin: 0 auto var(--s-8);
-      font-size: 17px;
-      line-height: 1.65;
-      color: rgba(255, 255, 255, .88);
-    }
-    .nlnet .btn-secondary {
-      position: relative; z-index: 1;
-      background: var(--gold);
-      color: #002266;
-      border-color: transparent;
-      font-weight: 650;
-    }
-    .nlnet .btn-secondary:hover { background: var(--gold-hover); }
-    .stars-nlnet {
-      position: absolute;
-      right: -90px; top: 50%;
-      width: 380px; height: 380px;
-      transform: translateY(-50%);
-      color: var(--gold);
-      opacity: .2;
-      z-index: 0;
-    }
-    @media (max-width: 720px) { .stars-nlnet { width: 260px; height: 260px; right: -100px; } }
-
-    /* -------- footer: deep blue band, gold keyline -------- */
-    footer {
-      background: var(--band-deep);
-      border-top: 3px solid var(--gold);
-      padding: var(--s-12) 0 var(--s-8);
-      margin-top: var(--s-16);
-      color: rgba(255, 255, 255, .82);
-    }
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1.4fr;
-      gap: var(--s-8);
-    }
-    @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; } }
-    .footer-grid h4 {
-      font-size: 12.5px;
-      font-weight: 650;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, .66);
-      margin-bottom: var(--s-4);
-    }
-    .footer-grid p, .footer-grid a {
-      font-size: 14px;
-      color: rgba(255, 255, 255, .82);
-      line-height: 1.7;
-    }
-    .footer-grid a { display: block; }
-    .footer-grid a:hover { color: var(--gold-hover); }
-    .credits {
-      margin-top: var(--s-8);
-      padding-top: var(--s-6);
-      border-top: 1px solid rgba(255, 255, 255, .18);
-      font-size: 12.5px;
-      color: rgba(255, 255, 255, .66);
-      text-align: center;
-    }
-
-    /* -------- print -------- */
-    @media print {
-      .nav, footer, .theme-toggle, .stars { display: none !important; }
-      body { background: #fff; color: #000; }
-      section { padding: 24px 0; page-break-inside: avoid; }
-    }
-  </style>
 </head>
 <body>
 
@@ -964,8 +84,9 @@
       </a>
       <div class="nav-links">
         <a href="#features">Funciones</a>
+        <a href="#compare">Comparar</a>
         <a href="#modules">Módulos</a>
-        <a href="#tech">Tecnología</a>
+        <a href="#download">Descargar</a>
         <a href="#roadmap">Roadmap</a>
         <a href="https://github.com/romantsisyk/MyEuroStatApp" class="gh">GitHub</a>
         <select class="lang-switch" id="langSwitch" aria-label="Elige el idioma" onchange="if(this.value)window.location.href=this.value;">
@@ -997,45 +118,48 @@
     <!-- ============ HERO ============ -->
     <header class="wrap hero">
       <div>
-        <span class="eyebrow"><span class="dot"></span> Fase 4 · 8 módulos con datos reales</span>
+        <span class="eyebrow"><span class="dot"></span> v0.7 · Comparar · Buscar · 3 idiomas</span>
         <h1>Datos de Eurostat,<br/><span class="hl-swipe">en cada pantalla.</span></h1>
-        <p class="lede">Un cliente móvil y de escritorio de código abierto para la API pública de Eurostat. Ocho módulos temáticos &mdash; economía, población, medio ambiente, comercio, transporte, turismo, social, ciencia &mdash; sobre una única base de código Kotlin Multiplatform.</p>
+        <p class="lede">Un cliente móvil y de escritorio de código abierto para la API pública de Eurostat. Ocho módulos temáticos &mdash; economía, población, medio ambiente, comercio, transporte, turismo, social, ciencia &mdash; además de comparación entre países y búsqueda de indicadores, todo sobre una única base de código Kotlin Multiplatform.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="https://github.com/romantsisyk/MyEuroStatApp">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.69-3.88-1.36-3.88-1.36-.53-1.34-1.29-1.69-1.29-1.69-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.39.96.1-.75.41-1.26.74-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.27 5.68.42.36.79 1.08.79 2.18v3.23c0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
             Ver en GitHub
           </a>
-          <a class="btn btn-secondary" href="#features">
-            Leer la documentación
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <a class="btn btn-secondary" href="#download">
+            Descargar la app
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M5 21h14"/></svg>
           </a>
         </div>
         <p class="disclaimer">
-          <span class="flag">🇪🇺</span>Cliente de código abierto independiente de terceros. No está afiliado a Eurostat ni a la Comisión Europea.
+          Cliente de código abierto independiente de terceros. No está afiliado a Eurostat ni a la Comisión Europea.
         </p>
       </div>
 
       <div class="hero-visual">
-        <svg class="stars stars-hero" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
-          <defs>
-            <path id="star12" d="M0,-6 L1.35,-1.85 L5.71,-1.85 L2.18,0.71 L3.53,4.85 L0,2.29 L-3.53,4.85 L-2.18,0.71 L-5.71,-1.85 L-1.35,-1.85 Z"/>
-          </defs>
-          <g fill="currentColor">
-            <use href="#star12" transform="translate(0,-38)"/>
-            <use href="#star12" transform="rotate(30) translate(0,-38) rotate(-30)"/>
-            <use href="#star12" transform="rotate(60) translate(0,-38) rotate(-60)"/>
-            <use href="#star12" transform="rotate(90) translate(0,-38) rotate(-90)"/>
-            <use href="#star12" transform="rotate(120) translate(0,-38) rotate(-120)"/>
-            <use href="#star12" transform="rotate(150) translate(0,-38) rotate(-150)"/>
-            <use href="#star12" transform="rotate(180) translate(0,-38) rotate(-180)"/>
-            <use href="#star12" transform="rotate(210) translate(0,-38) rotate(-210)"/>
-            <use href="#star12" transform="rotate(240) translate(0,-38) rotate(-240)"/>
-            <use href="#star12" transform="rotate(270) translate(0,-38) rotate(-270)"/>
-            <use href="#star12" transform="rotate(300) translate(0,-38) rotate(-300)"/>
-            <use href="#star12" transform="rotate(330) translate(0,-38) rotate(-330)"/>
+        <svg class="hero-chart" viewBox="0 0 560 400" aria-hidden="true" focusable="false">
+          <g class="grid">
+            <line class="grid-line" x1="0" y1="60"  x2="560" y2="60"/>
+            <line class="grid-line" x1="0" y1="130" x2="560" y2="130"/>
+            <line class="grid-line" x1="0" y1="200" x2="560" y2="200"/>
+            <line class="grid-line" x1="0" y1="270" x2="560" y2="270"/>
+            <line class="grid-line" x1="0" y1="340" x2="560" y2="340"/>
           </g>
+          <g>
+            <rect class="bar" x="30"  y="250" width="34" height="90"/>
+            <rect class="bar" x="76"  y="212" width="34" height="128"/>
+            <rect class="bar" x="122" y="232" width="34" height="108"/>
+            <rect class="bar" x="168" y="180" width="34" height="160"/>
+            <rect class="bar" x="214" y="200" width="34" height="140"/>
+          </g>
+          <path class="series s-a" d="M20 300 L110 268 L200 282 L290 226 L380 204 L470 156 L540 128"/>
+          <path class="series s-b" d="M20 330 L110 322 L200 290 L290 300 L380 252 L470 236 L540 196"/>
+          <path class="series s-c" d="M20 258 L110 274 L200 236 L290 248 L380 186 L470 196 L540 92"/>
+          <circle class="pt-a" cx="540" cy="128" r="4.5"/>
+          <circle class="pt-b" cx="540" cy="196" r="4.5"/>
+          <circle class="pt-c" cx="540" cy="92"  r="4.5"/>
         </svg>
-        <img class="hero-frame" src="../gifs/overview.gif" alt="Vista general de los ocho módulos de la app EU Stats" loading="lazy" />
+        <img class="hero-frame" src="../gifs/overview.gif" data-still="../assets/screens/overview.png" width="420" height="933" alt="Vista general de los ocho módulos de la app EU Stats" />
       </div>
     </header>
 
@@ -1044,7 +168,7 @@
       <section class="stats" aria-label="Cifras clave del proyecto" style="padding-top: var(--s-12); padding-bottom: var(--s-12);">
         <div class="stat"><div class="value num">19</div><div class="label">datasets de Eurostat</div></div>
         <div class="stat"><div class="value num">8</div><div class="label">módulos temáticos</div></div>
-        <div class="stat"><div class="value num">499</div><div class="label">tests unitarios pasando</div></div>
+        <div class="stat"><div class="value num">5</div><div class="label">plataformas, una base de código</div></div>
         <div class="stat"><div class="value">AGPL-3.0</div><div class="label">licencia de código abierto</div></div>
       </section>
     </div>
@@ -1076,14 +200,6 @@
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          </div>
-          <h3>Ocho módulos temáticos</h3>
-          <p>Economía, Población, Medio ambiente, Comercio, Transporte, Turismo, Social, Ciencia. Cada uno gestiona su propio dataset, su selector y una gráfica característica adaptada a la forma de los datos.</p>
-        </article>
-
-        <article class="feature-card">
-          <div class="icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 20V10"/><path d="M9 20V6"/><path d="M13 20v-8"/><path d="M17 20V4"/><path d="M21 20v-6"/></svg>
           </div>
           <h3>Gráficas sobre Compose Canvas puro</h3>
@@ -1092,18 +208,80 @@
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="10" height="14" rx="1.5"/><rect x="14" y="3" width="8" height="17" rx="2"/><path d="M7 17h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>
           </div>
-          <h3>Multiplataforma desde el primer día</h3>
-          <p>Teléfono y tablet Android, iPhone e iPad, y un <code>.jar</code> Compose Desktop autónomo para macOS, Linux y Windows &mdash; todo desde una única base de código Kotlin compartida.</p>
+          <h3>Habla tres idiomas</h3>
+          <p>Inglés, polaco y ucraniano en cada pantalla &mdash; y el selector de Ajustes cambia toda la interfaz en tiempo de ejecución, sin reiniciar. Este mismo sitio se publica en nueve idiomas.</p>
         </article>
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16"/></svg>
           </div>
-          <h3>Selector de año en cada pantalla</h3>
-          <p>Recién incorporado: elige cualquier año histórico y el titular con las estadísticas se actualiza al instante, sin ninguna petición de red. La gráfica conserva la serie completa; el año solo actualiza los valores en primer plano.</p>
+          <h3>Maestro-detalle adaptable</h3>
+          <p>En tablets y escritorio, cada una de las ocho pantallas cambia a un diseño de dos paneles &mdash; un panel de controles de 320&thinsp;dp junto al contenido &mdash; mientras que los móviles mantienen el mismo orden a una sola columna.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18L10 8l4 5 6-9"/><circle cx="14" cy="13" r="2.5"/><path d="M14 15.5V21"/></svg>
+          </div>
+          <h3>Toca una gráfica, obtén el dato</h3>
+          <p>Tocar cerca de cualquier punto de una gráfica de líneas abre una ficha de detalle con el país, el año, el valor formateado, la unidad y el código del dataset &mdash; incluso en modo Indexado-100 resuelve el valor absoluto real.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ COMPARE + SEARCH SPOTLIGHT ============ -->
+    <section id="compare" class="wrap">
+      <div class="section-head">
+        <div class="section-eyebrow">Novedad en v0.7</div>
+        <h2>Compara entre fronteras. Busca en todo.</h2>
+        <p>Las dos pantallas más nuevas convierten ocho módulos independientes en un único atlas estadístico conectado.</p>
+      </div>
+
+      <div class="spot-grid">
+        <article class="spot-card">
+          <div class="kicker">feature-compare</div>
+          <h3>Compara 2&ndash;5 países en una sola gráfica</h3>
+          <p>Elige uno de los ocho indicadores principales &mdash; población, PIB, emisiones, exportaciones, pasajeros aéreos, pernoctaciones turísticas, riesgo de pobreza, intensidad de I+D &mdash; y superpón hasta cinco países. Los colores se mantienen estables según el orden de selección, y el interruptor Absoluto&nbsp;/&nbsp;Indexado-100 reajusta cada serie a un punto de partida común: la forma honesta de comparar economías de tamaños distintos.</p>
+          <div class="mock" role="img" aria-label="Gráfica de comparación estilizada: tres series de países superpuestas en una gráfica de líneas con un interruptor Absoluto / Indexado-100">
+            <div class="mock-chips">
+              <span class="mock-chip"><i style="background: var(--mod-economy);"></i>DE</span>
+              <span class="mock-chip"><i style="background: var(--mod-population);"></i>FR</span>
+              <span class="mock-chip"><i style="background: var(--mod-tourism);"></i>PL</span>
+            </div>
+            <svg class="mock-chart" viewBox="0 0 440 170" aria-hidden="true" focusable="false">
+              <line class="grid-line" x1="0" y1="30"  x2="440" y2="30"/>
+              <line class="grid-line" x1="0" y1="75"  x2="440" y2="75"/>
+              <line class="grid-line" x1="0" y1="120" x2="440" y2="120"/>
+              <line class="grid-line" x1="0" y1="165" x2="440" y2="165"/>
+              <path class="series" style="stroke: var(--mod-economy);"    d="M10 130 L82 122 L154 100 L226 106 L298 72 L370 62 L430 38"/>
+              <path class="series" style="stroke: var(--mod-population);" d="M10 140 L82 132 L154 128 L226 112 L298 108 L370 88 L430 76"/>
+              <path class="series" style="stroke: var(--mod-tourism);"    d="M10 150 L82 154 L154 136 L226 130 L298 118 L370 122 L430 96"/>
+              <circle cx="430" cy="38" r="4" style="fill: var(--mod-economy);"/>
+              <circle cx="430" cy="76" r="4" style="fill: var(--mod-population);"/>
+              <circle cx="430" cy="96" r="4" style="fill: var(--mod-tourism);"/>
+            </svg>
+            <span class="mock-toggle"><span>Absoluto</span><span class="on">Indexed 100</span></span>
+          </div>
+        </article>
+
+        <article class="spot-card gold-rule">
+          <div class="kicker">feature-search</div>
+          <h3>27 indicadores, un solo cuadro de búsqueda</h3>
+          <p>Un índice integrado con todos los indicadores de los ocho módulos &mdash; etiquetas, códigos de dataset, palabras clave &mdash; con clasificación por niveles. Escribe &ldquo;pobreza&rdquo;, &ldquo;I+D&rdquo; o &ldquo;emisiones&rdquo; y salta directamente a la pantalla correcta; una búsqueda vacía explora el catálogo módulo por módulo.</p>
+          <div class="mock" role="img" aria-label="Pantalla de búsqueda estilizada: un campo de búsqueda con resultados que enlazan a las pantallas de los módulos">
+            <div class="mock-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              emisiones&hellip;
+            </div>
+            <div class="mock-rows">
+              <div class="mock-row"><i style="background: var(--mod-environment);"></i>Emisiones de gases de efecto invernadero<span class="code">env_air_gge</span></div>
+              <div class="mock-row"><i style="background: var(--mod-environment);"></i>Índice climático (SDG 13)<span class="code">sdg_13_10</span></div>
+              <div class="mock-row"><i style="background: var(--mod-transport);"></i>Pasajeros de transporte aéreo<span class="code">avia_paoc</span></div>
+            </div>
+          </div>
         </article>
       </div>
     </section>
@@ -1116,11 +294,11 @@
         <p>Cada módulo tiene su propio dataset, su selector y una gráfica característica adaptada a la forma de los datos. Las descripciones se toman directamente del README del proyecto.</p>
       </div>
 
-      <div class="modules">
+      <div class="modules" style="--kicker-label: 'Módulo ';">
 
         <!-- POPULATION -->
         <article class="module-row" style="--mod-accent: var(--mod-population);">
-          <img class="module-frame" src="../gifs/population.gif" alt="Módulo Población — arrastra el control de año para transformar la pirámide" loading="lazy" />
+          <img class="module-frame" src="../gifs/population.gif" data-still="../assets/screens/population.png" width="420" height="933" alt="Módulo Población — arrastra el control de año para transformar la pirámide" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">01</span>
             <h3>Población</h3>
@@ -1136,7 +314,7 @@
 
         <!-- ECONOMY -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-economy);">
-          <img class="module-frame" src="../gifs/economy.gif" alt="Módulo Economía — PIB, inflación HICP y déficit" loading="lazy" />
+          <img class="module-frame" src="../gifs/economy.gif" data-still="../assets/screens/economy.png" width="420" height="933" alt="Módulo Economía — PIB, inflación HICP y déficit" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">02</span>
             <h3>Economía</h3>
@@ -1152,7 +330,7 @@
 
         <!-- ENVIRONMENT -->
         <article class="module-row" style="--mod-accent: var(--mod-environment);">
-          <img class="module-frame" src="../gifs/environment.gif" alt="Módulo Medio ambiente — GHG, energía, índice climático SDG" loading="lazy" />
+          <img class="module-frame" src="../gifs/environment.gif" data-still="../assets/screens/environment.png" width="420" height="933" alt="Módulo Medio ambiente — GHG, energía, índice climático SDG" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">03</span>
             <h3>Medio ambiente</h3>
@@ -1168,7 +346,7 @@
 
         <!-- TRADE -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-trade);">
-          <img class="module-frame" src="../gifs/trade.gif" alt="Módulo Comercio — barras divergentes para exportaciones, importaciones, saldo" loading="lazy" />
+          <img class="module-frame" src="../gifs/trade.gif" data-still="../assets/screens/trade.png" width="420" height="933" alt="Módulo Comercio — barras divergentes para exportaciones, importaciones, saldo" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">04</span>
             <h3>Comercio</h3>
@@ -1184,12 +362,12 @@
 
         <!-- TRANSPORT -->
         <article class="module-row" style="--mod-accent: var(--mod-transport);">
-          <img class="module-frame" src="../gifs/transport.gif" alt="Módulo Transporte — small multiples de pasajeros por carretera y aéreos" loading="lazy" />
+          <img class="module-frame" src="../gifs/transport.gif" data-still="../assets/screens/transport.png" width="420" height="933" alt="Módulo Transporte — small multiples de pasajeros por carretera y aéreos" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">05</span>
             <h3>Transporte</h3>
             <div class="datasets">road_pa_buscoa &middot; avia_paoc</div>
-            <p>Volúmenes de pasajeros por carretera y aéreos presentados como gráficas de líneas small-multiple en paralelo. Los datos de carretera (miles de millones de pasajeros) y aéreos (millones de pasajeros) tienen escala independiente por panel. Un toggle en pastilla (CARRETERA / AIRE / TODO) controla qué paneles son visibles. Un interruptor de escala logarítmica comprime el eje para países con magnitudes muy distintas. Tres fichas de estadísticas resumen carretera, aire y una ficha "mar: n/d" que explica honestamente la exclusión del dataset basado en puertos.</p>
+            <p>Volúmenes de pasajeros por carretera y aéreos presentados como gráficas de líneas small-multiple en paralelo. Los datos de carretera (miles de millones de pasajeros) y aéreos (millones de pasajeros) tienen escala independiente por panel. Un toggle en pastilla (CARRETERA / AIRE / TODO) controla qué paneles son visibles. Un interruptor de escala logarítmica comprime el eje para países con magnitudes muy distintas. Tres fichas de estadísticas resumen carretera, aire y una ficha "mar: n/d" que explica honestamente que el dataset basado en puertos queda excluido a propósito.</p>
             <div class="pill-row">
               <span class="pill">small multiples</span>
               <span class="pill">toggle en pastilla</span>
@@ -1200,7 +378,7 @@
 
         <!-- TOURISM -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-tourism);">
-          <img class="module-frame" src="../gifs/tourism.gif" alt="Módulo Turismo — barras apiladas de pernoctaciones y mapa de calor de estacionalidad" loading="lazy" />
+          <img class="module-frame" src="../gifs/tourism.gif" data-still="../assets/screens/tourism.png" width="420" height="933" alt="Módulo Turismo — barras apiladas de pernoctaciones y mapa de calor de estacionalidad" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">06</span>
             <h3>Turismo</h3>
@@ -1216,11 +394,11 @@
 
         <!-- SOCIAL -->
         <article class="module-row" style="--mod-accent: var(--mod-social);">
-          <img class="module-frame" src="../gifs/social.gif" alt="Módulo Social — las fichas KPI dirigen una gráfica de líneas destacada" loading="lazy" />
+          <img class="module-frame" src="../gifs/social.gif" data-still="../assets/screens/social.png" width="420" height="933" alt="Módulo Social — las fichas KPI dirigen una gráfica de líneas destacada" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">07</span>
             <h3>Social</h3>
-            <div class="datasets">ilc_li02 &middot; ilc_peps01 &middot; hlth_silc_01</div>
+            <div class="datasets">ilc_li02 &middot; ilc_peps01n &middot; hlth_silc_01</div>
             <p>Tres indicadores de bienestar en porcentaje extraídos de las encuestas EU-SILC: tasa de riesgo de pobreza, tasa de riesgo de pobreza o exclusión social y proporción de población que declara una salud autopercibida muy buena. Los tres se representan juntos en una gráfica multilínea destacada; tocar una ficha KPI desplaza el énfasis a esa serie y actualiza el valor principal.</p>
             <div class="pill-row">
               <span class="pill">multilínea destacado</span>
@@ -1232,7 +410,7 @@
 
         <!-- SCIENCE -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-science);">
-          <img class="module-frame" src="../gifs/science.gif" alt="Módulo Ciencia — gráfica radar de I+D, uso de internet y educación terciaria" loading="lazy" />
+          <img class="module-frame" src="../gifs/science.gif" data-still="../assets/screens/science.png" width="420" height="933" alt="Módulo Ciencia — gráfica radar de I+D, uso de internet y educación terciaria" loading="lazy" decoding="async" />
           <div class="module-copy">
             <span class="ghost-num" aria-hidden="true">08</span>
             <h3>Ciencia</h3>
@@ -1254,7 +432,7 @@
       <div class="section-head">
         <div class="section-eyebrow">Bajo el capó</div>
         <h2>Decisiones conservadoras y probadas &mdash; a propósito.</h2>
-        <p>Clean Architecture distribuida en 18 módulos Gradle. Cada capa tiene un contrato sealed. Sin el operador <code>!!</code> en ningún sitio; sin gráficas de terceros; sin fugas de dispatcher.</p>
+        <p>Clean Architecture distribuida en 20 módulos Gradle, respaldada por más de 600 tests unitarios &mdash; incluida una suite real en el simulador de iOS. Cada capa tiene un contrato sealed. Sin el operador <code>!!</code> en ningún sitio; sin gráficas de terceros; sin fugas de dispatcher.</p>
       </div>
 
       <div class="tech-grid">
@@ -1274,7 +452,7 @@
           <ul>
             <li>Ktor Client &mdash; engine Darwin en iOS, OkHttp en Android</li>
             <li>kotlinx.serialization para JSON y blobs de caché</li>
-            <li>Esquemas SQLDelight con DAOs tipados</li>
+            <li>Esquemas SQLDelight con DAOs tipados y migraciones</li>
             <li>Parser JSON-stat 2.0 escrito a mano en <code>core-jsonstat</code></li>
             <li>Coroutines + Flow + StateFlow en toda la app</li>
           </ul>
@@ -1285,9 +463,9 @@
           <ul>
             <li>Compose Multiplatform &mdash; Android, iOS, Desktop</li>
             <li>Tokens de diseño <code>object Euro</code> &mdash; colores, tipografía, espaciado, formas</li>
-            <li>~25 composables reutilizables en <code>core-ui</code></li>
+            <li>~25 composables reutilizables en <code>core-ui</code> &middot; Inter + IBM Plex Mono incluidas</li>
             <li>Ocho tipos de gráfica sobre <code>Canvas</code> Compose puro &mdash; sin Koalaplot</li>
-            <li>kotlin.test y Turbine para tests unitarios y de flujo</li>
+            <li><code>AdaptiveTwoPane</code> maestro-detalle &middot; cambio de idioma en tiempo de ejecución</li>
           </ul>
         </article>
       </div>
@@ -1298,23 +476,23 @@
       <div class="section-head">
         <div class="section-eyebrow">Tres factores de forma</div>
         <h2>Teléfono, tablet, escritorio &mdash; el mismo código Compose.</h2>
-        <p>Un periodista en el escritorio, un estudiante en la tablet, un ciudadano en el móvil &mdash; los mismos datos, los mismos componentes, el mismo renderizado. Ya implementado a nivel de infraestructura.</p>
+        <p>Un periodista en el escritorio, un estudiante en la tablet, un ciudadano en el móvil &mdash; los mismos datos, los mismos componentes, el mismo renderizado. A partir de 840&thinsp;dp, cada pantalla cambia a un diseño maestro-detalle de dos paneles.</p>
       </div>
 
       <div class="devices">
         <div class="device-wrap">
-          <div class="device-android" aria-label="Maqueta de móvil y tablet Android">
+          <div class="device-android">
             <div class="device-screen" style="height: 100%;">
-              <span class="soon">Android</span>
+              <img class="device-shot" src="../assets/screens/economy.png" width="420" height="933" alt="Módulo Economía ejecutándose en Android" loading="lazy" decoding="async" />
             </div>
           </div>
           <div class="device-label">Android móvil &middot; tablet</div>
         </div>
 
         <div class="device-wrap">
-          <div class="device-ios" aria-label="Maqueta de iPhone">
+          <div class="device-ios">
             <div class="device-screen" style="height: 100%;">
-              <span class="soon">iOS</span>
+              <img class="device-shot" src="../assets/screens/population.png" width="420" height="933" alt="Pirámide de población ejecutándose en iPhone" loading="lazy" decoding="async" />
             </div>
           </div>
           <div class="device-label">iPhone &middot; iPad</div>
@@ -1324,14 +502,67 @@
           <div class="device-desktop" aria-label="Maqueta de ventana de escritorio">
             <div class="desktop-bar"><span></span><span></span><span></span></div>
             <div class="device-screen">
-              <span class="soon">macOS &middot; Linux &middot; Windows</span>
+              <span class="soon">La misma interfaz Compose &middot; .dmg &middot; .msi &middot; .deb</span>
             </div>
           </div>
           <div class="device-label">Compose Desktop</div>
         </div>
       </div>
 
-      <p class="devices-caption">Una única base de código Kotlin. Interfaz Compose Multiplatform. Componentes nativos en cada plataforma.</p>
+      <p class="devices-caption">Una única base de código Kotlin. Interfaz Compose Multiplatform. Ventanas nativas en cada plataforma.</p>
+    </section>
+
+    <!-- ============ DOWNLOADS ============ -->
+    <section id="download" class="wrap">
+      <div class="section-head">
+        <div class="section-eyebrow">Consigue la app</div>
+        <h2>Descarga para tu plataforma.</h2>
+        <p>Cada versión etiquetada la compila la CI &mdash; un APK universal de Android más instaladores nativos de escritorio, adjuntados automáticamente a la Release de GitHub.</p>
+      </div>
+
+      <div class="dl-grid">
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>
+          </div>
+          <h3>Android</h3>
+          <p>APK universal para Android 8.0+. Los metadatos de F-Droid ya están listos en el repositorio; el envío a la tienda está en el roadmap.</p>
+          <div class="dl-files">
+            <span class="pill">.apk</span>
+            <span class="pill">F-Droid: previsto</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases de GitHub</a>
+        </article>
+
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3>Escritorio</h3>
+          <p>Instaladores nativos para macOS, Windows y Debian/Ubuntu. Actualmente sin firmar &mdash; tu sistema operativo pedirá confirmación en el primer arranque.</p>
+          <div class="dl-files">
+            <span class="pill">.dmg</span>
+            <span class="pill">.msi</span>
+            <span class="pill">.deb</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases de GitHub</a>
+        </article>
+
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10 5h4"/></svg>
+          </div>
+          <h3>iOS</h3>
+          <p>Se compila y ejecuta en el simulador de iPhone con datos reales de Eurostat. Compílala desde el código fuente con el proyecto XcodeGen; la distribución por TestFlight es un objetivo de financiación.</p>
+          <div class="dl-files">
+            <span class="pill">Xcode + XcodeGen</span>
+            <span class="pill">TestFlight: previsto</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/iosApp/README.md">Guía de compilación</a>
+        </article>
+      </div>
+
+      <p class="dl-note">Se está preparando la primera versión etiquetada &mdash; el flujo de CI activado por etiqueta (APK + los tres instaladores) ya está fusionado y verificado. Vigila el repositorio en GitHub para enterarte en cuanto esté disponible.</p>
     </section>
 
     <!-- ============ ROADMAP ============ -->
@@ -1339,17 +570,29 @@
       <div class="section-head">
         <div class="section-eyebrow">Roadmap</div>
         <h2>Transparentes sobre lo que está listo, lo que viene y lo que necesita financiación.</h2>
-        <p>El proyecto está en la Fase 4: los ocho módulos muestran datos reales en Android. La Fase 5 completa la estructura &mdash; vista general, selector de país, ajustes &mdash; y la Fase 6 publica la primera versión.</p>
+        <p>El proyecto está en la v0.7: todo el trabajo de producto de la Fase 5 &mdash; vista general, comparación, búsqueda, ajustes, localización &mdash; ya está publicado. La Fase 6 prepara la primera versión pública.</p>
       </div>
 
       <div class="roadmap-cols">
         <div class="roadmap-col">
           <h3>Disponible hoy</h3>
-          <div class="col-sub">Fase 4 &middot; verificado</div>
+          <div class="col-sub">v0.7 &middot; verificado</div>
           <ul>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Ocho módulos temáticos conectados a datos reales de Eurostat</span>
+              <span>Ocho módulos temáticos conectados de extremo a extremo a datos reales de Eurostat</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Panel de vista general &middot; Comparación entre módulos &middot; Búsqueda de indicadores</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Ajustes con cambio de idioma en tiempo de ejecución &middot; EN, PL, UK</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Diseños maestro-detalle de dos paneles en las ocho pantallas</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -1357,73 +600,61 @@
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Selector de año en cada módulo &middot; el titular se actualiza sin nuevas peticiones</span>
+              <span>Instaladores de escritorio generados por un flujo de CI activado por etiqueta</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Ocho tipos de gráfica sobre <code>Canvas</code> Compose puro</span>
-            </li>
-            <li class="done">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>APK Android compilado &middot; <code>.jar</code> Compose Desktop funcionando en macOS/Linux/Windows</span>
-            </li>
-            <li class="done">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Publicado bajo AGPL-3.0</span>
+              <span>Más de 600 tests unitarios &middot; incluida una suite real en el simulador de iOS</span>
             </li>
           </ul>
         </div>
 
         <div class="roadmap-col">
-          <h3>Próximo hito (M1)</h3>
-          <div class="col-sub">Fase 5 &middot; en curso</div>
+          <h3>Próximo: primera versión pública</h3>
+          <div class="col-sub">Fase 6 &middot; en curso</div>
           <ul>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Pantalla de vista general &mdash; cuadrícula de acceso rápido</span>
+              <span>Versión etiquetada v0.7.0 &mdash; APK + instaladores adjuntados por la CI</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Selector de país &mdash; lista con búsqueda y toque en el mapa</span>
+              <span>Clave de firma de release real para Android &mdash; en sustitución del fallback de depuración</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Prueba de humo en iOS en simulador &middot; verificar las ocho pestañas</span>
+              <span>Prueba de humo en un dispositivo Android físico &middot; recorrido completo en iOS</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Persistencia de ajustes &middot; tema, país por defecto, idioma</span>
-            </li>
-            <li class="wait">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Renderizado real de banderas &middot; fuente Inter incluida</span>
+              <span>Envío a F-Droid &mdash; los metadatos de fastlane ya están en el repositorio</span>
             </li>
           </ul>
         </div>
 
         <div class="roadmap-col">
-          <h3>Objetivos de financiación (M2 &middot; M3)</h3>
-          <div class="col-sub">Fase 6 &middot; candidato NLnet</div>
+          <h3>Objetivos de financiación</h3>
+          <div class="col-sub">Candidatura a NLnet en evaluación</div>
           <ul>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Localización &middot; traducciones al polaco y al ucraniano</span>
+              <span>Instaladores firmados y notarizados &mdash; certificados de Apple y Windows</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Instaladores nativos &middot; <code>.dmg</code>, <code>.msi</code>, <code>.deb</code>, Flatpak</span>
+              <span>Flatpak en Flathub &middot; presencia en TestFlight / App Store</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Comparación multipaís &middot; superposición o small-multiples</span>
+              <span>Selector de país tocando el mapa &middot; gráficas de coropletas</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Búsqueda transversal &middot; índice de indicadores de los ocho módulos</span>
+              <span>Auditoría de accesibilidad &mdash; TalkBack y VoiceOver</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Diseños maestro-detalle para pantallas anchas, tablet y escritorio</span>
+              <span>Más idiomas de la UE en la interfaz de la app</span>
             </li>
           </ul>
         </div>
@@ -1433,26 +664,21 @@
     <!-- ============ NLNET ============ -->
     <section id="nlnet" class="wrap">
       <div class="nlnet">
-        <svg class="stars stars-nlnet" viewBox="-50 -50 100 100" aria-hidden="true" focusable="false">
+        <svg class="nlnet-motif" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
           <g fill="currentColor">
-            <use href="#star12" transform="translate(0,-38)"/>
-            <use href="#star12" transform="rotate(30) translate(0,-38) rotate(-30)"/>
-            <use href="#star12" transform="rotate(60) translate(0,-38) rotate(-60)"/>
-            <use href="#star12" transform="rotate(90) translate(0,-38) rotate(-90)"/>
-            <use href="#star12" transform="rotate(120) translate(0,-38) rotate(-120)"/>
-            <use href="#star12" transform="rotate(150) translate(0,-38) rotate(-150)"/>
-            <use href="#star12" transform="rotate(180) translate(0,-38) rotate(-180)"/>
-            <use href="#star12" transform="rotate(210) translate(0,-38) rotate(-210)"/>
-            <use href="#star12" transform="rotate(240) translate(0,-38) rotate(-240)"/>
-            <use href="#star12" transform="rotate(270) translate(0,-38) rotate(-270)"/>
-            <use href="#star12" transform="rotate(300) translate(0,-38) rotate(-300)"/>
-            <use href="#star12" transform="rotate(330) translate(0,-38) rotate(-330)"/>
+            <rect x="10"  y="150" width="30" height="70" rx="2"/>
+            <rect x="52"  y="118" width="30" height="102" rx="2"/>
+            <rect x="94"  y="134" width="30" height="86" rx="2"/>
+            <rect x="136" y="88"  width="30" height="132" rx="2"/>
+            <rect x="178" y="106" width="30" height="114" rx="2"/>
+            <rect x="220" y="56"  width="30" height="164" rx="2"/>
+            <rect x="262" y="24"  width="30" height="196" rx="2"/>
           </g>
         </svg>
         <div class="section-eyebrow" style="text-align: center; margin-bottom: var(--s-3);">Código abierto &middot; interés público</div>
         <h2>Desarrollado de forma independiente. Publicado bajo AGPL-3.0.</h2>
-        <p>Actualmente en proceso de evaluación para una candidatura a la convocatoria abierta de NLnet, para financiar los próximos hitos. Ciudadanos, periodistas y estudiantes deberían poder explorar los datos públicos europeos sin depender de ningún proveedor concreto &mdash; en cualquier dispositivo que ya tengan.</p>
-        <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/NEXT_STEPS.md">
+        <p>Una candidatura al NLnet NGI Zero Commons Fund está en evaluación para financiar los próximos hitos. Ciudadanos, periodistas y estudiantes deberían poder explorar los datos públicos europeos sin depender de ningún proveedor concreto &mdash; en cualquier dispositivo que ya tengan.</p>
+        <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/NEXT_STEPS.md">
           Leer la roadmap
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -1472,9 +698,11 @@
         <div>
           <h4>Proyecto</h4>
           <a href="https://github.com/romantsisyk/MyEuroStatApp">Repositorio GitHub</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases</a>
           <a href="https://github.com/romantsisyk/MyEuroStatApp/issues">Incidencias</a>
-          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/CONTRIBUTING.md">Cómo contribuir</a>
-          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/LICENSE">Licencia (AGPL-3.0)</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/CONTRIBUTING.md">Cómo contribuir</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/LICENSE">Licencia (AGPL-3.0)</a>
+          <a href="../technical/">Resumen técnico</a>
         </div>
         <div>
           <h4>Aviso legal</h4>
@@ -1517,6 +745,15 @@
             }
           });
         }
+      }
+    })();
+
+    // ---- reduced motion: swap animated GIFs for their still frames ----
+    (function () {
+      if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+      var imgs = document.querySelectorAll("img[data-still]");
+      for (var i = 0; i < imgs.length; i++) {
+        imgs[i].src = imgs[i].getAttribute("data-still");
       }
     })();
   </script>
