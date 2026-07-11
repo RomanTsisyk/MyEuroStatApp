@@ -1,0 +1,26 @@
+-- Convergent JSON-blob cache for multi-dimensional feature models
+-- (age-cohort pyramids, residence-split tourism rows, seasonality grids, …).
+-- One row per cache key; the payload is an opaque JSON document owned by the
+-- feature's data layer. Keys follow "{feature}:{slice}:v{N}:{params}" so that
+-- deleteByKeyPrefix can wipe a feature (or slice) in one statement.
+
+CREATE TABLE MultiDimCacheEntity (
+    cache_key TEXT NOT NULL PRIMARY KEY,
+    data_json TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL
+);
+
+selectByKey:
+SELECT * FROM MultiDimCacheEntity
+WHERE cache_key = ?;
+
+upsert:
+INSERT OR REPLACE INTO MultiDimCacheEntity(cache_key, data_json, fetched_at_epoch_ms)
+VALUES (?, ?, ?);
+
+deleteByKeyPrefix:
+DELETE FROM MultiDimCacheEntity
+WHERE cache_key LIKE ? || '%';
+
+clearAll:
+DELETE FROM MultiDimCacheEntity;

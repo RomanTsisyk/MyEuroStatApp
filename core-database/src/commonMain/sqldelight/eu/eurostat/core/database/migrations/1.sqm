@@ -1,0 +1,15 @@
+-- v1 -> v2: introduce the convergent JSON-blob cache (MultiDimCacheEntity)
+-- and drop the residence-tall tourism table it replaces.
+--
+-- Existing installs carry user_version = 1 (the pre-blob schema). Without this
+-- migration they would never get MultiDimCacheEntity: AndroidSqliteDriver /
+-- NativeSqliteDriver only run Schema.create() on a brand-new database file and
+-- only run migrations when user_version < Schema.version.
+
+CREATE TABLE MultiDimCacheEntity (
+    cache_key TEXT NOT NULL PRIMARY KEY,
+    data_json TEXT NOT NULL,
+    fetched_at_epoch_ms INTEGER NOT NULL
+);
+
+DROP TABLE IF EXISTS TourismCacheEntity;
