@@ -88,6 +88,6 @@ class DefaultSettingsComponent(
 
     companion object {
         /** Display version shown on the About row; matches composeApp versionName. */
-        const val APP_VERSION = "0.4.0"
+        const val APP_VERSION = "0.6.0"
     }
 }

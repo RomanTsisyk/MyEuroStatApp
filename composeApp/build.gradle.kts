@@ -9,8 +9,8 @@ android {
     namespace = "eu.eurostat.app"
     defaultConfig {
         applicationId = "eu.eurostat.app"
-        versionCode = 50
-        versionName = "0.5.0"
+        versionCode = 60
+        versionName = "0.6.0"
         resourceConfigurations += listOf("en", "pl", "uk")
     }
 
