@@ -1,4 +1,5 @@
 import java.util.Properties
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     id("eurostat.android.application")
@@ -105,5 +106,27 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "eu.eurostat.app.MainKt"
+
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "EU Stats"
+            // Tracks the app version at release time.
+            packageVersion = "1.0.0"
+            description = "Independent open-source client for the public Eurostat API"
+            vendor = "Roman Tsisyk"
+            licenseFile.set(rootProject.file("LICENSE"))
+
+            linux {
+                iconFile.set(project.file("icons/app.png"))
+            }
+            macOS {
+                iconFile.set(project.file("icons/app.icns"))
+                bundleID = "eu.eurostat.app"
+            }
+            windows {
+                iconFile.set(project.file("icons/app.ico"))
+                menuGroup = "EU Stats"
+            }
+        }
     }
 }
