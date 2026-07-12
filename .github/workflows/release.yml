@@ -17,6 +17,12 @@ permissions:
 jobs:
   android:
     runs-on: ubuntu-latest
+    env:
+      # `secrets` is not a valid context in a step-level `if:` — GitHub
+      # rejects the whole workflow file at parse time ("Unrecognized
+      # named-value: secrets", startup failure with zero jobs). Job-level
+      # `env` IS allowed to read secrets, so bridge through it.
+      HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,7 +36,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Restore release keystore
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

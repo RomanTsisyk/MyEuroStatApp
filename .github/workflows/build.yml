@@ -72,7 +72,11 @@ jobs:
     # the fast `android` job.
     needs: android
     runs-on: macos-latest
-    timeout-minutes: 45
+    # First cold run compiles+links Native test binaries for ~20 modules and
+    # downloads the Kotlin/Native toolchain — it blew through a 45-minute
+    # budget. The ~/.konan cache below makes warm runs much faster; the
+    # timeout covers the cold case.
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
 
@@ -81,6 +85,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
