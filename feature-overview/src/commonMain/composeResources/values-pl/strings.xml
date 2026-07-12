@@ -1,0 +1,38 @@
+<resources>
+    <!-- HeaderBar -->
+    <string name="overview_header_title">EU Stats</string>
+    <string name="overview_header_tagline">Statystyki europejskie · otwarte dane</string>
+    <string name="overview_header_search_description">Szukaj</string>
+    <string name="overview_header_settings_description">Ustawienia</string>
+
+    <!-- Browse section label -->
+    <string name="overview_browse_label">PRZEGLĄD</string>
+
+    <!-- Hero block (Economy · GDP teaser); %1$s = headline country code, e.g. "DE" -->
+    <string name="overview_hero_unit">mld €</string>
+    <string name="overview_hero_subtitle">PKB · %1$s · na żywo</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="overview_footer_staleness_live">otwarte dane na żywo</string>
+
+    <!-- BROWSE grid teaser titles (module names; order matches the Overview grid) -->
+    <string name="overview_module_title_population">Ludność</string>
+    <string name="overview_module_title_economy">Gospodarka</string>
+    <string name="overview_module_title_environment">Środowisko</string>
+    <string name="overview_module_title_trade">Handel</string>
+    <string name="overview_module_title_transport">Transport</string>
+    <string name="overview_module_title_tourism">Turystyka</string>
+    <string name="overview_module_title_social">Społeczeństwo</string>
+    <string name="overview_module_title_science">Nauka</string>
+
+    <!-- BROWSE grid teaser unit suffixes -->
+    <string name="overview_module_unit_population">osób</string>
+    <string name="overview_module_unit_economy">mld € · PKB</string>
+    <string name="overview_module_unit_environment">Mt CO₂e</string>
+    <string name="overview_module_unit_trade">mld € · eksport</string>
+    <string name="overview_module_unit_transport">pasażerowie</string>
+    <string name="overview_module_unit_tourism">noclegi</string>
+    <string name="overview_module_unit_social">zagrożenie ubóstwem</string>
+    <string name="overview_module_unit_science">B+R % PKB</string>
+    <string name="overview_header_compare_description">Porównaj kraje</string>
+</resources>

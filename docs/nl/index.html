@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>EU Stats Multiplatform — Eurostat-gegevens op elk scherm.</title>
-  <meta name="description" content="Een onafhankelijke, open-source mobiele en desktopapplicatie voor de publieke Eurostat API. Acht thematische modules — economie, bevolking, milieu, handel, vervoer, toerisme, sociaal, wetenschap — op één Kotlin Multiplatform codebase." />
-  <meta name="theme-color" content="#2F4969" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0E0D0C" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="Een onafhankelijke, open-source mobiele en desktopapplicatie voor de publieke Eurostat API. Acht thematische modules, landvergelijking en indicatorenzoekfunctie — op één Kotlin Multiplatform codebase voor Android, iOS, macOS, Linux en Windows." />
+  <meta name="theme-color" content="#004494" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B1120" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta property="og:title" content="EU Stats Multiplatform" />
   <meta property="og:description" content="Eurostat-gegevens op elk scherm. Open-source client voor de publieke Eurostat API, gebouwd met Kotlin Multiplatform." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="../gifs/overview.gif" />
+  <meta property="og:image" content="https://romantsisyk.github.io/MyEuroStatApp/assets/og.png" />
   <meta property="og:url" content="https://romantsisyk.github.io/MyEuroStatApp/nl/" />
   <meta property="og:locale" content="nl_NL" />
   <meta property="og:locale:alternate" content="en_GB" />
@@ -24,8 +24,8 @@
   <meta property="og:locale:alternate" content="uk_UA" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="EU Stats Multiplatform" />
-  <meta name="twitter:description" content="Open-source Kotlin Multiplatform client voor de publieke Eurostat API. 8 modules · Android · iOS · Desktop." />
-  <meta name="twitter:image" content="../gifs/overview.gif" />
+  <meta name="twitter:description" content="Open-source Kotlin Multiplatform client voor de publieke Eurostat API. 8 modules · Vergelijken · Zoeken · Android · iOS · Desktop." />
+  <meta name="twitter:image" content="https://romantsisyk.github.io/MyEuroStatApp/assets/og.png" />
   <link rel="canonical" href="https://romantsisyk.github.io/MyEuroStatApp/nl/" />
   <link rel="alternate" hreflang="en" href="https://romantsisyk.github.io/MyEuroStatApp/" />
   <link rel="alternate" hreflang="de" href="https://romantsisyk.github.io/MyEuroStatApp/de/" />
@@ -38,6 +38,7 @@
   <link rel="alternate" hreflang="uk" href="https://romantsisyk.github.io/MyEuroStatApp/uk/" />
   <link rel="alternate" hreflang="x-default" href="https://romantsisyk.github.io/MyEuroStatApp/" />
   <link rel="sitemap" type="application/xml" href="../sitemap.xml" />
+  <link rel="stylesheet" href="../assets/site.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -47,11 +48,11 @@
         "name": "EU Stats Multiplatform",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Android, iOS, macOS, Linux, Windows",
-        "description": "Onafhankelijke open-source Kotlin Multiplatform client voor de publieke Eurostat API. Visualiseert Europese statistische gegevens in acht thematische modules: economie, bevolking, milieu, handel, vervoer, toerisme, sociaal, wetenschap.",
+        "description": "Onafhankelijke open-source Kotlin Multiplatform client voor de publieke Eurostat API. Visualiseert Europese statistische gegevens in acht thematische modules — economie, bevolking, milieu, handel, vervoer, toerisme, sociaal, wetenschap — met landvergelijking, indicatorenzoekfunctie en een tijdens runtime omschakelbare Engels/Pools/Oekraïense interface.",
         "url": "https://romantsisyk.github.io/MyEuroStatApp/",
         "license": "https://www.gnu.org/licenses/agpl-3.0.html",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-        "softwareVersion": "0.4.0",
+        "softwareVersion": "0.7.0-dev",
         "inLanguage": ["en", "de", "fr", "it", "es", "pl", "nl", "pt", "uk"],
         "author": { "@type": "Person", "name": "Roman Tsisyk" },
         "isAccessibleForFree": true,
@@ -69,753 +70,10 @@
     ]
   }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
-  <style>
-    /* -------- tokens (light) -------- */
-    :root {
-      --paper: #F4F1EA;
-      --paper-alt: #FFFFFF;
-      --surface-2: #EAE6DD;
-      --ink: #1A1817;
-      --ink-subtle: #3A352E;
-      --muted: #6B6359;
-      --accent: #2F4969;
-      --accent-soft: #C6D0DC;
-      --warn: #C25A35;
-      --border: rgba(0, 0, 0, 0.07);
-      --border-strong: rgba(0, 0, 0, 0.12);
-      --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 12px rgba(0, 0, 0, .04);
-
-      /* module accents (light) */
-      --mod-economy: #2F4969;
-      --mod-population: #5E6B58;
-      --mod-environment: #6B8A76;
-      --mod-trade: #7A5C46;
-      --mod-transport: #4A4A55;
-      --mod-tourism: #B06A3A;
-      --mod-social: #7D5E76;
-      --mod-science: #4A6B7A;
-
-      /* spacing scale */
-      --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
-      --s-6: 24px; --s-8: 32px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
-
-      /* radii */
-      --r-card: 12px;
-      --r-hero: 24px;
-      --r-pill: 999px;
-
-      /* type */
-      --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
-    }
-
-    /* -------- tokens (dark) -------- */
-    html[data-theme="dark"] {
-      --paper: #0E0D0C;
-      --paper-alt: #1A1816;
-      --surface-2: #252320;
-      --ink: #F5F2EB;
-      --ink-subtle: #E8E2D5;
-      --muted: #9C948A;
-      --accent: #7DA0C9;
-      --accent-soft: #2F4969;
-      --warn: #C25A35;
-      --border: rgba(255, 255, 255, 0.10);
-      --border-strong: rgba(255, 255, 255, 0.18);
-      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .35);
-
-      --mod-economy: #7DA0C9;
-      --mod-population: #9CB394;
-      --mod-environment: #9FC3AC;
-      --mod-trade: #C2967A;
-      --mod-transport: #A8A8B8;
-      --mod-tourism: #E69664;
-      --mod-social: #C599BC;
-      --mod-science: #8FB4C7;
-    }
-
-    /* -------- base -------- */
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--paper);
-      color: var(--ink);
-      font-family: var(--font-sans);
-      font-size: 16px;
-      line-height: 1.65;
-      font-weight: 400;
-      font-feature-settings: 'ss01', 'cv01', 'cv11';
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      transition: background-color .25s ease, color .25s ease;
-    }
-    a { color: inherit; text-decoration: none; }
-    h1, h2, h3, h4 {
-      font-family: var(--font-sans);
-      color: var(--ink);
-      letter-spacing: -0.015em;
-      line-height: 1.15;
-      margin: 0;
-      font-weight: 700;
-    }
-    p { margin: 0; color: var(--ink-subtle); }
-    code, .mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
-    .num { font-variant-numeric: tabular-nums; }
-
-    .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 var(--s-6);
-    }
-
-    /* -------- nav -------- */
-    .nav {
-      position: sticky; top: 0; z-index: 50;
-      background: color-mix(in srgb, var(--paper) 86%, transparent);
-      -webkit-backdrop-filter: saturate(140%) blur(14px);
-      backdrop-filter: saturate(140%) blur(14px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-inner {
-      display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
-    }
-    .brand { display: flex; align-items: baseline; gap: 10px; }
-    .brand-mark {
-      font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
-    }
-    .brand-sub {
-      font-size: 12px; color: var(--muted);
-      font-family: var(--font-mono); font-weight: 400;
-    }
-    .nav-links { display: flex; align-items: center; gap: var(--s-6); }
-    .nav-links a {
-      color: var(--ink-subtle);
-      font-size: 14px;
-      font-weight: 500;
-      transition: color .15s ease;
-    }
-    .nav-links a:hover { color: var(--ink); }
-    .nav-links .gh {
-      padding: 6px 12px;
-      border-radius: var(--r-pill);
-      border: 1px solid var(--border-strong);
-      color: var(--ink);
-    }
-    .nav-links .gh:hover { background: var(--surface-2); }
-    .theme-toggle {
-      width: 36px; height: 36px;
-      display: inline-grid; place-items: center;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      color: var(--ink-subtle);
-      cursor: pointer;
-      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-    }
-    .theme-toggle:hover { background: var(--surface-2); color: var(--ink); }
-    .theme-toggle svg { width: 16px; height: 16px; }
-    html[data-theme="light"] .icon-moon { display: block; }
-    html[data-theme="light"] .icon-sun  { display: none; }
-    html[data-theme="dark"]  .icon-moon { display: none; }
-    html[data-theme="dark"]  .icon-sun  { display: block; }
-    /* Language switcher — minimal native <select> styled as a pill */
-    .lang-switch {
-      appearance: none; -webkit-appearance: none; -moz-appearance: none;
-      height: 36px;
-      padding: 0 28px 0 12px;
-      background:
-        transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%236B6359" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      color: var(--ink-subtle);
-      font: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-    }
-    .lang-switch:hover { background-color: var(--surface-2); color: var(--ink); }
-    .lang-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    html[data-theme="dark"] .lang-switch {
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%239C948A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-    }
-    @media (max-width: 720px) {
-      .nav-links a:not(.gh) { display: none; }
-    }
-
-    /* -------- hero -------- */
-    .hero {
-      min-height: calc(100vh - 64px);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--s-12);
-      align-items: center;
-      padding: var(--s-16) 0;
-    }
-    @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; padding: var(--s-12) 0; gap: var(--s-8); }
-    }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      font-size: 12px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--muted);
-      background: var(--paper-alt);
-      margin-bottom: var(--s-6);
-    }
-    .eyebrow .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent);
-      display: inline-block;
-    }
-    .hero h1 {
-      font-size: clamp(40px, 6.4vw, 72px);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.04;
-      margin-bottom: var(--s-6);
-    }
-    .hero .lede {
-      font-size: clamp(17px, 1.4vw, 19px);
-      color: var(--ink-subtle);
-      max-width: 56ch;
-      line-height: 1.6;
-      margin-bottom: var(--s-8);
-    }
-    .cta-row {
-      display: flex; flex-wrap: wrap; gap: var(--s-3);
-      margin-bottom: var(--s-6);
-    }
-    .btn {
-      display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 12px 20px;
-      border-radius: var(--r-pill);
-      font-size: 15px; font-weight: 500;
-      transition: transform .12s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
-      cursor: pointer; border: 1px solid transparent;
-    }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--ink); color: var(--paper); }
-    .btn-primary:hover { background: color-mix(in srgb, var(--ink) 88%, var(--accent)); }
-    .btn-secondary {
-      background: transparent;
-      color: var(--ink);
-      border-color: var(--border-strong);
-    }
-    .btn-secondary:hover { background: var(--surface-2); }
-    .btn svg { width: 16px; height: 16px; }
-    .disclaimer {
-      font-size: 13px; line-height: 1.55;
-      color: var(--muted);
-      max-width: 52ch;
-    }
-    .disclaimer .flag { margin-right: 6px; }
-
-    /* hero placeholder */
-    .hero-frame {
-      position: relative;
-      aspect-ratio: 16 / 11;
-      border-radius: var(--r-hero);
-      border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
-      background:
-        repeating-linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--accent) 8%, transparent) 0px,
-          color-mix(in srgb, var(--accent) 8%, transparent) 1px,
-          transparent 1px,
-          transparent 14px
-        ),
-        var(--paper-alt);
-      display: grid; place-items: center;
-      overflow: hidden;
-    }
-    .placeholder-label {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--muted);
-      padding: var(--s-4) var(--s-6);
-      text-align: center;
-      max-width: 80%;
-    }
-    .placeholder-label .play { color: var(--accent); margin-right: 6px; }
-    .placeholder-tag {
-      position: absolute; top: var(--s-3); right: var(--s-3);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      background: color-mix(in srgb, var(--paper) 70%, transparent);
-      border: 1px solid var(--border);
-      padding: 4px 10px;
-      border-radius: var(--r-pill);
-    }
-
-    /* -------- at-a-glance -------- */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: var(--s-6);
-      padding: var(--s-12) 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 420px) { .stats { grid-template-columns: 1fr; } }
-    .stat .value {
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      font-variant-numeric: tabular-nums;
-      color: var(--ink);
-      line-height: 1.1;
-    }
-    .stat .label {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--muted);
-      letter-spacing: 0.01em;
-    }
-
-    /* -------- section common -------- */
-    section { padding: var(--s-24) 0; }
-    @media (max-width: 720px) { section { padding: var(--s-16) 0; } }
-    .section-head { max-width: 720px; margin-bottom: var(--s-12); }
-    .section-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: var(--s-3);
-    }
-    .section-head h2 {
-      font-size: clamp(28px, 3.6vw, 42px);
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      margin-bottom: var(--s-4);
-    }
-    .section-head p {
-      font-size: 17px;
-      color: var(--ink-subtle);
-      line-height: 1.6;
-    }
-
-    /* -------- features grid -------- */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 1000px) { .features { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
-    .feature-card {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-6);
-      transition: transform .15s ease, border-color .15s ease;
-    }
-    .feature-card:hover {
-      border-color: var(--border-strong);
-    }
-    .feature-card .icon {
-      width: 36px; height: 36px;
-      display: grid; place-items: center;
-      border-radius: 10px;
-      background: var(--surface-2);
-      color: var(--accent);
-      margin-bottom: var(--s-4);
-    }
-    .feature-card .icon svg { width: 18px; height: 18px; stroke-width: 1.7; }
-    .feature-card h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .feature-card p {
-      font-size: 14.5px;
-      color: var(--ink-subtle);
-      line-height: 1.55;
-    }
-
-    /* -------- modules -------- */
-    .modules { display: flex; flex-direction: column; gap: var(--s-24); }
-    .module-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--s-12);
-      align-items: center;
-    }
-    .module-row.reverse .module-frame { order: 2; }
-    @media (max-width: 880px) {
-      .module-row, .module-row.reverse { grid-template-columns: 1fr; gap: var(--s-6); }
-      .module-row.reverse .module-frame { order: 0; }
-    }
-    .module-frame {
-      position: relative;
-      aspect-ratio: 16 / 9;
-      border-radius: var(--r-card);
-      border: 1.5px dashed var(--mod-accent, var(--accent));
-      background:
-        repeating-linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--mod-accent, var(--accent)) 10%, transparent) 0px,
-          color-mix(in srgb, var(--mod-accent, var(--accent)) 10%, transparent) 1px,
-          transparent 1px,
-          transparent 12px
-        ),
-        var(--paper-alt);
-      display: grid; place-items: center;
-      overflow: hidden;
-    }
-    .module-frame .placeholder-label .play { color: var(--mod-accent, var(--accent)); }
-    .module-copy { border-left: 2px solid var(--mod-accent, var(--accent)); padding-left: var(--s-6); }
-    .module-copy h3 {
-      font-size: clamp(26px, 3vw, 34px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--mod-accent, var(--accent));
-      margin-bottom: var(--s-2);
-    }
-    .module-copy .datasets {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-      margin-bottom: var(--s-4);
-    }
-    .module-copy p {
-      font-size: 16px;
-      color: var(--ink-subtle);
-      line-height: 1.7;
-      margin-bottom: var(--s-4);
-    }
-    .pill-row {
-      display: flex; flex-wrap: wrap; gap: var(--s-2);
-    }
-    .pill {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--muted);
-      padding: 4px 10px;
-      border-radius: var(--r-pill);
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      letter-spacing: 0.02em;
-    }
-
-    /* -------- tech 3-col -------- */
-    .tech-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 880px) { .tech-grid { grid-template-columns: 1fr; } }
-    .tech-card {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-8);
-    }
-    .tech-card h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: var(--s-4);
-    }
-    .tech-card ul {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-2);
-    }
-    .tech-card li {
-      font-size: 14.5px;
-      color: var(--ink-subtle);
-      display: flex; gap: 10px; align-items: baseline;
-      line-height: 1.5;
-    }
-    .tech-card li::before {
-      content: "";
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
-      transform: translateY(-2px);
-    }
-    .tech-card code {
-      font-size: 13px;
-      color: var(--ink);
-      background: var(--surface-2);
-      padding: 1px 6px;
-      border-radius: 4px;
-    }
-
-    /* -------- multi-platform -------- */
-    .devices {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.4fr;
-      gap: var(--s-8);
-      align-items: end;
-    }
-    @media (max-width: 880px) { .devices { grid-template-columns: 1fr; } }
-    .device-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--s-3); }
-    .device-label {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    /* phone (android) */
-    .device-android {
-      width: 100%;
-      max-width: 220px;
-      aspect-ratio: 9 / 18.5;
-      border-radius: 32px;
-      border: 8px solid var(--ink);
-      background: var(--paper-alt);
-      position: relative;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .device-android::before {
-      content: "";
-      position: absolute;
-      top: 10px; left: 50%;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: color-mix(in srgb, var(--paper) 60%, transparent);
-      transform: translateX(-50%);
-      z-index: 2;
-    }
-    /* phone (iPhone) */
-    .device-ios {
-      width: 100%;
-      max-width: 220px;
-      aspect-ratio: 9 / 19.5;
-      border-radius: 38px;
-      border: 9px solid var(--ink);
-      background: var(--paper-alt);
-      position: relative;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .device-ios::before {
-      content: "";
-      position: absolute;
-      top: 8px; left: 50%;
-      width: 70px; height: 22px;
-      border-radius: 14px;
-      background: var(--ink);
-      transform: translateX(-50%);
-      z-index: 2;
-    }
-    /* desktop */
-    .device-desktop {
-      width: 100%;
-      max-width: 480px;
-      aspect-ratio: 16 / 10;
-      border-radius: 12px;
-      border: 1px solid var(--border-strong);
-      background: var(--paper-alt);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      display: flex; flex-direction: column;
-    }
-    .desktop-bar {
-      height: 28px;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 6px;
-      padding: 0 12px;
-      flex-shrink: 0;
-    }
-    .desktop-bar span {
-      width: 11px; height: 11px; border-radius: 50%;
-      background: color-mix(in srgb, var(--muted) 50%, transparent);
-    }
-    .desktop-bar span:nth-child(1) { background: #FF5F57; }
-    .desktop-bar span:nth-child(2) { background: #FEBC2E; }
-    .desktop-bar span:nth-child(3) { background: #28C840; }
-    .device-screen {
-      flex: 1;
-      background:
-        repeating-linear-gradient(135deg,
-          color-mix(in srgb, var(--accent) 6%, transparent) 0px,
-          color-mix(in srgb, var(--accent) 6%, transparent) 1px,
-          transparent 1px,
-          transparent 12px
-        );
-      display: grid; place-items: center;
-      position: relative;
-    }
-    .device-screen .soon {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      background: var(--paper-alt);
-    }
-    .devices-caption {
-      margin-top: var(--s-8);
-      text-align: center;
-      font-size: 14.5px;
-      color: var(--muted);
-    }
-
-    /* -------- roadmap -------- */
-    .roadmap-cols {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 960px) { .roadmap-cols { grid-template-columns: 1fr; } }
-    .roadmap-col {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-8);
-    }
-    .roadmap-col h3 {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin-bottom: 4px;
-    }
-    .roadmap-col .col-sub {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: var(--s-6);
-      letter-spacing: 0.02em;
-    }
-    .roadmap-col ul {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-3);
-    }
-    .roadmap-col li {
-      display: grid;
-      grid-template-columns: 18px 1fr;
-      gap: 10px;
-      font-size: 14.5px;
-      line-height: 1.55;
-      color: var(--ink-subtle);
-    }
-    .roadmap-col li svg { width: 16px; height: 16px; margin-top: 3px; }
-    .roadmap-col li.done svg { color: var(--mod-environment); }
-    .roadmap-col li.wait svg { color: var(--muted); }
-
-    /* -------- nlnet -------- */
-    .nlnet {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-hero);
-      padding: clamp(var(--s-8), 5vw, var(--s-16));
-      text-align: center;
-    }
-    .nlnet h2 {
-      font-size: clamp(26px, 3vw, 36px);
-      max-width: 22ch;
-      margin: 0 auto var(--s-4);
-    }
-    .nlnet p {
-      max-width: 60ch;
-      margin: 0 auto var(--s-8);
-      font-size: 17px;
-      line-height: 1.65;
-      color: var(--ink-subtle);
-    }
-
-    /* -------- footer -------- */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: var(--s-12) 0 var(--s-8);
-      margin-top: var(--s-16);
-    }
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1.4fr;
-      gap: var(--s-8);
-    }
-    @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; } }
-    .footer-grid h4 {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: var(--s-4);
-    }
-    .footer-grid p, .footer-grid a {
-      font-size: 14px;
-      color: var(--ink-subtle);
-      line-height: 1.7;
-    }
-    .footer-grid a { display: block; }
-    .footer-grid a:hover { color: var(--ink); }
-    .credits {
-      margin-top: var(--s-8);
-      padding-top: var(--s-6);
-      border-top: 1px solid var(--border);
-      font-size: 12.5px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    /* -------- print -------- */
-    @media print {
-      .nav, footer, .theme-toggle { display: none !important; }
-      body { background: #fff; color: #000; }
-      section { padding: 24px 0; page-break-inside: avoid; }
-      .hero { min-height: auto; }
-    }
-
-    /* -------- a11y -------- */
-    :focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 3px;
-      border-radius: 4px;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-      html { scroll-behavior: auto; }
-    }
-  
-    /* GIF override — phone-shaped images instead of 16/9 placeholder */
-    img.hero-frame, img.module-frame {
-      aspect-ratio: auto !important;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: 540px;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 12px 32px rgba(0,0,0,.08);
-      padding: 0;
-    }
-    img.hero-frame { max-height: 600px; }
-    @media (max-width: 880px) {
-      img.hero-frame, img.module-frame { max-height: 480px; }
-    }
-  
-  </style>
 </head>
 <body>
+
+  <a class="skip" href="#top">Naar de inhoud</a>
 
   <!-- ============ NAV ============ -->
   <nav class="nav" aria-label="Primaire navigatie">
@@ -826,8 +84,9 @@
       </a>
       <div class="nav-links">
         <a href="#features">Functies</a>
+        <a href="#compare">Vergelijken</a>
         <a href="#modules">Modules</a>
-        <a href="#tech">Techniek</a>
+        <a href="#download">Download</a>
         <a href="#roadmap">Roadmap</a>
         <a href="https://github.com/romantsisyk/MyEuroStatApp" class="gh">GitHub</a>
         <select class="lang-switch" id="langSwitch" aria-label="Taal kiezen" onchange="if(this.value)window.location.href=this.value;">
@@ -859,25 +118,49 @@
     <!-- ============ HERO ============ -->
     <header class="wrap hero">
       <div>
-        <span class="eyebrow"><span class="dot"></span> Phase 4 · 8 modules met echte data</span>
-        <h1>Eurostat-gegevens<br/>op elk scherm.</h1>
-        <p class="lede">Een open-source mobiele en desktopapplicatie voor de publieke Eurostat API. Acht thematische modules &mdash; economie, bevolking, milieu, handel, vervoer, toerisme, sociaal, wetenschap &mdash; op één Kotlin Multiplatform codebase.</p>
+        <span class="eyebrow"><span class="dot"></span> v0.7 · Vergelijken · Zoeken · 3 talen</span>
+        <h1>Eurostat-gegevens<br/><span class="hl-swipe">op elk scherm.</span></h1>
+        <p class="lede">Een open-source mobiele en desktopapplicatie voor de publieke Eurostat API. Acht thematische modules &mdash; economie, bevolking, milieu, handel, vervoer, toerisme, sociaal, wetenschap &mdash; plus landvergelijking en indicatorenzoekfunctie, allemaal op één Kotlin Multiplatform codebase.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="https://github.com/romantsisyk/MyEuroStatApp">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.69-3.88-1.36-3.88-1.36-.53-1.34-1.29-1.69-1.29-1.69-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.39.96.1-.75.41-1.26.74-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.27 5.68.42.36.79 1.08.79 2.18v3.23c0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
             Bekijk op GitHub
           </a>
-          <a class="btn btn-secondary" href="#features">
-            Documentatie lezen
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <a class="btn btn-secondary" href="#download">
+            Download de app
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M5 21h14"/></svg>
           </a>
         </div>
         <p class="disclaimer">
-          <span class="flag">🇪🇺</span>Onafhankelijke open-source client van derden. Niet gelieerd aan Eurostat of de Europese Commissie.
+          Onafhankelijke open-source client van derden. Niet gelieerd aan Eurostat of de Europese Commissie.
         </p>
       </div>
 
-      <img class="hero-frame" src="../gifs/overview.gif" alt="Overzicht van alle acht modules in de EU Stats-app" loading="lazy" />
+      <div class="hero-visual">
+        <svg class="hero-chart" viewBox="0 0 560 400" aria-hidden="true" focusable="false">
+          <g class="grid">
+            <line class="grid-line" x1="0" y1="60"  x2="560" y2="60"/>
+            <line class="grid-line" x1="0" y1="130" x2="560" y2="130"/>
+            <line class="grid-line" x1="0" y1="200" x2="560" y2="200"/>
+            <line class="grid-line" x1="0" y1="270" x2="560" y2="270"/>
+            <line class="grid-line" x1="0" y1="340" x2="560" y2="340"/>
+          </g>
+          <g>
+            <rect class="bar" x="30"  y="250" width="34" height="90"/>
+            <rect class="bar" x="76"  y="212" width="34" height="128"/>
+            <rect class="bar" x="122" y="232" width="34" height="108"/>
+            <rect class="bar" x="168" y="180" width="34" height="160"/>
+            <rect class="bar" x="214" y="200" width="34" height="140"/>
+          </g>
+          <path class="series s-a" d="M20 300 L110 268 L200 282 L290 226 L380 204 L470 156 L540 128"/>
+          <path class="series s-b" d="M20 330 L110 322 L200 290 L290 300 L380 252 L470 236 L540 196"/>
+          <path class="series s-c" d="M20 258 L110 274 L200 236 L290 248 L380 186 L470 196 L540 92"/>
+          <circle class="pt-a" cx="540" cy="128" r="4.5"/>
+          <circle class="pt-b" cx="540" cy="196" r="4.5"/>
+          <circle class="pt-c" cx="540" cy="92"  r="4.5"/>
+        </svg>
+        <img class="hero-frame" src="../gifs/overview.gif" data-still="../assets/screens/overview.png" width="420" height="933" alt="Overzicht van alle acht modules in de EU Stats-app" />
+      </div>
     </header>
 
     <!-- ============ AT-A-GLANCE STRIP ============ -->
@@ -885,7 +168,7 @@
       <section class="stats" aria-label="Projectfeiten in één oogopslag" style="padding-top: var(--s-12); padding-bottom: var(--s-12);">
         <div class="stat"><div class="value num">19</div><div class="label">Eurostat-datasets</div></div>
         <div class="stat"><div class="value num">8</div><div class="label">thematische modules</div></div>
-        <div class="stat"><div class="value num">499</div><div class="label">unit tests geslaagd</div></div>
+        <div class="stat"><div class="value num">5</div><div class="label">platforms, één codebase</div></div>
         <div class="stat"><div class="value">AGPL-3.0</div><div class="label">open-sourcelicentie</div></div>
       </section>
     </div>
@@ -912,15 +195,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/><circle cx="12" cy="12" r="2.5"/></svg>
           </div>
           <h3>Stale-while-revalidate-caching</h3>
-          <p>SQLDelight-cache met een TTL van 12 uur. Gecachede data verschijnt direct; de netwerkverversing vindt op de achtergrond plaats achter een rustige stalebanner. Offline betekent nooit een leeg scherm.</p>
-        </article>
-
-        <article class="feature-card">
-          <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          </div>
-          <h3>Acht thematische modules</h3>
-          <p>Economie, bevolking, milieu, handel, vervoer, toerisme, sociaal, wetenschap. Elke module beheert zijn eigen dataset, schakelpatroon en een kenmerkende grafiek die past bij de datavorm.</p>
+          <p>SQLDelight-cache met een TTL van 12 uur. Gecachede data verschijnt direct; de netwerkverversing vindt op de achtergrond plaats achter een rustige stalebanner, en offline betekent nooit een leeg scherm.</p>
         </article>
 
         <article class="feature-card">
@@ -933,18 +208,80 @@
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="10" height="14" rx="1.5"/><rect x="14" y="3" width="8" height="17" rx="2"/><path d="M7 17h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>
           </div>
-          <h3>Multiplatform vanaf dag één</h3>
-          <p>Android-telefoon &amp; tablet, iPhone &amp; iPad, en een zelfstandige Compose Desktop <code>.jar</code> voor macOS, Linux en Windows &mdash; vanuit één gedeelde Kotlin-codebase.</p>
+          <h3>Spreekt drie talen</h3>
+          <p>Engels, Pools en Oekraïens op elk scherm &mdash; en de taalkiezer in Instellingen schakelt de hele interface direct om, zonder herstart. Deze website zelf is beschikbaar in negen talen.</p>
         </article>
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16"/></svg>
           </div>
-          <h3>Jaarkiezer op elk scherm</h3>
-          <p>Onlangs toegevoegd: kies een historisch jaar en de kopregel met statistiektegels werkt direct bij &mdash; zonder een nieuwe netwerkoproep. De grafiek behoudt de volledige reeks; het jaar stuurt alleen de weergavewaarden.</p>
+          <h3>Adaptieve hoofd-detailweergave</h3>
+          <p>Op tablets en desktop schakelt elk van de acht schermen over naar een lay-out met twee deelvensters &mdash; een bedieningsvenster van 320&thinsp;dp naast de inhoud &mdash; terwijl telefoons de exacte volgorde in één kolom behouden.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18L10 8l4 5 6-9"/><circle cx="14" cy="13" r="2.5"/><path d="M14 15.5V21"/></svg>
+          </div>
+          <h3>Tik op een grafiek, krijg het getal</h3>
+          <p>Een tik in de buurt van een willekeurig punt op een lijndiagram opent een detailvenster met het land, jaar, geformatteerde waarde, eenheid en datasetcode &mdash; zelfs in de Indexed-100-modus wordt de werkelijke absolute waarde herleid.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ COMPARE + SEARCH SPOTLIGHT ============ -->
+    <section id="compare" class="wrap">
+      <div class="section-head">
+        <div class="section-eyebrow">Nieuw in v0.7</div>
+        <h2>Vergelijk over grenzen heen. Doorzoek alles.</h2>
+        <p>De twee nieuwste schermen maken van acht losse modules één samenhangende statistische atlas.</p>
+      </div>
+
+      <div class="spot-grid">
+        <article class="spot-card">
+          <div class="kicker">feature-compare</div>
+          <h3>Vergelijk 2&ndash;5 landen in één grafiek</h3>
+          <p>Kies een van acht hoofdindicatoren &mdash; bevolking, bbp, emissies, uitvoer, luchtpassagiers, toeristische overnachtingen, armoederisico, O&amp;O-intensiteit &mdash; en leg tot vijf landen over elkaar. Kleuren blijven stabiel in selectievolgorde, en de schakelaar Absolute / Indexed-100 herijkt elke reeks naar een gemeenschappelijk startpunt: de eerlijke manier om economieën van verschillende omvang te vergelijken.</p>
+          <div class="mock" role="img" aria-label="Gestileerde vergelijkingsgrafiek: drie landreeksen over elkaar in één lijndiagram met een schakelaar Absolute / Indexed-100">
+            <div class="mock-chips">
+              <span class="mock-chip"><i style="background: var(--mod-economy);"></i>DE</span>
+              <span class="mock-chip"><i style="background: var(--mod-population);"></i>FR</span>
+              <span class="mock-chip"><i style="background: var(--mod-tourism);"></i>PL</span>
+            </div>
+            <svg class="mock-chart" viewBox="0 0 440 170" aria-hidden="true" focusable="false">
+              <line class="grid-line" x1="0" y1="30"  x2="440" y2="30"/>
+              <line class="grid-line" x1="0" y1="75"  x2="440" y2="75"/>
+              <line class="grid-line" x1="0" y1="120" x2="440" y2="120"/>
+              <line class="grid-line" x1="0" y1="165" x2="440" y2="165"/>
+              <path class="series" style="stroke: var(--mod-economy);"    d="M10 130 L82 122 L154 100 L226 106 L298 72 L370 62 L430 38"/>
+              <path class="series" style="stroke: var(--mod-population);" d="M10 140 L82 132 L154 128 L226 112 L298 108 L370 88 L430 76"/>
+              <path class="series" style="stroke: var(--mod-tourism);"    d="M10 150 L82 154 L154 136 L226 130 L298 118 L370 122 L430 96"/>
+              <circle cx="430" cy="38" r="4" style="fill: var(--mod-economy);"/>
+              <circle cx="430" cy="76" r="4" style="fill: var(--mod-population);"/>
+              <circle cx="430" cy="96" r="4" style="fill: var(--mod-tourism);"/>
+            </svg>
+            <span class="mock-toggle"><span>Absolute</span><span class="on">Indexed 100</span></span>
+          </div>
+        </article>
+
+        <article class="spot-card gold-rule">
+          <div class="kicker">feature-search</div>
+          <h3>27 indicatoren, één zoekvak</h3>
+          <p>Een ingebouwde index van elke indicator in alle acht modules &mdash; labels, datasetcodes, trefwoorden &mdash; met gelaagde rangschikking. Typ &ldquo;armoede&rdquo;, &ldquo;O&amp;O&rdquo; of &ldquo;emissies&rdquo; en spring direct naar het juiste scherm; een lege zoekopdracht doorbladert de catalogus module voor module.</p>
+          <div class="mock" role="img" aria-label="Gestileerd zoekscherm: een zoekveld met resultaten die naar modules linken">
+            <div class="mock-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              emissies&hellip;
+            </div>
+            <div class="mock-rows">
+              <div class="mock-row"><i style="background: var(--mod-environment);"></i>Broeikasgasemissies<span class="code">env_air_gge</span></div>
+              <div class="mock-row"><i style="background: var(--mod-environment);"></i>Klimaatindex (SDG 13)<span class="code">sdg_13_10</span></div>
+              <div class="mock-row"><i style="background: var(--mod-transport);"></i>Luchtvaartpassagiers<span class="code">avia_paoc</span></div>
+            </div>
+          </div>
         </article>
       </div>
     </section>
@@ -959,10 +296,11 @@
 
       <div class="modules">
 
-        <!-- BEVOLKING -->
+        <!-- POPULATION -->
         <article class="module-row" style="--mod-accent: var(--mod-population);">
-          <img class="module-frame" src="../gifs/population.gif" alt="Bevolkingsmodule — sleep de jaarschuifregelaar om de piramide te vormen" loading="lazy" />
+          <img class="module-frame" src="../gifs/population.gif" data-still="../assets/screens/population.png" width="420" height="933" alt="Bevolkingsmodule — sleep de jaarschuifregelaar om de piramide te vormen" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">01</span>
             <h3>Bevolking</h3>
             <div class="datasets">demo_pjangroup &middot; 18 cohorten &middot; M/V/T</div>
             <p>Een demografische piramide voor 18 leeftijdscohorten (vijfjaarsbanden, Y_LT5 t/m Y_GE85). De kopregel toont de totale bevolking met jaar-op-jaarverandering. Een drievoudige gesegmenteerde bediening (Totaal / Mannen / Vrouwen) dimt de tegenovergestelde zijde van de piramide bij enkelvoudige geslachtsselectie. Een jaarschuifregelaar doorloopt de beschikbare jaren; een rij met landchips wisselt het actieve land zonder opnieuw op te halen.</p>
@@ -974,13 +312,14 @@
           </div>
         </article>
 
-        <!-- ECONOMIE -->
+        <!-- ECONOMY -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-economy);">
-          <img class="module-frame" src="../gifs/economy.gif" alt="Economiemodule — bbp, HICP-inflatie en begrotingssaldo" loading="lazy" />
+          <img class="module-frame" src="../gifs/economy.gif" data-still="../assets/screens/economy.png" width="420" height="933" alt="Economiemodule — bbp, HICP-inflatie en begrotingssaldo" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">02</span>
             <h3>Economie</h3>
             <div class="datasets">nama_10_gdp &middot; prc_hicp_aind &middot; gov_10dd_edpt1</div>
-            <p>Drie macro-indicatoren &mdash; bbp in lopende prijzen (miljard EUR), HICP-inflatie-index (2015 = 100), en het netto financieringssaldo van de overheid als % van het bbp &mdash; weergegeven als een meerlijns grafiek voor meerdere landen. Een gesegmenteerde bediening schakelt de actieve statistiek; de twee inactieve statistieken blijven zichtbaar als gedimde secundaire tegels. Een jaar- schuifregelaar met twee handvatten begrenst het x-bereik; een afzonderlijk jaardropdown kiest het jaar voor de kopregel.</p>
+            <p>Drie macro-indicatoren &mdash; bbp in lopende prijzen (miljard EUR), HICP-inflatie-index (2015 = 100), en het netto financieringssaldo van de overheid als % van het bbp &mdash; weergegeven als een meerlijns grafiek voor meerdere landen. Een gesegmenteerde bediening schakelt de actieve statistiek; de twee inactieve statistieken blijven zichtbaar als gedimde secundaire tegels. Een jaarschuifregelaar met twee handvatten begrenst het x-bereik; een afzonderlijk jaardropdown kiest het jaar voor de kopregel.</p>
             <div class="pill-row">
               <span class="pill">meerlijns grafiek</span>
               <span class="pill">statistiek gesegmenteerd</span>
@@ -989,10 +328,11 @@
           </div>
         </article>
 
-        <!-- MILIEU -->
+        <!-- ENVIRONMENT -->
         <article class="module-row" style="--mod-accent: var(--mod-environment);">
-          <img class="module-frame" src="../gifs/environment.gif" alt="Milieumodule — broeikasgassen, energie en SDG 13-klimaatindex" loading="lazy" />
+          <img class="module-frame" src="../gifs/environment.gif" data-still="../assets/screens/environment.png" width="420" height="933" alt="Milieumodule — broeikasgassen, energie en SDG 13-klimaatindex" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">03</span>
             <h3>Milieu</h3>
             <div class="datasets">env_air_gge &middot; nrg_bal_c &middot; sdg_13_10</div>
             <p>Drie klimaatdatasets selecteerbaar via een dropdown: broeikasgasemissies in Mt CO&#8322;-eq, eindenergieverbruik in ktoe, en de SDG 13-klimaatindex bij 1990 = 100. Wanneer Broeikasgassen of Energie actief is, filtert een chiprij op sector (TOTAAL / VERVOER / INDUSTRIE). De hoofdgrafiek is een lijndiagram dat het actieve land vergelijkt met één referentieland; twee statistiektegels tonen de andere twee statistieken voor hetzelfde jaar.</p>
@@ -1004,10 +344,11 @@
           </div>
         </article>
 
-        <!-- HANDEL -->
+        <!-- TRADE -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-trade);">
-          <img class="module-frame" src="../gifs/trade.gif" alt="Handelsmodule — divergerende balken voor uitvoer, invoer en saldo" loading="lazy" />
+          <img class="module-frame" src="../gifs/trade.gif" data-still="../assets/screens/trade.png" width="420" height="933" alt="Handelsmodule — divergerende balken voor uitvoer, invoer en saldo" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">04</span>
             <h3>Handel</h3>
             <div class="datasets">ext_lt_intratrd</div>
             <p>Intra-EU goederenhandelsstromen &mdash; uitvoer, invoer en handelsbalans in miljard EUR. De hoofdgrafiek is een divergerende balkgrafiek over de acht meest recente jaren, waarbij uitvoer rechts en invoer links uitsteekt. Drie onderstreepte tabbladen (Uitvoer / Invoer / Saldo) markeren de relevante richting. Twee compacte statistiektegels tonen de cijfers van het actieve land voor het geselecteerde jaar.</p>
@@ -1019,10 +360,11 @@
           </div>
         </article>
 
-        <!-- VERVOER -->
+        <!-- TRANSPORT -->
         <article class="module-row" style="--mod-accent: var(--mod-transport);">
-          <img class="module-frame" src="../gifs/transport.gif" alt="Vervoermodule — small multiples van weg- en luchtpassagiers" loading="lazy" />
+          <img class="module-frame" src="../gifs/transport.gif" data-still="../assets/screens/transport.png" width="420" height="933" alt="Vervoermodule — small multiples van weg- en luchtpassagiers" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">05</span>
             <h3>Vervoer</h3>
             <div class="datasets">road_pa_buscoa &middot; avia_paoc</div>
             <p>Weg- en luchtpassagiersvolumes weergegeven als small-multiple lijndiagrammen naast elkaar. Wegdata (miljard passagiers) en luchtdata (miljoen passagiers) worden onafhankelijk geschaald per paneel. Een pillenschakelaar (WEG / LUCHT / ALLE) bepaalt welke panelen zichtbaar zijn. Een logaritmische schakelaar comprimeert de as voor landen met sterk uiteenlopende grootten. Drie statistiektegels vatten weg, lucht en een tegel "zee: n.v.t." samen, die eerlijk verklaart waarom de havengekoppelde dataset bewust is weggelaten.</p>
@@ -1034,10 +376,11 @@
           </div>
         </article>
 
-        <!-- TOERISME -->
+        <!-- TOURISM -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-tourism);">
-          <img class="module-frame" src="../gifs/tourism.gif" alt="Toerismemodule — gestapelde overnachtingen en seizoenaliteitsheatmap" loading="lazy" />
+          <img class="module-frame" src="../gifs/tourism.gif" data-still="../assets/screens/tourism.png" width="420" height="933" alt="Toerismemodule — gestapelde overnachtingen en seizoenaliteitsheatmap" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">06</span>
             <h3>Toerisme</h3>
             <div class="datasets">tour_occ_ninat &middot; tour_occ_nim</div>
             <p>Overnachtingen in logiesaccommodaties &mdash; binnenlandse, buitenlandse en totale overnachtingen &mdash; weergegeven als een gestapelde balkgrafiek over de negen meest recente jaren. Een chiprij bepaalt welke statistiek de kopregel aanstuurt. Onder de gestapelde balken toont een maandelijkse seizoenaliteitsheatmap (cellen = maand &times; jaar) de verdeling van overnachtingen door het kalenderjaar.</p>
@@ -1049,12 +392,13 @@
           </div>
         </article>
 
-        <!-- SOCIAAL -->
+        <!-- SOCIAL -->
         <article class="module-row" style="--mod-accent: var(--mod-social);">
-          <img class="module-frame" src="../gifs/social.gif" alt="Sociale module — KPI-tegels sturen een gemarkeerd lijndiagram" loading="lazy" />
+          <img class="module-frame" src="../gifs/social.gif" data-still="../assets/screens/social.png" width="420" height="933" alt="Sociale module — KPI-tegels sturen een gemarkeerd lijndiagram" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">07</span>
             <h3>Sociaal</h3>
-            <div class="datasets">ilc_li02 &middot; ilc_peps01 &middot; hlth_silc_01</div>
+            <div class="datasets">ilc_li02 &middot; ilc_peps01n &middot; hlth_silc_01</div>
             <p>Drie welzijnspercentage-indicatoren afkomstig uit EU-SILC-enquêtes: armoederisicodrempel, armoede- of sociale uitsluitingsrisico, en het aandeel van de bevolking dat een zeer goede zelfbeoordeelde gezondheid rapporteert. Alle drie worden tegelijk weergegeven als een meerlijns gemarkeerd diagram; een tik op een KPI-tegel verschuift de nadruk naar die reeks en werkt de kopwaarde bij.</p>
             <div class="pill-row">
               <span class="pill">meerlijns gemarkeerd</span>
@@ -1064,10 +408,11 @@
           </div>
         </article>
 
-        <!-- WETENSCHAP -->
+        <!-- SCIENCE -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-science);">
-          <img class="module-frame" src="../gifs/science.gif" alt="Wetenschapsmodule — radargrafiek van O&O, internetgebruik en tertiair onderwijs" loading="lazy" />
+          <img class="module-frame" src="../gifs/science.gif" data-still="../assets/screens/science.png" width="420" height="933" alt="Wetenschapsmodule — radargrafiek van O&O, internetgebruik en tertiair onderwijs" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">08</span>
             <h3>Wetenschap</h3>
             <div class="datasets">rd_e_gerdtot &middot; isoc_ci_ifp_iu &middot; edat_lfse_03</div>
             <p>Drie innovatie-indicatoren &mdash; O&amp;O-uitgaven als % van het bbp, internetgebruikspercentage, en het aandeel tertiair opgeleiden onder 25&ndash;64-jarigen &mdash; tegelijk weergegeven op een radargrafiek. De radar projecteert het actieve land over één referentieland (voorkeur DE, dan FR, dan EU27). Drie sparklines eronder tonen altijd de volledige trend. Er is geen statistiekkiezer; de radar presenteert alle drie assen tegelijk.</p>
@@ -1087,7 +432,7 @@
       <div class="section-head">
         <div class="section-eyebrow">Onder de motorkap</div>
         <h2>Bedachtzame, conservatieve keuzes &mdash; met opzet.</h2>
-        <p>Clean Architecture verdeeld over 18 Gradle-modules. Elke laag heeft een sealed contract. Geen <code>!!</code>-operator; geen externe grafiekbibliotheken; geen dispatcher-lekken.</p>
+        <p>Clean Architecture verdeeld over 20 Gradle-modules, gedekt door 600+ unit tests &mdash; inclusief een echte iOS-simulatorsuite. Elke laag heeft een sealed contract. Geen <code>!!</code>-operator; geen externe grafiekbibliotheken; geen dispatcher-lekken.</p>
       </div>
 
       <div class="tech-grid">
@@ -1107,7 +452,7 @@
           <ul>
             <li>Ktor Client &mdash; Darwin engine op iOS, OkHttp op Android</li>
             <li>kotlinx.serialization voor JSON &amp; cacheblobs</li>
-            <li>SQLDelight-schema's met getypte DAO's</li>
+            <li>SQLDelight-schema's met getypte DAO's &amp; migraties</li>
             <li>Eigen JSON-stat 2.0-parser in <code>core-jsonstat</code></li>
             <li>Coroutines + Flow + StateFlow door de hele codebase</li>
           </ul>
@@ -1118,9 +463,9 @@
           <ul>
             <li>Compose Multiplatform &mdash; Android, iOS, Desktop</li>
             <li><code>object Euro</code> ontwerptokens &mdash; kleuren, typografie, afstand, vormen</li>
-            <li>~25 herbruikbare composables in <code>core-ui</code></li>
+            <li>~25 herbruikbare composables in <code>core-ui</code> &middot; gebundelde Inter + IBM Plex Mono</li>
             <li>Acht grafiektypen op pure Compose <code>Canvas</code> &mdash; geen Koalaplot</li>
-            <li>kotlin.test &amp; Turbine voor unit- en flow-tests</li>
+            <li><code>AdaptiveTwoPane</code> hoofd-detail &middot; taalwisseling tijdens runtime</li>
           </ul>
         </article>
       </div>
@@ -1131,23 +476,23 @@
       <div class="section-head">
         <div class="section-eyebrow">Drie vormfactoren</div>
         <h2>Telefoon, tablet, desktop &mdash; dezelfde Compose-code.</h2>
-        <p>Een journalist op de desktop, een student op een tablet, een burger op een telefoon &mdash; dezelfde data, dezelfde componenten, dezelfde rendering. Al gerealiseerd op infrastructuurniveau.</p>
+        <p>Een journalist op de desktop, een student op een tablet, een burger op een telefoon &mdash; dezelfde data, dezelfde componenten, dezelfde rendering. Vanaf 840&thinsp;dp schakelt elk scherm over naar een hoofd-detaillay-out met twee deelvensters.</p>
       </div>
 
       <div class="devices">
         <div class="device-wrap">
-          <div class="device-android" aria-label="Mockup van Android-telefoon en tablet">
+          <div class="device-android">
             <div class="device-screen" style="height: 100%;">
-              <span class="soon">Android</span>
+              <img class="device-shot" src="../assets/screens/economy.png" width="420" height="933" alt="Economiemodule actief op Android" loading="lazy" decoding="async" />
             </div>
           </div>
           <div class="device-label">Android telefoon &middot; tablet</div>
         </div>
 
         <div class="device-wrap">
-          <div class="device-ios" aria-label="iPhone-model">
+          <div class="device-ios">
             <div class="device-screen" style="height: 100%;">
-              <span class="soon">iOS</span>
+              <img class="device-shot" src="../assets/screens/population.png" width="420" height="933" alt="Bevolkingspiramide actief op iPhone" loading="lazy" decoding="async" />
             </div>
           </div>
           <div class="device-label">iPhone &middot; iPad</div>
@@ -1157,14 +502,67 @@
           <div class="device-desktop" aria-label="Desktopvenstermodel">
             <div class="desktop-bar"><span></span><span></span><span></span></div>
             <div class="device-screen">
-              <span class="soon">macOS &middot; Linux &middot; Windows</span>
+              <span class="soon">Dezelfde Compose-UI &middot; .dmg &middot; .msi &middot; .deb</span>
             </div>
           </div>
           <div class="device-label">Compose Desktop</div>
         </div>
       </div>
 
-      <p class="devices-caption">Één Kotlin-codebase. Compose Multiplatform-interface. Systeemeigen widgets op elk platform.</p>
+      <p class="devices-caption">Eén Kotlin-codebase. Compose Multiplatform-interface. Systeemeigen vensters op elk platform.</p>
+    </section>
+
+    <!-- ============ DOWNLOADS ============ -->
+    <section id="download" class="wrap">
+      <div class="section-head">
+        <div class="section-eyebrow">Haal de app op</div>
+        <h2>Download voor je platform.</h2>
+        <p>Elke getagde release wordt gebouwd door CI &mdash; een universele Android-APK plus systeemeigen desktopinstallatieprogramma's, automatisch toegevoegd aan de GitHub Release.</p>
+      </div>
+
+      <div class="dl-grid">
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>
+          </div>
+          <h3>Android</h3>
+          <p>Universele APK voor Android 8.0 en hoger. F-Droid-metadata staat al klaar in de repository; indiening bij de store staat op de roadmap.</p>
+          <div class="dl-files">
+            <span class="pill">.apk</span>
+            <span class="pill">F-Droid: gepland</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/releases">GitHub Releases</a>
+        </article>
+
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3>Desktop</h3>
+          <p>Systeemeigen installatieprogramma's voor macOS, Windows en Debian/Ubuntu. Momenteel ongesigneerd &mdash; je besturingssysteem vraagt bij de eerste start om bevestiging.</p>
+          <div class="dl-files">
+            <span class="pill">.dmg</span>
+            <span class="pill">.msi</span>
+            <span class="pill">.deb</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/releases">GitHub Releases</a>
+        </article>
+
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10 5h4"/></svg>
+          </div>
+          <h3>iOS</h3>
+          <p>Bouwt en draait in de iPhone-simulator met live Eurostat-data. Bouw zelf vanuit de broncode met het XcodeGen-project; distributie via TestFlight is een financieringsdoel.</p>
+          <div class="dl-files">
+            <span class="pill">Xcode + XcodeGen</span>
+            <span class="pill">TestFlight: gepland</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/iosApp/README.md">Bouwhandleiding</a>
+        </article>
+      </div>
+
+      <p class="dl-note">De eerste getagde release wordt voorbereid &mdash; de tag-gestuurde CI-workflow (APK + alle drie de installatieprogramma's) is al samengevoegd en geverifieerd. Volg de repository op GitHub om meteen een melding te krijgen zodra deze verschijnt.</p>
     </section>
 
     <!-- ============ ROADMAP ============ -->
@@ -1172,13 +570,13 @@
       <div class="section-head">
         <div class="section-eyebrow">Roadmap</div>
         <h2>Eerlijk over wat beschikbaar is, wat volgt en wat financiering nodig heeft.</h2>
-        <p>Het project bevindt zich in Phase 4: alle acht modules tonen echte data op Android. Phase 5 voltooit de shell &mdash; overzicht, landkiezer, instellingen &mdash; en Phase 6 brengt de eerste release uit.</p>
+        <p>Het project bevindt zich in v0.7: al het productwerk van Phase 5 &mdash; overzicht, vergelijken, zoeken, instellingen, lokalisatie &mdash; is uitgebracht. Phase 6 brengt de eerste publieke release uit.</p>
       </div>
 
       <div class="roadmap-cols">
         <div class="roadmap-col">
           <h3>Nu beschikbaar</h3>
-          <div class="col-sub">Phase 4 &middot; geverifieerd</div>
+          <div class="col-sub">v0.7 &middot; geverifieerd</div>
           <ul>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -1186,77 +584,77 @@
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Stale-while-revalidate-caching &middot; offline bestand een vlucht</span>
+              <span>Overzichtsdashboard &middot; module-overstijgend Vergelijken &middot; indicatoren Zoeken</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Jaarkiezer op elke module &middot; kopregel werkt bij zonder nieuwe ophaling</span>
+              <span>Instellingen met taalwisseling tijdens runtime &middot; EN, PL, UK</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Acht grafiektypen op pure Compose <code>Canvas</code></span>
+              <span>Hoofd-detaillay-outs met twee deelvensters op alle acht schermen</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Android APK compileert &middot; Compose Desktop <code>.jar</code> draait op macOS/Linux/Windows</span>
+              <span>Stale-while-revalidate-caching &middot; offline overleeft een vlucht</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Uitgebracht onder AGPL-3.0</span>
+              <span>Desktopinstallatieprogramma's gebouwd door een tag-gestuurde CI-releaseworkflow</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>600+ unit tests &middot; inclusief een echte iOS-simulatorsuite</span>
             </li>
           </ul>
         </div>
 
         <div class="roadmap-col">
-          <h3>Volgende mijlpaal (M1)</h3>
-          <div class="col-sub">Phase 5 &middot; in uitvoering</div>
+          <h3>Volgende stap: eerste publieke release</h3>
+          <div class="col-sub">Phase 6 &middot; in uitvoering</div>
           <ul>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Overzichtsdashboard &mdash; beginscherm met tegelraster</span>
+              <span>Getagde v0.7.0-release &mdash; APK + installatieprogramma's toegevoegd door CI</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Landkiezer &mdash; doorzoekbare lijst en tikken op de kaart</span>
+              <span>Echte Android-releasesleutel &mdash; ter vervanging van de debug-fallback</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>iOS-rooktest in simulator &middot; alle acht tabbladen verifiëren</span>
+              <span>Rooktest op een fysiek Android-toestel &middot; volledige iOS-doorloop</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Instellingen opslaan &middot; thema, standaardland, taal</span>
-            </li>
-            <li class="wait">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Echte vlagrendering &middot; gebundeld Inter-lettertype</span>
+              <span>F-Droid-indiening &mdash; fastlane-metadata al aanwezig in de repository</span>
             </li>
           </ul>
         </div>
 
         <div class="roadmap-col">
-          <h3>Financieringsdoelen (M2 &middot; M3)</h3>
-          <div class="col-sub">Phase 6 &middot; NLnet-kandidaat</div>
+          <h3>Financieringsdoelen</h3>
+          <div class="col-sub">NLnet-aanvraag in behandeling</div>
           <ul>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Lokalisatie &middot; Poolse &amp; Oekraïense vertalingen</span>
+              <span>Gesigneerde &amp; genotariseerde installatieprogramma's &mdash; Apple- en Windows-certificaten</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Systeemeigen installatiepakketten &middot; <code>.dmg</code>, <code>.msi</code>, <code>.deb</code>, Flatpak</span>
+              <span>Flatpak op Flathub &middot; aanwezigheid op TestFlight / App Store</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Meerlandenvergelijking &middot; overlay of small-multiples</span>
+              <span>Tik-op-de-kaart landkiezer &middot; choropleetkaarten</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Moduleoverschrijdende zoekopdracht &middot; indicatorenindex over alle acht modules</span>
+              <span>Toegankelijkheidsaudit &mdash; TalkBack &amp; VoiceOver</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Breedbeeldlay-outs voor hoofd-detail op tablet en desktop</span>
+              <span>Meer EU-talen in de app-interface</span>
             </li>
           </ul>
         </div>
@@ -1266,10 +664,21 @@
     <!-- ============ NLNET ============ -->
     <section id="nlnet" class="wrap">
       <div class="nlnet">
+        <svg class="nlnet-motif" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
+          <g fill="currentColor">
+            <rect x="10"  y="150" width="30" height="70" rx="2"/>
+            <rect x="52"  y="118" width="30" height="102" rx="2"/>
+            <rect x="94"  y="134" width="30" height="86" rx="2"/>
+            <rect x="136" y="88"  width="30" height="132" rx="2"/>
+            <rect x="178" y="106" width="30" height="114" rx="2"/>
+            <rect x="220" y="56"  width="30" height="164" rx="2"/>
+            <rect x="262" y="24"  width="30" height="196" rx="2"/>
+          </g>
+        </svg>
         <div class="section-eyebrow" style="text-align: center; margin-bottom: var(--s-3);">Open source &middot; publiek belang</div>
         <h2>Onafhankelijk gebouwd. Uitgebracht onder AGPL-3.0.</h2>
-        <p>Momenteel wordt onderzocht of een NLnet open-call-indiening de volgende mijlpalen kan financieren. Burgers, journalisten en studenten moeten publieke Europese data kunnen verkennen zonder afhankelijk te zijn van één leverancier &mdash; op elk apparaat dat ze al bezitten.</p>
-        <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/NEXT_STEPS.md">
+        <p>Een aanvraag bij het NLnet NGI Zero Commons Fund wordt momenteel beoordeeld om de volgende mijlpalen te financieren. Burgers, journalisten en studenten moeten publieke Europese data kunnen verkennen zonder afhankelijk te zijn van één leverancier &mdash; op elk apparaat dat ze al bezitten.</p>
+        <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/NEXT_STEPS.md">
           Roadmap lezen
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -1284,14 +693,16 @@
       <div class="footer-grid">
         <div>
           <h4>EU Stats Multiplatform</h4>
-          <p>Open-source client voor de publieke Eurostat API. Uitgebracht onder AGPL-3.0-or-later. Gezet in Inter van Google Fonts.</p>
+          <p>Open-source client voor de publieke Eurostat API. Uitgebracht onder AGPL-3.0-or-later. Gezet in systeemlettertypen &mdash; geen externe fonts, geen trackers.</p>
         </div>
         <div>
           <h4>Project</h4>
           <a href="https://github.com/romantsisyk/MyEuroStatApp">GitHub-repository</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases</a>
           <a href="https://github.com/romantsisyk/MyEuroStatApp/issues">Meldingen</a>
-          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/CONTRIBUTING.md">Bijdragen</a>
-          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/LICENSE">Licentie (AGPL-3.0)</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/CONTRIBUTING.md">Bijdragen</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/LICENSE">Licentie (AGPL-3.0)</a>
+          <a href="../technical/">Technisch overzicht</a>
         </div>
         <div>
           <h4>Disclaimer</h4>
@@ -1334,6 +745,15 @@
             }
           });
         }
+      }
+    })();
+
+    // ---- reduced motion: swap animated GIFs for their still frames ----
+    (function () {
+      if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+      var imgs = document.querySelectorAll("img[data-still]");
+      for (var i = 0; i < imgs.length; i++) {
+        imgs[i].src = imgs[i].getAttribute("data-still");
       }
     })();
   </script>

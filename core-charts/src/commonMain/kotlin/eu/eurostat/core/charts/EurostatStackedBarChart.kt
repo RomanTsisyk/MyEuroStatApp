@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -45,8 +46,7 @@ fun EurostatStackedBarChart(
         Box(modifier = modifier)
         return
     }
-    val totals = data.map { it.bottom + it.top }
-    val max = totals.max().coerceAtLeast(0.0001f)
+    val max = remember(data) { data.maxOf { it.bottom + it.top }.coerceAtLeast(0.0001f) }
 
     Canvas(modifier = modifier) {
         val n = data.size

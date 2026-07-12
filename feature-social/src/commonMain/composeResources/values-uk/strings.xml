@@ -1,0 +1,30 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="social_module_title">Суспільство</string>
+    <string name="social_module_tagline">Добробут</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="social_empty_headline">немає даних</string>
+    <string name="social_empty_body">Немає соціальних показників для вибраних фільтрів.</string>
+
+    <!-- ErrorState -->
+    <string name="social_error_headline">Не вдалося завантажити соціальні дані</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="social_footer_staleness_fresh">актуальні</string>
+    <string name="social_footer_staleness_stale">застарілі</string>
+
+    <!-- MetricHeadline subtitle, keyed by selected KPI tile -->
+    <string name="social_headline_subtitle_poverty">ризик бідності</string>
+    <string name="social_headline_subtitle_at_risk">ризик бідності або соціального відчуження</string>
+    <string name="social_headline_subtitle_health">дуже добрий стан здоров\'я за самооцінкою</string>
+
+    <!-- KpiTileSelector labels (shared with the chart legend / series labels) -->
+    <string name="social_kpi_label_poverty">бідність</string>
+    <string name="social_kpi_label_at_risk">ризик</string>
+    <string name="social_kpi_label_health">здоров\'я</string>
+
+    <!-- Chart card caption -->
+    <string name="social_chart_caption">три ряди %</string>
+    <string name="social_chart_caption_highlighted">три ряди % · виділено = %1$s</string>
+</resources>

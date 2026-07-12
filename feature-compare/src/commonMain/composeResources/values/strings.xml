@@ -1,0 +1,54 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="compare_module_title">Compare</string>
+    <string name="compare_module_tagline">Cross-country</string>
+
+    <!-- Indicator selector (MetricDropdown) -->
+    <string name="compare_selector_label">indicator</string>
+
+    <!-- Indicator names (one headline metric per module) -->
+    <string name="compare_indicator_population">Population</string>
+    <string name="compare_indicator_gdp">GDP</string>
+    <string name="compare_indicator_ghg">Greenhouse gas</string>
+    <string name="compare_indicator_exports">Intra-EU exports</string>
+    <string name="compare_indicator_air">Air passengers</string>
+    <string name="compare_indicator_tourism">Tourism nights</string>
+    <string name="compare_indicator_poverty">At-risk-of-poverty rate</string>
+    <string name="compare_indicator_rd">R&amp;D spending</string>
+
+    <!-- Indicator unit labels (y-axis / header) -->
+    <string name="compare_unit_population">people</string>
+    <string name="compare_unit_gdp">B €</string>
+    <string name="compare_unit_ghg">Mt CO₂e</string>
+    <string name="compare_unit_exports">B €</string>
+    <string name="compare_unit_air">passengers</string>
+    <string name="compare_unit_tourism">nights</string>
+    <string name="compare_unit_poverty">%</string>
+    <string name="compare_unit_rd">% of GDP</string>
+
+    <!-- PillToggle chart scale -->
+    <string name="compare_toggle_absolute">Absolute</string>
+    <string name="compare_toggle_indexed">Indexed 100</string>
+
+    <!-- Chart axes -->
+    <string name="compare_chart_axis_year">Year</string>
+    <string name="compare_chart_axis_index">Index (first year = 100)</string>
+
+    <!-- CountryPickerSheet title -->
+    <string name="compare_add_country">Add countries</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="compare_empty_headline">no data</string>
+    <string name="compare_empty_body">No data for the selected indicator and countries.</string>
+
+    <!-- ErrorState -->
+    <string name="compare_error_headline">Couldn't load comparison</string>
+
+    <!-- Chart card empty -->
+    <string name="compare_chart_empty_headline">no data</string>
+    <string name="compare_chart_empty_body">No series for the selected indicator and year range.</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="compare_footer_staleness_fresh">fresh</string>
+    <string name="compare_footer_staleness_stale">stale</string>
+</resources>

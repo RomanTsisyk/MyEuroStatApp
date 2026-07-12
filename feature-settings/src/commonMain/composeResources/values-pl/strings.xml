@@ -1,0 +1,31 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="settings_module_title">Ustawienia</string>
+
+    <!-- Theme row -->
+    <string name="settings_theme_label">Motyw</string>
+    <string name="settings_theme_system">Systemowy</string>
+    <string name="settings_theme_light">Jasny</string>
+    <string name="settings_theme_dark">Ciemny</string>
+
+    <!-- Language row (English/Polski/Українська are endonyms and stay
+         identical across all locales; only "System" translates) -->
+    <string name="settings_language_label">Język</string>
+    <string name="settings_language_system">Systemowy</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_polski">Polski</string>
+    <string name="settings_language_ukrainska">Українська</string>
+
+    <!-- Default country row -->
+    <string name="settings_default_country_label">Domyślny kraj</string>
+
+    <!-- Clear cache row -->
+    <string name="settings_clear_cache_label">Wyczyść pamięć podręczną</string>
+    <string name="settings_clear_cache_clearing">Czyszczenie…</string>
+    <string name="settings_clear_cache_cleared">Pamięć podręczna wyczyszczona</string>
+    <string name="settings_clear_cache_subtitle">Usuń wszystkie pobrane statystyki</string>
+
+    <!-- About row -->
+    <string name="settings_about_label">O aplikacji</string>
+    <string name="settings_about_version">v%1$s · niezależny klient API Eurostatu</string>
+</resources>

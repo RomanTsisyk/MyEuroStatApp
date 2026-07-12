@@ -14,6 +14,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -35,11 +37,11 @@ class TourismApiServiceImplTest {
     """.trimIndent()
 
     private fun buildServiceWithCapture(
-        capturedUrls: MutableList<String>,
+        recorder: RequestRecorder,
         respondWith: String = oneCell(),
     ): TourismApiServiceImpl {
         val engine = MockEngine { request ->
-            capturedUrls += request.url.toString()
+            recorder.record(request.url.toString())
             respond(
                 content = ByteReadChannel(respondWith),
                 status = HttpStatusCode.OK,
@@ -53,9 +55,10 @@ class TourismApiServiceImplTest {
 
     @Test
     fun fetch_calls_all_three_datasets() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
 
         assertEquals(3, urls.size, "Expected 3 requests (nights + trips + seasonality), got $urls")
         assertTrue(urls.any { it.contains("tour_occ_ninat") }, "Missing tour_occ_ninat in $urls")
@@ -65,9 +68,10 @@ class TourismApiServiceImplTest {
 
     @Test
     fun fetch_nights_url_includes_all_three_c_resid_categories() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val nightsUrl = urls.first { it.contains("tour_occ_ninat") }
         assertTrue(nightsUrl.contains("c_resid=DOM"), "Expected c_resid=DOM in: $nightsUrl")
         assertTrue(nightsUrl.contains("c_resid=FOR"), "Expected c_resid=FOR in: $nightsUrl")
@@ -76,9 +80,10 @@ class TourismApiServiceImplTest {
 
     @Test
     fun fetch_trips_url_omits_c_resid_filter() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val tripsUrl = urls.first { it.contains("tour_dem_tttot") }
         assertTrue(!tripsUrl.contains("c_resid="), "tour_dem_tttot must not carry c_resid: $tripsUrl")
     }
@@ -88,18 +93,20 @@ class TourismApiServiceImplTest {
 
     @Test
     fun fetch_trips_url_contains_purpose_TOTAL() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val tripsUrl = urls.first { it.contains("tour_dem_tttot") }
         assertTrue(tripsUrl.contains("purpose=TOTAL"), "tour_dem_tttot must pin purpose=TOTAL to avoid multi-counting: $tripsUrl")
     }
 
     @Test
     fun fetch_trips_url_contains_duration_N_GE1() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val tripsUrl = urls.first { it.contains("tour_dem_tttot") }
         assertTrue(tripsUrl.contains("duration=N_GE1"), "tour_dem_tttot must pin duration=N_GE1 (overnight trips) to avoid multi-counting: $tripsUrl")
     }
@@ -108,9 +115,10 @@ class TourismApiServiceImplTest {
     // Sending `partner=WORLD` returns HTTP 400 INVALID_QUERY_DIMENSION from the live API.
     @Test
     fun fetch_trips_url_contains_c_dest_WORLD_not_partner() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val tripsUrl = urls.first { it.contains("tour_dem_tttot") }
         assertTrue(
             tripsUrl.contains("c_dest=WORLD"),
@@ -124,9 +132,10 @@ class TourismApiServiceImplTest {
 
     @Test
     fun fetch_nights_url_includes_nace_r2_accommodation_subcategories() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL"), 2020..2020))
+        val urls = recorder.all()
         val nightsUrl = urls.first { it.contains("tour_occ_ninat") }
         assertTrue(nightsUrl.contains("nace_r2=I551"), "Missing nace_r2=I551 in $nightsUrl")
         assertTrue(nightsUrl.contains("nace_r2=I552"), "Missing nace_r2=I552 in $nightsUrl")
@@ -135,9 +144,10 @@ class TourismApiServiceImplTest {
 
     @Test
     fun fetch_url_contains_geo_and_time_params() = runTest {
-        val urls = mutableListOf<String>()
-        val service = buildServiceWithCapture(urls)
+        val recorder = RequestRecorder()
+        val service = buildServiceWithCapture(recorder)
         service.fetch(TourismQuery(listOf("PL", "DE"), 2021..2022))
+        val urls = recorder.all()
         val nightsUrl = urls.first { it.contains("tour_occ_ninat") }
         assertTrue(nightsUrl.contains("geo=PL"),    "Missing geo=PL in $nightsUrl")
         assertTrue(nightsUrl.contains("geo=DE"),    "Missing geo=DE in $nightsUrl")
@@ -174,4 +184,22 @@ class TourismApiServiceImplTest {
         // columns remain null — what matters here is that trips stayed null.
         assertNull(result.points[0].trips)
     }
+}
+
+/**
+ * Thread-safe request-URL recorder: MockEngine may invoke handlers concurrently on
+ * different threads (the service fires 3 parallel requests), so unsynchronized
+ * appends to a plain list can lose elements.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val urls = mutableListOf<String>()
+
+    /** Records one intercepted request URL under the mutex. */
+    suspend fun record(url: String) {
+        mutex.withLock { urls += url }
+    }
+
+    /** Returns a snapshot of all recorded request URLs. */
+    suspend fun all(): List<String> = mutex.withLock { urls.toList() }
 }

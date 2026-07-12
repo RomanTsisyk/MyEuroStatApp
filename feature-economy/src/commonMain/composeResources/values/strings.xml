@@ -1,0 +1,50 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="economy_module_title">Economy</string>
+    <string name="economy_module_tagline">Macro</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="economy_empty_headline">no data</string>
+    <string name="economy_empty_body">No economy data for the selected filters.</string>
+
+    <!-- ErrorState -->
+    <string name="economy_error_headline">Couldn't load economy</string>
+
+    <!-- SegmentedControl metric switcher -->
+    <string name="economy_metric_gdp">GDP</string>
+    <string name="economy_metric_inflation">Inflation</string>
+    <string name="economy_metric_deficit">Deficit</string>
+
+    <!-- PillToggle chart scale -->
+    <string name="economy_toggle_absolute">Absolute</string>
+    <string name="economy_toggle_indexed">Indexed 100</string>
+
+    <!-- Chart card -->
+    <string name="economy_chart_empty_headline">no data</string>
+    <string name="economy_chart_empty_body">No series available for the selected metric and year range.</string>
+    <string name="economy_chart_axis_year">Year</string>
+    <string name="economy_chart_axis_index">Index (first year = 100)</string>
+    <string name="economy_axis_gdp">GDP M€</string>
+    <string name="economy_axis_inflation">HICP idx</string>
+    <string name="economy_axis_deficit">% GDP</string>
+
+    <!-- MetricHeadline (units, subtitles, YoY delta unit) -->
+    <string name="economy_unit_gdp">B €</string>
+    <string name="economy_subtitle_gdp">GDP · current prices</string>
+    <string name="economy_unit_inflation">idx</string>
+    <string name="economy_subtitle_inflation">HICP · 2015 = 100</string>
+    <string name="economy_unit_deficit">% GDP</string>
+    <string name="economy_subtitle_deficit">Gov. net lending / borrowing</string>
+    <string name="economy_delta_unit_pp">pp</string>
+
+    <!-- Secondary metric tiles -->
+    <string name="economy_tile_gdp_delta">B € · current prices</string>
+    <string name="economy_tile_inflation_label">HICP infl.</string>
+    <string name="economy_tile_inflation_delta">idx · 2015=100</string>
+    <string name="economy_tile_deficit_label">deficit</string>
+    <string name="economy_tile_deficit_unit">% of GDP</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="economy_footer_staleness_stale">stale</string>
+    <string name="economy_footer_staleness_fresh">fresh</string>
+</resources>

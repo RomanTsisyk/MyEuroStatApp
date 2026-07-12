@@ -1,0 +1,34 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="population_module_title">Ludność</string>
+    <string name="population_tagline">Demografia</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="population_empty_headline">brak danych</string>
+    <string name="population_empty_body">Brak danych o ludności dla wybranych filtrów.</string>
+
+    <!-- ErrorState -->
+    <string name="population_error_headline">Nie udało się wczytać danych o ludności</string>
+
+    <!-- SegmentedControl metric switcher -->
+    <string name="population_metric_total">Ogółem</string>
+    <string name="population_metric_men">Mężczyźni</string>
+    <string name="population_metric_women">Kobiety</string>
+
+    <!-- MetricHeadline subtitle -->
+    <string name="population_subtitle_total">ogółem</string>
+    <string name="population_headline_yoy">%1$s r/r</string>
+
+    <!-- Pyramid card -->
+    <string name="population_cohort_empty_headline">Brak danych o grupach wieku</string>
+    <string name="population_cohort_empty_body">Brak danych o 5-letnich grupach wieku dla %1$s w %2$d r.</string>
+    <string name="population_pyramid_cohorts_label">grupy 5-letnie</string>
+    <string name="population_legend_men">mężczyźni %1$s</string>
+    <string name="population_legend_women">kobiety %1$s</string>
+
+    <!-- Year slider -->
+    <string name="population_year_label">rok</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="population_footer_staleness_fresh">aktualne</string>
+</resources>

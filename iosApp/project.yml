@@ -1,0 +1,50 @@
+# XcodeGen manifest — generates iosApp.xcodeproj.
+#
+# The checked-in pbxproj used to be a hand-written stub (see README.md);
+# regenerate the real project any time with:
+#   brew install xcodegen && cd iosApp && xcodegen generate
+name: iosApp
+options:
+  deploymentTarget:
+    iOS: "15.0"
+configFiles:
+  Debug: Configuration/Config.xcconfig
+  Release: Configuration/Config.xcconfig
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: iosApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID)
+        PRODUCT_NAME: $(APP_NAME)
+        INFOPLIST_FILE: iosApp/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # The Kotlin framework is embedded by the pre-build gradle task below;
+        # the search path is where embedAndSignAppleFrameworkForXcode puts it.
+        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+        # -lsqlite3: the Kotlin framework is static and SQLDelight's native
+        # driver (SQLiter) binds the system sqlite3 — the app must link it.
+        OTHER_LDFLAGS: "$(inherited) -framework ComposeApp -lsqlite3"
+        DEVELOPMENT_TEAM: $(TEAM_ID)
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # The gradle pre-build script writes outside Xcode's sandbox.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    preBuildScripts:
+      - name: Compile Kotlin Framework
+        script: |
+          cd "$SRCROOT/.."
+          # Xcode script phases scrub PATH, so gradlew can resolve a different
+          # JDK than the one that wrote the Kotlin incremental caches (symptom:
+          # "Don't know how to deserialize a snapshot with type tag ..."). Pin
+          # JAVA_HOME to the same JBR the IDE/terminal builds use.
+          if [ -z "${JAVA_HOME:-}" ]; then
+            for CAND in "$HOME/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+                        "/Applications/Android Studio.app/Contents/jbr/Contents/Home"; do
+              if [ -d "$CAND" ]; then export JAVA_HOME="$CAND"; break; fi
+            done
+          fi
+          ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+        basedOnDependencyAnalysis: false

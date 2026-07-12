@@ -1,0 +1,54 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="compare_module_title">Порівняння</string>
+    <string name="compare_module_tagline">Між країнами</string>
+
+    <!-- Indicator selector (MetricDropdown) -->
+    <string name="compare_selector_label">показник</string>
+
+    <!-- Indicator names (one headline metric per module) -->
+    <string name="compare_indicator_population">Населення</string>
+    <string name="compare_indicator_gdp">ВВП</string>
+    <string name="compare_indicator_ghg">Парникові гази</string>
+    <string name="compare_indicator_exports">Експорт у межах ЄС</string>
+    <string name="compare_indicator_air">Авіапасажири</string>
+    <string name="compare_indicator_tourism">Туристичні ночівлі</string>
+    <string name="compare_indicator_poverty">Рівень ризику бідності</string>
+    <string name="compare_indicator_rd">Витрати на НДДКР</string>
+
+    <!-- Indicator unit labels (y-axis / header) -->
+    <string name="compare_unit_population">осіб</string>
+    <string name="compare_unit_gdp">млрд €</string>
+    <string name="compare_unit_ghg">Мт CO₂e</string>
+    <string name="compare_unit_exports">млрд €</string>
+    <string name="compare_unit_air">пасажири</string>
+    <string name="compare_unit_tourism">ночівлі</string>
+    <string name="compare_unit_poverty">%</string>
+    <string name="compare_unit_rd">% ВВП</string>
+
+    <!-- PillToggle chart scale -->
+    <string name="compare_toggle_absolute">Абсолютні</string>
+    <string name="compare_toggle_indexed">Індекс = 100</string>
+
+    <!-- Chart axes -->
+    <string name="compare_chart_axis_year">Рік</string>
+    <string name="compare_chart_axis_index">Індекс (перший рік = 100)</string>
+
+    <!-- CountryPickerSheet title -->
+    <string name="compare_add_country">Додати країни</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="compare_empty_headline">немає даних</string>
+    <string name="compare_empty_body">Немає даних для вибраного показника та країн.</string>
+
+    <!-- ErrorState -->
+    <string name="compare_error_headline">Не вдалося завантажити порівняння</string>
+
+    <!-- Chart card empty -->
+    <string name="compare_chart_empty_headline">немає даних</string>
+    <string name="compare_chart_empty_body">Немає рядів даних для вибраного показника та діапазону років.</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="compare_footer_staleness_fresh">актуальні</string>
+    <string name="compare_footer_staleness_stale">застарілі</string>
+</resources>

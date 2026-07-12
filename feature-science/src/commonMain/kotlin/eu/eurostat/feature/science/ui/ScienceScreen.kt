@@ -10,14 +10,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,11 +26,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.core.charts.EurostatRadarChart
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.core.charts.RadarSeries
@@ -51,7 +49,27 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.feature_science.generated.resources.Res
+import myeurostatapp.feature_science.generated.resources.science_empty_body
+import myeurostatapp.feature_science.generated.resources.science_empty_headline
+import myeurostatapp.feature_science.generated.resources.science_error_headline
+import myeurostatapp.feature_science.generated.resources.science_headline_subtitle
+import myeurostatapp.feature_science.generated.resources.science_module_tagline
+import myeurostatapp.feature_science.generated.resources.science_module_title
+import myeurostatapp.feature_science.generated.resources.science_radar_axis_internet
+import myeurostatapp.feature_science.generated.resources.science_radar_axis_rd
+import myeurostatapp.feature_science.generated.resources.science_radar_axis_tertiary
+import myeurostatapp.feature_science.generated.resources.science_radar_caption
+import myeurostatapp.feature_science.generated.resources.science_spark_internet
+import myeurostatapp.feature_science.generated.resources.science_spark_rd
+import myeurostatapp.feature_science.generated.resources.science_spark_tertiary
+import myeurostatapp.feature_science.generated.resources.science_unit_pct_age_25_64
+import myeurostatapp.feature_science.generated.resources.science_unit_pct_gdp
+import myeurostatapp.feature_science.generated.resources.science_unit_pct_individuals
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Editorial Science feature screen. Renders the R&D / Internet / Tertiary
@@ -62,6 +80,7 @@ import eu.eurostat.ui.theme.Euro
  * No metric switcher — the radar already presents all three normalized %
  * metrics at once.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -78,8 +97,8 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Science",
-            tagline = "Innovation",
+            title = stringResource(Res.string.science_module_title),
+            tagline = stringResource(Res.string.science_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -88,41 +107,47 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(ScienceIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                ScienceUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
-                is ScienceUiState.Empty -> EmptyState(
-                    headline = "no data",
-                    body = "No science indicators for the selected filters.",
-                )
-                is ScienceUiState.Error -> ErrorState(
-                    headline = "Couldn't load science",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(ScienceIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
-                is ScienceUiState.Content -> ScienceContent(
-                    accent = accent,
-                    timeSeries = s.series,
-                    isStale = s.isStale,
-                    activeCountry = s.activeCountry,
-                    availableCountries = s.availableCountries,
-                    selectedYear = s.selectedYear,
-                    availableYears = s.availableYears,
-                    onSelectActiveCountry = { code ->
-                        component.onIntent(ScienceIntent.SelectActiveCountry(code))
-                    },
-                    onSelectCountries = { codes ->
-                        component.onIntent(ScienceIntent.SelectCountries(codes))
-                    },
-                    onSelectYear = { year ->
-                        component.onIntent(ScienceIntent.SelectYear(year))
-                    },
-                )
+            PullToRefreshBox(
+                isRefreshing = state is ScienceUiState.Loading,
+                onRefresh = { component.onIntent(ScienceIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    ScienceUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
+                    is ScienceUiState.Empty -> EmptyState(
+                        headline = stringResource(Res.string.science_empty_headline),
+                        body = stringResource(Res.string.science_empty_body),
+                    )
+                    is ScienceUiState.Error -> ErrorState(
+                        headline = stringResource(Res.string.science_error_headline),
+                        body = s.error.localizedMessage(),
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(ScienceIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is ScienceUiState.Content -> ScienceContent(
+                        accent = accent,
+                        timeSeries = s.series,
+                        isStale = s.isStale,
+                        activeCountry = s.activeCountry,
+                        availableCountries = s.availableCountries,
+                        selectedYear = s.selectedYear,
+                        availableYears = s.availableYears,
+                        onSelectActiveCountry = { code ->
+                            component.onIntent(ScienceIntent.SelectActiveCountry(code))
+                        },
+                        onSelectCountries = { codes ->
+                            component.onIntent(ScienceIntent.SelectCountries(codes))
+                        },
+                        onSelectYear = { year ->
+                            component.onIntent(ScienceIntent.SelectYear(year))
+                        },
+                    )
+                }
             }
         }
         SourceFooter(
@@ -171,57 +196,43 @@ private fun ScienceContent(
             ?.rdSpendPctGdp
     }
 
-    val maxW = adaptiveContentMaxWidth()
     val radarHeight = adaptiveChartHeight(compact = 260.dp, medium = 320.dp, expanded = 380.dp)
 
-    Box(modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-            .align(Alignment.TopCenter)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Euro.spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-    ) {
-        if (isStale) {
-            StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
-        }
+    var showCountryPicker by remember { mutableStateOf(false) }
 
-        Spacer(Modifier.height(Euro.spacing.xs))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            MetricHeadline(
-                value = headlineRd?.formatPct() ?: "—",
-                unit = "%",
-                subtitle = buildString {
-                    append("R&D spend · % of GDP")
-                    if (selectedYear != null) append(" · ").append(selectedYear)
-                },
-                year = selectedYear?.toString().orEmpty(),
-                accent = accent,
-                modifier = Modifier.weight(1f),
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable (Modifier) -> Unit = { modifier ->
+        val subtitleBase = stringResource(Res.string.science_headline_subtitle)
+        MetricHeadline(
+            value = headlineRd?.formatPct() ?: "—",
+            unit = "%",
+            subtitle = buildString {
+                append(subtitleBase)
+                if (selectedYear != null) append(" · ").append(selectedYear)
+            },
+            year = selectedYear?.toString().orEmpty(),
+            accent = accent,
+            modifier = modifier,
+        )
+    }
+    val yearDropdown: @Composable () -> Unit = {
+        if (availableYears.isNotEmpty() && selectedYear != null) {
+            YearDropdown(
+                selectedYear = selectedYear,
+                years = availableYears,
+                onSelect = onSelectYear,
             )
-            if (availableYears.isNotEmpty() && selectedYear != null) {
-                Spacer(Modifier.width(Euro.spacing.s))
-                YearDropdown(
-                    selectedYear = selectedYear,
-                    years = availableYears,
-                    onSelect = onSelectYear,
-                )
-            }
         }
-
+    }
+    val radarSection: @Composable () -> Unit = {
         EuroCard(modifier = Modifier.fillMaxWidth()) {
             Column {
                 // Label clarifies: active country (primary) vs. best-available comparison (DE/FR/EU27).
+                val radarCaption = stringResource(Res.string.science_radar_caption)
                 Text(
                     text = buildString {
-                        append("radar · selected country vs. top peer")
+                        append(radarCaption)
                         if (selectedYear != null) append(" · ").append(selectedYear)
                     },
                     style = Euro.typography.bodySmall,
@@ -236,7 +247,11 @@ private fun ScienceContent(
                     secondaryColor = warn,
                 )
                 EurostatRadarChart(
-                    axes = listOf("R&D %GDP", "Internet %", "Tertiary %"),
+                    axes = listOf(
+                        stringResource(Res.string.science_radar_axis_rd),
+                        stringResource(Res.string.science_radar_axis_internet),
+                        stringResource(Res.string.science_radar_axis_tertiary),
+                    ),
                     series = radarSeries,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -255,36 +270,37 @@ private fun ScienceContent(
                 }
             }
         }
-
+    }
+    val sparkTilesSection: @Composable () -> Unit = {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
         ) {
             SparkTile(
-                label = "R&D",
-                unit = "%GDP",
+                label = stringResource(Res.string.science_spark_rd),
+                unit = stringResource(Res.string.science_unit_pct_gdp),
                 accent = accent,
                 series = activeSeries?.toSparkSeries(accent) { it.rdSpendPctGdp },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
-                label = "Internet",
-                unit = "%ind",
+                label = stringResource(Res.string.science_spark_internet),
+                unit = stringResource(Res.string.science_unit_pct_individuals),
                 accent = accent,
                 series = activeSeries?.toSparkSeries(accent) { it.internetUsagePct },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
-                label = "Tertiary",
-                unit = "%25-64",
+                label = stringResource(Res.string.science_spark_tertiary),
+                unit = stringResource(Res.string.science_unit_pct_age_25_64),
                 accent = accent,
                 series = activeSeries?.toSparkSeries(accent) { it.tertiaryEducPct },
                 modifier = Modifier.weight(1f),
             )
         }
-
+    }
+    val countriesSection: @Composable () -> Unit = {
         if (availableCountries.isNotEmpty()) {
-            var showCountryPicker by remember { mutableStateOf(false) }
             CountryChipsRow(
                 countries = availableCountries,
                 active = setOf(activeCountry),
@@ -292,21 +308,60 @@ private fun ScienceContent(
                 onAdd = { showCountryPicker = true },
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (showCountryPicker) {
-                CountryPickerSheet(
-                    selected = availableCountries.toSet(),
-                    onConfirm = { selected ->
-                        onSelectCountries(selected.toList())
-                        showCountryPicker = false
-                    },
-                    onDismiss = { showCountryPicker = false },
-                )
-            }
         }
-
-        Spacer(Modifier.height(Euro.spacing.s))
     }
-    } // end Box
+
+    AdaptiveTwoPane(
+        modifier = Modifier.fillMaxSize(),
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            yearDropdown()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
+            if (isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection(Modifier.fillMaxWidth())
+            radarSection()
+            sparkTilesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        compact = {
+            if (isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                headlineSection(Modifier.weight(1f))
+                if (availableYears.isNotEmpty() && selectedYear != null) {
+                    Spacer(Modifier.width(Euro.spacing.s))
+                }
+                yearDropdown()
+            }
+            radarSection()
+            sparkTilesSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = availableCountries.toSet(),
+            onConfirm = { selected ->
+                onSelectCountries(selected.toList())
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
+        )
+    }
 }
 
 /**
@@ -449,12 +504,5 @@ private fun LegendDot(color: Color, label: String) {
     }
 }
 
-/** Format a percentage-like Double with two decimals when small, one otherwise. */
-private fun Double.formatPct(): String {
-    val rounded = (this * 100.0).toLong() / 100.0
-    val whole = rounded.toLong()
-    val frac = ((rounded - whole) * 100).toLong()
-    val absFrac = if (frac < 0) -frac else frac
-    val fracStr = absFrac.toString().padStart(2, '0')
-    return "$whole.$fracStr"
-}
+/** Format a percentage-like Double with two decimal digits, e.g. `"15.68"`. */
+private fun Double.formatPct(): String = formatDecimal(this, decimals = 2)

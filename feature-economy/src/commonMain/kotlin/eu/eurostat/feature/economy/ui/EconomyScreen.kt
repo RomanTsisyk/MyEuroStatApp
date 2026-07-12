@@ -12,36 +12,38 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.model.ChartAxis
 import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
+import eu.eurostat.core.charts.model.SeriesPalette
+import eu.eurostat.core.charts.model.rebaseToIndex
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
+import eu.eurostat.ui.component.ChartPointDetailSheet
 import eu.eurostat.ui.component.CountryChipsRow
 import eu.eurostat.ui.component.CountryPickerSheet
 import eu.eurostat.ui.component.EuroCard
 import eu.eurostat.ui.component.MetricHeadline
 import eu.eurostat.ui.component.ModuleAppBar
+import eu.eurostat.ui.component.PillToggle
 import eu.eurostat.ui.component.SegmentedControl
 import eu.eurostat.ui.component.SourceFooter
 import eu.eurostat.ui.component.StatTile
@@ -50,24 +52,59 @@ import eu.eurostat.ui.component.YearScrubber
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatGrouped
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
+import myeurostatapp.feature_economy.generated.resources.Res
+import myeurostatapp.feature_economy.generated.resources.economy_axis_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_axis_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_axis_inflation
+import myeurostatapp.feature_economy.generated.resources.economy_chart_axis_index
+import myeurostatapp.feature_economy.generated.resources.economy_chart_axis_year
+import myeurostatapp.feature_economy.generated.resources.economy_chart_empty_body
+import myeurostatapp.feature_economy.generated.resources.economy_chart_empty_headline
+import myeurostatapp.feature_economy.generated.resources.economy_delta_unit_pp
+import myeurostatapp.feature_economy.generated.resources.economy_empty_body
+import myeurostatapp.feature_economy.generated.resources.economy_empty_headline
+import myeurostatapp.feature_economy.generated.resources.economy_error_headline
+import myeurostatapp.feature_economy.generated.resources.economy_footer_staleness_fresh
+import myeurostatapp.feature_economy.generated.resources.economy_footer_staleness_stale
+import myeurostatapp.feature_economy.generated.resources.economy_metric_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_metric_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_metric_inflation
+import myeurostatapp.feature_economy.generated.resources.economy_module_tagline
+import myeurostatapp.feature_economy.generated.resources.economy_module_title
+import myeurostatapp.feature_economy.generated.resources.economy_subtitle_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_subtitle_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_subtitle_inflation
+import myeurostatapp.feature_economy.generated.resources.economy_tile_deficit_label
+import myeurostatapp.feature_economy.generated.resources.economy_tile_deficit_unit
+import myeurostatapp.feature_economy.generated.resources.economy_tile_gdp_delta
+import myeurostatapp.feature_economy.generated.resources.economy_tile_inflation_delta
+import myeurostatapp.feature_economy.generated.resources.economy_tile_inflation_label
+import myeurostatapp.feature_economy.generated.resources.economy_toggle_absolute
+import myeurostatapp.feature_economy.generated.resources.economy_toggle_indexed
+import myeurostatapp.feature_economy.generated.resources.economy_unit_deficit
+import myeurostatapp.feature_economy.generated.resources.economy_unit_gdp
+import myeurostatapp.feature_economy.generated.resources.economy_unit_inflation
+import org.jetbrains.compose.resources.stringResource
 
-private val SeriesFr: Color = Color(0xFF7A5C46)
-private val SeriesPl: Color = Color(0xFF5E6B58)
-
-private const val M_TO_B: Double = 1_000.0
+private const val M_TO_B: Long = 1_000L
 private const val PERCENT: Double = 100.0
 
 /**
  * Editorial Economy feature screen. Bound to [EconomyComponent.state]:
  * Loading / Empty / Error branches use the shared status views; the
  * Content branch renders the headline + GDP/Inflation/Deficit segmented
- * switcher, a multi-country line chart hero, secondary KPI tiles for the
- * inactive metrics, the year scrubber and country chips.
+ * switcher, a multi-country line chart hero with an Absolute / Indexed-100
+ * scale toggle (comparison mode), secondary KPI tiles for the inactive
+ * metrics, the year scrubber and country chips.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -84,8 +121,8 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Economy",
-            tagline = "Macro",
+            title = stringResource(Res.string.economy_module_title),
+            tagline = stringResource(Res.string.economy_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -94,33 +131,43 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(EconomyIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                EconomyUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
-                is EconomyUiState.Empty -> EmptyState(
-                    headline = "no data",
-                    body = "No economy data for the selected filters.",
-                )
-                is EconomyUiState.Error -> ErrorState(
-                    headline = "Couldn't load economy",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(EconomyIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
-                is EconomyUiState.Content -> EconomyContent(
-                    accent = accent,
-                    state = s,
-                    component = component,
-                )
+            PullToRefreshBox(
+                isRefreshing = state is EconomyUiState.Loading,
+                onRefresh = { component.onIntent(EconomyIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    EconomyUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
+                    is EconomyUiState.Empty -> EmptyState(
+                        headline = stringResource(Res.string.economy_empty_headline),
+                        body = stringResource(Res.string.economy_empty_body),
+                    )
+                    is EconomyUiState.Error -> ErrorState(
+                        headline = stringResource(Res.string.economy_error_headline),
+                        body = s.error.localizedMessage(),
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(EconomyIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is EconomyUiState.Content -> EconomyContent(
+                        accent = accent,
+                        state = s,
+                        component = component,
+                    )
+                }
             }
         }
         SourceFooter(
             dataset = "nama_10_gdp · +2",
-            staleness = if ((state as? EconomyUiState.Content)?.isStale == true) "stale" else "fresh",
+            staleness = if ((state as? EconomyUiState.Content)?.isStale == true) {
+                stringResource(Res.string.economy_footer_staleness_stale)
+            } else {
+                stringResource(Res.string.economy_footer_staleness_fresh)
+            },
             stale = (state as? EconomyUiState.Content)?.isStale == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -146,7 +193,13 @@ private fun EconomyContent(
     component: EconomyComponent,
 ) {
     val timeSeries = state.timeSeries
-    val metricLabels = remember { listOf("GDP", "Inflation", "Deficit") }
+    // stringResource is @Composable — resolved here (not inside remember{}) and
+    // combined into a plain List<String> for the segmented control.
+    val metricLabels = listOf(
+        stringResource(Res.string.economy_metric_gdp),
+        stringResource(Res.string.economy_metric_inflation),
+        stringResource(Res.string.economy_metric_deficit),
+    )
     val metrics = remember { listOf(EconomyMetric.Gdp, EconomyMetric.Inflation, EconomyMetric.Deficit) }
 
     // selectedMetric and displayYearRange are owned by the component — survives rotation.
@@ -172,117 +225,157 @@ private fun EconomyContent(
     val prevPoint: EconomyDataPoint? = sortedPoints.firstOrNull { it.year == state.selectedYear - 1 }
 
     var showCountryPicker by remember { mutableStateOf(false) }
+    // Tapped chart point → detail sheet. Holds the (series label, point) pair;
+    // cleared on dismiss. Intentionally not rememberSaveable — a transient sheet.
+    var tappedPoint by remember { mutableStateOf<Pair<String, ChartPoint>?>(null) }
 
     val chartHeight = adaptiveChartHeight(compact = 160.dp, medium = 220.dp, expanded = 280.dp)
-    val maxW = adaptiveContentMaxWidth()
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .then(
-                    if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier,
-                )
-                .padding(horizontal = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val yearSection: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(Modifier.height(Euro.spacing.xs))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (state.availableYears.isNotEmpty()) {
-                    YearDropdown(
-                        selectedYear = state.selectedYear,
-                        years = state.availableYears,
-                        onSelect = { component.onIntent(EconomyIntent.SelectYear(it)) },
-                    )
-                }
+            if (state.availableYears.isNotEmpty()) {
+                YearDropdown(
+                    selectedYear = state.selectedYear,
+                    years = state.availableYears,
+                    onSelect = { component.onIntent(EconomyIntent.SelectYear(it)) },
+                )
             }
-
-            HeadlineForMetric(
-                metric = selectedMetric,
-                latest = latestPoint,
-                previous = prevPoint,
-                accent = accent,
-            )
-
-            SegmentedControl(
-                options = metricLabels,
-                selectedIndex = selectedIndex,
-                onSelect = { component.onIntent(EconomyIntent.SelectMetric(metrics[it])) },
-                activeColor = accent,
-            )
-
-            EuroCard {
-                Column {
-                    val chartSeries = remember(timeSeries, selectedMetric, accent, yearRange) {
-                        buildChartSeries(timeSeries, selectedMetric, accent, yearRange)
-                    }
-                    if (chartSeries.isEmpty() || chartSeries.all { it.points.isEmpty() }) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(chartHeight),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            EmptyState(
-                                headline = "no data",
-                                body = "No series available for the selected metric and year range.",
-                            )
-                        }
-                    } else {
-                        EurostatLineChart(
-                            series = chartSeries,
-                            xAxis = ChartAxis(label = "Year"),
-                            yAxis = ChartAxis(label = yAxisLabelFor(selectedMetric)),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(chartHeight),
-                        )
-                    }
-                    Spacer(Modifier.height(Euro.spacing.s))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        chartSeries.forEach { s ->
-                            LegendDot(color = s.color, label = s.label)
-                        }
-                    }
-                }
-            }
-
-            SecondaryMetricTiles(
-                selected = selectedMetric,
-                latest = latestPoint,
-            )
-
-            YearScrubber(
-                min = minYear,
-                max = maxYear,
-                value = yearRange,
-                onValueChange = { component.onIntent(EconomyIntent.SetDisplayYearRange(it)) },
-            )
-
-            CountryChipsRow(
-                countries = availableCountries,
-                active = setOf(activeCountry),
-                onSelect = { component.onIntent(EconomyIntent.SelectActiveCountry(it)) },
-                onAdd = { showCountryPicker = true },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(Euro.spacing.s))
         }
     }
+    val headlineSection: @Composable () -> Unit = {
+        HeadlineForMetric(
+            metric = selectedMetric,
+            latest = latestPoint,
+            previous = prevPoint,
+            accent = accent,
+        )
+    }
+    val metricSwitcherSection: @Composable () -> Unit = {
+        SegmentedControl(
+            options = metricLabels,
+            selectedIndex = selectedIndex,
+            onSelect = { component.onIntent(EconomyIntent.SelectMetric(metrics[it])) },
+            activeColor = accent,
+        )
+    }
+    val chartSection: @Composable () -> Unit = {
+        EuroCard {
+            Column {
+                PillToggle(
+                    options = listOf(
+                        stringResource(Res.string.economy_toggle_absolute),
+                        stringResource(Res.string.economy_toggle_indexed),
+                    ),
+                    selectedIndex = if (state.normalized) 1 else 0,
+                    onSelect = { component.onIntent(EconomyIntent.SetNormalized(it == 1)) },
+                    activeColor = accent,
+                )
+                Spacer(Modifier.height(Euro.spacing.s))
+                val chartSeries = remember(timeSeries, selectedMetric, yearRange, state.normalized) {
+                    val absolute = buildChartSeries(timeSeries, selectedMetric, yearRange)
+                    if (state.normalized) rebaseToIndex(absolute) else absolute
+                }
+                if (chartSeries.isEmpty() || chartSeries.all { it.points.isEmpty() }) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(chartHeight),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyState(
+                            headline = stringResource(Res.string.economy_chart_empty_headline),
+                            body = stringResource(Res.string.economy_chart_empty_body),
+                        )
+                    }
+                } else {
+                    EurostatLineChart(
+                        series = chartSeries,
+                        xAxis = ChartAxis(label = stringResource(Res.string.economy_chart_axis_year)),
+                        yAxis = ChartAxis(
+                            label = if (state.normalized) {
+                                stringResource(Res.string.economy_chart_axis_index)
+                            } else {
+                                yAxisLabelFor(selectedMetric)
+                            },
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(chartHeight),
+                        onPointTap = { s, p -> tappedPoint = s.label to p },
+                    )
+                }
+                Spacer(Modifier.height(Euro.spacing.s))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    chartSeries.forEach { s ->
+                        LegendDot(color = s.color, label = s.label)
+                    }
+                }
+            }
+        }
+    }
+    val tilesSection: @Composable () -> Unit = {
+        SecondaryMetricTiles(
+            selected = selectedMetric,
+            latest = latestPoint,
+        )
+    }
+    val scrubberSection: @Composable () -> Unit = {
+        YearScrubber(
+            min = minYear,
+            max = maxYear,
+            value = yearRange,
+            onValueChange = { component.onIntent(EconomyIntent.SetDisplayYearRange(it)) },
+        )
+    }
+    val countriesSection: @Composable () -> Unit = {
+        CountryChipsRow(
+            countries = availableCountries,
+            active = setOf(activeCountry),
+            onSelect = { component.onIntent(EconomyIntent.SelectActiveCountry(it)) },
+            onAdd = { showCountryPicker = true },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
+    AdaptiveTwoPane(
+        modifier = Modifier.fillMaxSize(),
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            yearSection()
+            metricSwitcherSection()
+            scrubberSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection()
+            chartSection()
+            tilesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        compact = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            yearSection()
+            headlineSection()
+            metricSwitcherSection()
+            chartSection()
+            tilesSection()
+            scrubberSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
 
     if (showCountryPicker) {
         CountryPickerSheet(
@@ -292,6 +385,32 @@ private fun EconomyContent(
                 showCountryPicker = false
             },
             onDismiss = { showCountryPicker = false },
+        )
+    }
+
+    // Detail sheet for a tapped chart point. The chart may be in Indexed-100
+    // mode, so resolve the true *absolute* value for the tapped country+year
+    // from the underlying series rather than reading the (possibly rebased)
+    // chart point's y. The lookup can miss if a stale-while-revalidate
+    // refresh replaces `timeSeries` while the sheet is open — in that race,
+    // only fall back to the raw chart y when the chart is in Absolute mode
+    // (where point.y already is the absolute value); in Indexed-100 mode
+    // point.y is a rebased index and would render with the wrong unit
+    // (e.g. "108 B€" for GDP), so show an em dash instead.
+    tappedPoint?.let { (label, point) ->
+        val year = point.x.toInt()
+        val absolute = timeSeries
+            .firstOrNull { it.countryCode == label }
+            ?.points?.firstOrNull { it.year == year }
+            ?.fieldFor(selectedMetric)
+        val resolvedValue = absolute ?: point.y.takeUnless { state.normalized }
+        ChartPointDetailSheet(
+            seriesLabel = label,
+            year = year.toString(),
+            value = metricValueText(selectedMetric, resolvedValue),
+            unit = metricUnitText(selectedMetric),
+            datasetCode = metricDatasetCode(selectedMetric),
+            onDismiss = { tappedPoint = null },
         )
     }
 }
@@ -310,21 +429,29 @@ private fun HeadlineForMetric(
     val (valueText, unitText, baseSubtitle) = when (metric) {
         EconomyMetric.Gdp -> Triple(
             latest?.gdpEur?.let { formatBillions(it) } ?: "—",
-            "B €",
-            "GDP · current prices",
+            stringResource(Res.string.economy_unit_gdp),
+            stringResource(Res.string.economy_subtitle_gdp),
         )
         EconomyMetric.Inflation -> Triple(
             latest?.hicpIndex?.let { formatDecimal(it, 1) } ?: "—",
-            "idx",
-            "HICP · 2015 = 100",
+            stringResource(Res.string.economy_unit_inflation),
+            stringResource(Res.string.economy_subtitle_inflation),
         )
         EconomyMetric.Deficit -> Triple(
             latest?.deficitPctGdp?.let { formatSignedPercent(it) } ?: "—",
-            "% GDP",
-            "Gov. net lending / borrowing",
+            stringResource(Res.string.economy_unit_deficit),
+            stringResource(Res.string.economy_subtitle_deficit),
         )
     }
-    val deltaText = yoyDeltaText(metric, latest, previous)
+    // yoyDeltaText is a plain (non-@Composable) helper — its unit suffixes are
+    // resolved here, at the composable call site, and passed in.
+    val deltaText = yoyDeltaText(
+        metric = metric,
+        latest = latest,
+        previous = previous,
+        idxUnit = stringResource(Res.string.economy_unit_inflation),
+        ppUnit = stringResource(Res.string.economy_delta_unit_pp),
+    )
     val subtitle = if (deltaText != null) "$baseSubtitle · $deltaText" else baseSubtitle
     val yearLabel = latest?.year?.toString() ?: "—"
     MetricHeadline(
@@ -353,16 +480,16 @@ private fun SecondaryMetricTiles(
         others.forEach { metric ->
             when (metric) {
                 EconomyMetric.Gdp -> StatTile(
-                    label = "GDP",
+                    label = stringResource(Res.string.economy_metric_gdp),
                     value = latest?.gdpEur?.let { formatBillions(it) } ?: "—",
-                    delta = "B € · current prices",
+                    delta = stringResource(Res.string.economy_tile_gdp_delta),
                     bordered = true,
                     modifier = Modifier.weight(1f).alpha(0.55f),
                 )
                 EconomyMetric.Inflation -> StatTile(
-                    label = "HICP infl.",
+                    label = stringResource(Res.string.economy_tile_inflation_label),
                     value = latest?.hicpIndex?.let { formatDecimal(it, 1) } ?: "—",
-                    delta = "idx · 2015=100",
+                    delta = stringResource(Res.string.economy_tile_inflation_delta),
                     bordered = true,
                     modifier = Modifier.weight(1f).alpha(0.55f),
                 )
@@ -384,7 +511,7 @@ private fun DeficitTile(value: Double?, modifier: Modifier = Modifier) {
     Column(modifier = modifier.padding(0.dp)) {
         Column(modifier = Modifier.padding(Euro.spacing.m)) {
             Text(
-                text = "deficit",
+                text = stringResource(Res.string.economy_tile_deficit_label),
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
             )
@@ -394,7 +521,7 @@ private fun DeficitTile(value: Double?, modifier: Modifier = Modifier) {
                 color = Euro.colors.warn,
             )
             Text(
-                text = "% of GDP",
+                text = stringResource(Res.string.economy_tile_deficit_unit),
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
             )
@@ -423,15 +550,16 @@ private fun LegendDot(color: Color, label: String) {
 
 /**
  * Project the merged [EconomyTimeSeries] list into chart series for the
- * given [metric], filtered to [yearRange] and using the editorial color
- * palette (DE = module accent, FR = sienna, PL = olive, EU27_* = muted).
+ * given [metric], filtered to [yearRange]. Series colors are assigned by
+ * stable index over the rendered series list via [SeriesPalette], so any
+ * combination of picked countries stays visually distinct (cycling only
+ * past 8 series).
  */
 private fun buildChartSeries(
     timeSeries: List<EconomyTimeSeries>,
     metric: EconomyMetric,
-    accent: Color,
     yearRange: IntRange,
-): List<ChartSeries> = timeSeries.map { ts ->
+): List<ChartSeries> = timeSeries.mapIndexed { index, ts ->
     val points = ts.points
         .filter { it.year in yearRange }
         .mapNotNull { p ->
@@ -439,29 +567,62 @@ private fun buildChartSeries(
         }
     ChartSeries(
         label = ts.countryCode,
-        color = colorFor(ts.countryCode, accent),
+        color = SeriesPalette.colorAt(index),
         points = points,
     )
 }
 
-private fun colorFor(countryCode: String, accent: Color): Color = when (countryCode) {
-    "DE" -> accent
-    "FR" -> SeriesFr
-    "PL" -> SeriesPl
-    else -> if (countryCode.startsWith("EU")) Color(0xFFA39A8D) else accent
-}
-
+@Composable
 private fun yAxisLabelFor(metric: EconomyMetric): String = when (metric) {
-    EconomyMetric.Gdp -> "GDP M€"
-    EconomyMetric.Inflation -> "HICP idx"
-    EconomyMetric.Deficit -> "% GDP"
+    EconomyMetric.Gdp -> stringResource(Res.string.economy_axis_gdp)
+    EconomyMetric.Inflation -> stringResource(Res.string.economy_axis_inflation)
+    EconomyMetric.Deficit -> stringResource(Res.string.economy_axis_deficit)
 }
 
-/** Year-over-year delta string, e.g. `"+6.2%"`, `"+1.2 idx"`, `"−0.4 pp"`. */
+/**
+ * Formats a metric [value] (in its native unit — GDP million EUR, HICP index,
+ * deficit % of GDP) for the chart-tap detail sheet, reusing this screen's
+ * headline formatters. Null (missing observation) renders as an em dash.
+ * Not composable — the delegated formatters are plain functions.
+ */
+private fun metricValueText(metric: EconomyMetric, value: Double?): String {
+    if (value == null) return "—"
+    return when (metric) {
+        EconomyMetric.Gdp -> formatBillions(value.toLong())
+        EconomyMetric.Inflation -> formatDecimal(value, 1)
+        EconomyMetric.Deficit -> formatSignedPercent(value)
+    }
+}
+
+/** Localized short unit label for the tapped metric, matching the headline unit. */
+@Composable
+private fun metricUnitText(metric: EconomyMetric): String = when (metric) {
+    EconomyMetric.Gdp -> stringResource(Res.string.economy_unit_gdp)
+    EconomyMetric.Inflation -> stringResource(Res.string.economy_unit_inflation)
+    EconomyMetric.Deficit -> stringResource(Res.string.economy_unit_deficit)
+}
+
+/**
+ * Eurostat dataset code backing each metric, cited in the tap detail sheet.
+ * Kept in sync with the codes in `CLAUDE.md` and the domain [EconomyMetric] KDoc.
+ */
+private fun metricDatasetCode(metric: EconomyMetric): String = when (metric) {
+    EconomyMetric.Gdp -> "nama_10_gdp"
+    EconomyMetric.Inflation -> "prc_hicp_aind"
+    EconomyMetric.Deficit -> "gov_10dd_edpt1"
+}
+
+/**
+ * Year-over-year delta string, e.g. `"+6.2%"`, `"+1.2 idx"`, `"−0.4 pp"`. Not
+ * composable — [idxUnit] and [ppUnit] are resolved via stringResource at the
+ * composable call site (see [HeadlineForMetric]) and passed in.
+ */
 private fun yoyDeltaText(
     metric: EconomyMetric,
     latest: EconomyDataPoint?,
     previous: EconomyDataPoint?,
+    idxUnit: String,
+    ppUnit: String,
 ): String? {
     if (latest == null || previous == null) return null
     return when (metric) {
@@ -475,63 +636,53 @@ private fun yoyDeltaText(
         EconomyMetric.Inflation -> {
             val l = latest.hicpIndex ?: return null
             val p = previous.hicpIndex ?: return null
-            "${signed(l - p)} idx"
+            "${signed(l - p)} $idxUnit"
         }
         EconomyMetric.Deficit -> {
             val l = latest.deficitPctGdp ?: return null
             val p = previous.deficitPctGdp ?: return null
-            "${signed(l - p)} pp"
+            "${signed(l - p)} $ppUnit"
         }
     }
 }
 
-/** Million-EUR → billion-EUR, formatted with non-breaking thin spaces (e.g. `3 451`). */
-private fun formatBillions(millionEur: Long): String {
-    val billions = millionEur / M_TO_B
-    return formatThousands(billions.toLong())
-}
+/**
+ * Million-EUR → billion-EUR, with locale-aware thousands grouping (e.g.
+ * `"3,451"` in en, `"3.451"` in de). Uses truncating integer billions (not
+ * rounded), matching this tile's original compactness convention.
+ */
+private fun formatBillions(millionEur: Long): String =
+    formatGrouped(millionEur / M_TO_B)
 
-private fun formatThousands(n: Long): String {
-    val raw = abs(n).toString()
-    val parts = mutableListOf<String>()
-    var i = raw.length
-    while (i > 0) {
-        val start = maxOf(0, i - 3)
-        parts.add(0, raw.substring(start, i))
-        i = start
-    }
-    val joined = parts.joinToString(" ")
-    return if (n < 0) "-$joined" else joined
-}
-
-private fun formatDecimal(v: Double, digits: Int): String {
-    val factor = pow10(digits)
-    val rounded = kotlin.math.round(v * factor) / factor
-    val whole = rounded.toLong()
-    val frac = abs((rounded - whole) * factor).toLong()
-    return if (digits == 0) whole.toString() else "$whole.${frac.toString().padStart(digits, '0')}"
-}
-
+/**
+ * Signed percent-point delta, e.g. `"+6.2%"`, `"−0.4%"`. Exact zero renders
+ * as bare `"0.0%"` with no sign character — this screen's original
+ * convention, distinct from the `"+0.0"` used elsewhere (e.g. Population's
+ * YoY badge).
+ */
 private fun formatSignedPercent(v: Double): String {
     val formatted = formatDecimal(abs(v), 1)
     return when {
         v > 0 -> "+$formatted%"
         v < 0 -> "−$formatted%"
-        else -> "0.0%"
+        // Route zero through formatDecimal too, so the separator stays
+        // locale-consistent with the non-zero branches.
+        else -> "${formatDecimal(0.0, 1)}%"
     }
 }
 
+/**
+ * Signed decimal delta with no unit suffix, e.g. `"+1.2"`, `"−0.4"`. Exact
+ * zero renders as bare `"0.0"` — see [formatSignedPercent] for why this
+ * screen special-cases zero rather than always showing a sign.
+ */
 private fun signed(v: Double): String {
     val formatted = formatDecimal(abs(v), 1)
     return when {
         v > 0 -> "+$formatted"
         v < 0 -> "−$formatted"
-        else -> "0.0"
+        // Route zero through formatDecimal too, so the separator stays
+        // locale-consistent with the non-zero branches.
+        else -> formatDecimal(0.0, 1)
     }
-}
-
-private fun pow10(n: Int): Double {
-    var r = 1.0
-    repeat(n) { r *= 10.0 }
-    return r
 }

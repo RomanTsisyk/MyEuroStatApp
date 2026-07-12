@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.DivergingBarRow
 import eu.eurostat.core.charts.EurostatDivergingBarChart
@@ -45,12 +44,33 @@ import eu.eurostat.ui.component.YearDropdown
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.absoluteValue
+import myeurostatapp.feature_trade.generated.resources.Res
+import myeurostatapp.feature_trade.generated.resources.trade_chart_caption
+import myeurostatapp.feature_trade.generated.resources.trade_content_empty_body
+import myeurostatapp.feature_trade.generated.resources.trade_content_empty_headline
+import myeurostatapp.feature_trade.generated.resources.trade_empty_body
+import myeurostatapp.feature_trade.generated.resources.trade_empty_headline
+import myeurostatapp.feature_trade.generated.resources.trade_error_headline
+import myeurostatapp.feature_trade.generated.resources.trade_footer_staleness_fresh
+import myeurostatapp.feature_trade.generated.resources.trade_footer_staleness_stale
+import myeurostatapp.feature_trade.generated.resources.trade_legend_exports
+import myeurostatapp.feature_trade.generated.resources.trade_legend_imports
+import myeurostatapp.feature_trade.generated.resources.trade_module_tagline
+import myeurostatapp.feature_trade.generated.resources.trade_module_title
+import myeurostatapp.feature_trade.generated.resources.trade_stat_exports_label
+import myeurostatapp.feature_trade.generated.resources.trade_stat_imports_label
+import myeurostatapp.feature_trade.generated.resources.trade_subtitle_format
+import myeurostatapp.feature_trade.generated.resources.trade_tab_balance
+import myeurostatapp.feature_trade.generated.resources.trade_tab_exports
+import myeurostatapp.feature_trade.generated.resources.trade_tab_imports
+import myeurostatapp.feature_trade.generated.resources.trade_unit_billion_eur
+import org.jetbrains.compose.resources.stringResource
 
-private val TradeTabs = listOf("Exports", "Imports", "Balance")
 private const val MAX_VISIBLE_YEARS = 8
 
 /**
@@ -62,6 +82,7 @@ private const val MAX_VISIBLE_YEARS = 8
  * (no re-fetch). The "+" chip opens a [CountryPickerSheet] whose "Apply" dispatches
  * [TradeIntent.SelectCountries], triggering a re-fetch.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -79,8 +100,8 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Trade",
-            tagline = "Flows",
+            title = stringResource(Res.string.trade_module_title),
+            tagline = stringResource(Res.string.trade_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -88,43 +109,51 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(TradeIntent.Refresh) },
         )
 
-        when (val s = state) {
-            is TradeUiState.Loading -> LoadingBody()
-            is TradeUiState.Error -> ErrorState(
-                headline = "Could not load Trade",
-                body = s.message,
-                onRetry = if (s.canRetry) {
-                    { component.onIntent(TradeIntent.Retry) }
-                } else {
-                    null
-                },
-            )
-            is TradeUiState.Empty -> ErrorState(
-                headline = "No data",
-                body = "No data for the selected filters.",
-            )
-            is TradeUiState.Content -> ContentBody(
-                accent = accent,
-                series = s.series,
-                isStale = s.isStale,
-                activeCountry = s.activeCountry,
-                availableCountries = s.availableCountries,
-                selectedTabIndex = s.selectedTabIndex,
-                selectedYear = s.selectedYear,
-                availableYears = s.availableYears,
-                onSelectTab = { index ->
-                    component.onIntent(TradeIntent.SelectTab(index))
-                },
-                onSelectActiveCountry = { code ->
-                    component.onIntent(TradeIntent.SelectActiveCountry(code))
-                },
-                onSelectCountries = { codes ->
-                    component.onIntent(TradeIntent.SelectCountries(codes))
-                },
-                onSelectYear = { year ->
-                    component.onIntent(TradeIntent.SelectYear(year))
-                },
-            )
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            PullToRefreshBox(
+                isRefreshing = state is TradeUiState.Loading,
+                onRefresh = { component.onIntent(TradeIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    is TradeUiState.Loading -> LoadingBody()
+                    is TradeUiState.Error -> ErrorState(
+                        headline = stringResource(Res.string.trade_error_headline),
+                        body = s.error.localizedMessage(),
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(TradeIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is TradeUiState.Empty -> ErrorState(
+                        headline = stringResource(Res.string.trade_empty_headline),
+                        body = stringResource(Res.string.trade_empty_body),
+                    )
+                    is TradeUiState.Content -> ContentBody(
+                        accent = accent,
+                        series = s.series,
+                        isStale = s.isStale,
+                        activeCountry = s.activeCountry,
+                        availableCountries = s.availableCountries,
+                        selectedTabIndex = s.selectedTabIndex,
+                        selectedYear = s.selectedYear,
+                        availableYears = s.availableYears,
+                        onSelectTab = { index ->
+                            component.onIntent(TradeIntent.SelectTab(index))
+                        },
+                        onSelectActiveCountry = { code ->
+                            component.onIntent(TradeIntent.SelectActiveCountry(code))
+                        },
+                        onSelectCountries = { codes ->
+                            component.onIntent(TradeIntent.SelectCountries(codes))
+                        },
+                        onSelectYear = { year ->
+                            component.onIntent(TradeIntent.SelectYear(year))
+                        },
+                    )
+                }
+            }
         }
     }
 }
@@ -175,11 +204,21 @@ private fun ContentBody(
 
     if (activeSeries == null) {
         EmptyState(
-            headline = "No data for $activeCountry",
-            body = "Select a different country from the chips below.",
+            headline = stringResource(Res.string.trade_content_empty_headline, activeCountry),
+            body = stringResource(Res.string.trade_content_empty_body),
         )
         return
     }
+
+    // Resolved once here (ContentBody is @Composable) and captured by the
+    // section lambdas below — stringResource() cannot be called from the
+    // non-composable helpers (formatSignedBillions, formatBillions, etc.).
+    val tabLabels = listOf(
+        stringResource(Res.string.trade_tab_exports),
+        stringResource(Res.string.trade_tab_imports),
+        stringResource(Res.string.trade_tab_balance),
+    )
+    val unitBillionEur = stringResource(Res.string.trade_unit_billion_eur)
 
     val visiblePoints = remember(activeSeries) {
         activeSeries.points.takeLast(MAX_VISIBLE_YEARS)
@@ -197,112 +236,144 @@ private fun ContentBody(
     }
 
     val balanceText = latest?.balanceEur?.let(::formatSignedBillions) ?: "—"
-    val exportsText = latest?.exportsEur?.let { "${formatBillions(it)} B €" } ?: "—"
-    val importsText = latest?.importsEur?.let { "${formatBillions(it)} B €" } ?: "—"
+    val exportsText = latest?.exportsEur?.let { "${formatBillions(it)} $unitBillionEur" } ?: "—"
+    val importsText = latest?.importsEur?.let { "${formatBillions(it)} $unitBillionEur" } ?: "—"
     val latestYear = selectedYear.toString()
     val chartH = adaptiveChartHeight(compact = 180.dp, medium = 240.dp, expanded = 300.dp)
-    val maxW = adaptiveContentMaxWidth()
+
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
+        val metricLower = (tabLabels.getOrNull(selectedTabIndex) ?: tabLabels.last()).lowercase()
+        MetricHeadline(
+            value = balanceText,
+            unit = unitBillionEur,
+            subtitle = stringResource(Res.string.trade_subtitle_format, metricLower, activeCountry),
+            year = latestYear,
+            accent = accent,
+        )
+    }
+    val tabsSection: @Composable () -> Unit = {
+        UnderlineTabs(
+            tabs = tabLabels,
+            selectedIndex = selectedTabIndex,
+            onSelect = { onSelectTab(it) },
+            activeColor = accent,
+        )
+    }
+    val yearSection: @Composable () -> Unit = {
+        if (availableYears.isNotEmpty()) {
+            YearDropdown(
+                selectedYear = selectedYear,
+                years = availableYears,
+                onSelect = onSelectYear,
+            )
+        }
+    }
+    val chartSection: @Composable () -> Unit = {
+        EuroCard(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+            ) {
+                Text(
+                    text = stringResource(Res.string.trade_chart_caption),
+                    style = Euro.typography.bodySmall,
+                    color = Euro.colors.muted,
+                )
+                val exportColor = when (selectedTabIndex) {
+                    0 -> accent
+                    1 -> accent.copy(alpha = 0.4f)
+                    else -> accent
+                }
+                val importColor = when (selectedTabIndex) {
+                    0 -> Euro.colors.warn.copy(alpha = 0.4f)
+                    1 -> Euro.colors.warn
+                    else -> Euro.colors.warn
+                }
+                EurostatDivergingBarChart(
+                    data = rows,
+                    exportColor = exportColor,
+                    importColor = importColor,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(chartH),
+                )
+                LegendRow(accent = accent, warn = Euro.colors.warn)
+            }
+        }
+    }
+    val tilesSection: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+        ) {
+            StatTile(
+                label = stringResource(Res.string.trade_stat_exports_label),
+                value = exportsText,
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+            StatTile(
+                label = stringResource(Res.string.trade_stat_imports_label),
+                value = importsText,
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+    val countriesSection: @Composable () -> Unit = {
+        CountryChipsRow(
+            countries = availableCountries,
+            active = setOf(activeCountry),
+            onSelect = { code -> onSelectActiveCountry(code) },
+            onAdd = { showCountryPicker = true },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Euro.spacing.base)
-                .padding(top = Euro.spacing.s, bottom = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-        ) {
-            MetricHeadline(
-                value = balanceText,
-                unit = "B €",
-                subtitle = subtitleFor(selectedTabIndex, activeCountry),
-                year = latestYear,
-                accent = accent,
-            )
-
-            UnderlineTabs(
-                tabs = TradeTabs,
-                selectedIndex = selectedTabIndex,
-                onSelect = { onSelectTab(it) },
-                activeColor = accent,
-            )
-
-            if (availableYears.isNotEmpty()) {
-                YearDropdown(
-                    selectedYear = selectedYear,
-                    years = availableYears,
-                    onSelect = onSelectYear,
-                )
-            }
-
-            EuroCard(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-                ) {
-                    Text(
-                        text = "exports vs imports · €M",
-                        style = Euro.typography.bodySmall,
-                        color = Euro.colors.muted,
-                    )
-                    val exportColor = when (selectedTabIndex) {
-                        0 -> accent
-                        1 -> accent.copy(alpha = 0.4f)
-                        else -> accent
-                    }
-                    val importColor = when (selectedTabIndex) {
-                        0 -> Euro.colors.warn.copy(alpha = 0.4f)
-                        1 -> Euro.colors.warn
-                        else -> Euro.colors.warn
-                    }
-                    EurostatDivergingBarChart(
-                        data = rows,
-                        exportColor = exportColor,
-                        importColor = importColor,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(chartH),
-                    )
-                    LegendRow(accent = accent, warn = Euro.colors.warn)
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-            ) {
-                StatTile(
-                    label = "exports",
-                    value = exportsText,
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "imports",
-                    value = importsText,
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            CountryChipsRow(
-                countries = availableCountries,
-                active = setOf(activeCountry),
-                onSelect = { code -> onSelectActiveCountry(code) },
-                onAdd = { showCountryPicker = true },
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.size(Euro.spacing.s))
-        }
+        AdaptiveTwoPane(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(
+                start = Euro.spacing.base,
+                end = Euro.spacing.base,
+                top = Euro.spacing.s,
+                bottom = Euro.spacing.base,
+            ),
+            controls = {
+                tabsSection()
+                yearSection()
+                countriesSection()
+                Spacer(Modifier.size(Euro.spacing.s))
+            },
+            content = {
+                headlineSection()
+                chartSection()
+                tilesSection()
+                Spacer(Modifier.size(Euro.spacing.s))
+            },
+            compact = {
+                headlineSection()
+                tabsSection()
+                yearSection()
+                chartSection()
+                tilesSection()
+                countriesSection()
+                Spacer(Modifier.size(Euro.spacing.s))
+            },
+        )
 
         SourceFooter(
             dataset = "ext_lt_intratrd",
-            staleness = if (isStale) "stale" else "fresh",
+            staleness = if (isStale) {
+                stringResource(Res.string.trade_footer_staleness_stale)
+            } else {
+                stringResource(Res.string.trade_footer_staleness_fresh)
+            },
             stale = isStale,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -329,8 +400,8 @@ private fun LegendRow(accent: Color, warn: Color) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
     ) {
-        LegendItem(label = "exports", dot = accent)
-        LegendItem(label = "imports", dot = warn)
+        LegendItem(label = stringResource(Res.string.trade_legend_exports), dot = accent)
+        LegendItem(label = stringResource(Res.string.trade_legend_imports), dot = warn)
     }
 }
 
@@ -353,8 +424,8 @@ private fun LegendItem(label: String, dot: Color) {
 
 /**
  * Format a millions-of-EUR value as a signed billions string with a leading
- * sign character (e.g. `+89`, `-12`). Uses integer billions, dropping fractional
- * digits for headline compactness.
+ * ASCII sign character (e.g. `+89`, `-12`). Uses truncating integer billions
+ * (not rounded), dropping fractional digits for headline compactness.
  */
 private fun formatSignedBillions(valueMEur: Long): String {
     val billions = valueMEur / 1000L
@@ -370,9 +441,4 @@ private fun formatSignedBillions(valueMEur: Long): String {
 private fun formatBillions(valueMEur: Long): String {
     val billions = valueMEur / 1000L
     return billions.absoluteValue.toString()
-}
-
-private fun subtitleFor(tabIndex: Int, country: String): String {
-    val metric = TradeTabs.getOrNull(tabIndex)?.lowercase() ?: "balance"
-    return "$metric · partner EU27 · $country"
 }

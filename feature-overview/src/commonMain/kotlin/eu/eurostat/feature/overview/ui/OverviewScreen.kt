@@ -3,17 +3,25 @@ package eu.eurostat.feature.overview.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SsidChart
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +39,17 @@ import eu.eurostat.ui.component.SourceFooter
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroWindowWidth
 import eu.eurostat.ui.theme.LocalEuroWindowWidth
+import myeurostatapp.feature_overview.generated.resources.Res
+import myeurostatapp.feature_overview.generated.resources.overview_browse_label
+import myeurostatapp.feature_overview.generated.resources.overview_footer_staleness_live
+import myeurostatapp.feature_overview.generated.resources.overview_header_compare_description
+import myeurostatapp.feature_overview.generated.resources.overview_header_search_description
+import myeurostatapp.feature_overview.generated.resources.overview_header_settings_description
+import myeurostatapp.feature_overview.generated.resources.overview_header_tagline
+import myeurostatapp.feature_overview.generated.resources.overview_header_title
+import myeurostatapp.feature_overview.generated.resources.overview_hero_subtitle
+import myeurostatapp.feature_overview.generated.resources.overview_hero_unit
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Overview dashboard — the app's landing screen.
@@ -61,15 +81,21 @@ fun OverviewScreen(
         verticalArrangement = Arrangement.spacedBy(Euro.spacing.s),
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
     ) {
-        item(span = { GridItemSpan(maxLineSpan) }) { HeaderBar() }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            HeaderBar(
+                onSearch = { onModuleSelected(ChildConfig.Search) },
+                onCompare = { onModuleSelected(ChildConfig.Compare) },
+                onSettings = { onModuleSelected(ChildConfig.Settings) },
+            )
+        }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            HeroBlock(hero = state.hero)
+            HeroBlock(hero = state.hero, headlineCountryCode = state.headlineCountryCode)
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             Text(
-                text = "BROWSE",
+                text = stringResource(Res.string.overview_browse_label),
                 color = Euro.colors.muted,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -85,7 +111,7 @@ fun OverviewScreen(
         item(span = { GridItemSpan(maxLineSpan) }) {
             SourceFooter(
                 dataset = "eurostat.europa.eu",
-                staleness = "live open data",
+                staleness = stringResource(Res.string.overview_footer_staleness_live),
                 modifier = Modifier.padding(top = Euro.spacing.s),
             )
         }
@@ -93,32 +119,86 @@ fun OverviewScreen(
 }
 
 @Composable
-private fun HeaderBar() {
-    Column(
+private fun HeaderBar(onSearch: () -> Unit, onCompare: () -> Unit, onSettings: () -> Unit) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Euro.colors.ink)
             .statusBarsPadding()
             .padding(horizontal = Euro.spacing.base, vertical = Euro.spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "EU Stats",
-            color = Euro.colors.paper,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(Res.string.overview_header_title),
+                color = Euro.colors.paper,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
+            )
+            Text(
+                text = stringResource(Res.string.overview_header_tagline),
+                color = Euro.colors.paper.copy(alpha = 0.65f),
+                fontSize = 13.sp,
+                letterSpacing = 0.25.sp,
+            )
+        }
+        HeaderIconPill(
+            icon = Icons.Default.Search,
+            description = stringResource(Res.string.overview_header_search_description),
+            onClick = onSearch,
         )
-        Text(
-            text = "European Statistics · open data",
-            color = Euro.colors.paper.copy(alpha = 0.65f),
-            fontSize = 13.sp,
-            letterSpacing = 0.25.sp,
+        HeaderIconPill(
+            icon = Icons.Default.SsidChart,
+            description = stringResource(Res.string.overview_header_compare_description),
+            onClick = onCompare,
+        )
+        HeaderIconPill(
+            icon = Icons.Default.Settings,
+            description = stringResource(Res.string.overview_header_settings_description),
+            onClick = onSettings,
         )
     }
 }
 
+/**
+ * Circular icon affordance on the header's ink band — mirrors the 36dp
+ * icon pill inside a 48dp tap target used by ModuleAppBar, tinted for the
+ * dark band. Used for the Search (ChildConfig.Search), Compare
+ * (ChildConfig.Compare) and Settings (ChildConfig.Settings) entry points.
+ */
 @Composable
-private fun HeroBlock(hero: ModuleTeaser?) {
+private fun HeaderIconPill(
+    icon: ImageVector,
+    description: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Euro.colors.paper.copy(alpha = 0.14f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = description,
+                tint = Euro.colors.paper,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeroBlock(hero: ModuleTeaser?, headlineCountryCode: String) {
     val accent = Euro.moduleAccents.forModule("economy")
     Column(
         modifier = Modifier
@@ -127,8 +207,8 @@ private fun HeroBlock(hero: ModuleTeaser?) {
     ) {
         MetricHeadline(
             value = hero?.value ?: "—",
-            unit = "B €",
-            subtitle = "GDP · Germany · live",
+            unit = stringResource(Res.string.overview_hero_unit),
+            subtitle = stringResource(Res.string.overview_hero_subtitle, headlineCountryCode.uppercase()),
             year = hero?.year?.toString() ?: "—",
             accent = accent,
         )
@@ -155,7 +235,7 @@ private fun TeaserTile(teaser: ModuleTeaser, onClick: () -> Unit) {
         ) {
             Text(text = teaser.emoji, fontSize = 20.sp)
             Text(
-                text = teaser.title,
+                text = stringResource(teaser.titleRes),
                 color = Euro.colors.ink,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -168,7 +248,7 @@ private fun TeaserTile(teaser: ModuleTeaser, onClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = teaser.unit + (teaser.year?.let { " · $it" } ?: ""),
+            text = stringResource(teaser.unitRes) + (teaser.year?.let { " · $it" } ?: ""),
             color = Euro.colors.ink.copy(alpha = 0.60f),
             fontSize = 11.sp,
             lineHeight = 14.sp,

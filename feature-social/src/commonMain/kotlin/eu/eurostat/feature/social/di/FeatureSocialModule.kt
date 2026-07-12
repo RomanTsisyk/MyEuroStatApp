@@ -21,6 +21,6 @@ fun featureSocialModule() = module {
     factory<Clock> { Clock.System }
     factory { GetSocialTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(qualifier = named(ChildConfig.Social::class.qualifiedName!!)) {
-        ComponentFactory { ctx -> DefaultSocialComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultSocialComponent(ctx, get(), get(), get()) }
     }
 }

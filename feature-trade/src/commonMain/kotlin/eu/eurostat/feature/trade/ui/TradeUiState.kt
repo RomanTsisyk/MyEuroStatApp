@@ -1,5 +1,6 @@
 package eu.eurostat.feature.trade.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.trade.domain.TradeQuery
 import eu.eurostat.feature.trade.domain.TradeTimeSeries
 
@@ -21,5 +22,14 @@ sealed interface TradeUiState {
         val availableYears: List<Int>,
     ) : TradeUiState
     data class Empty(val query: TradeQuery) : TradeUiState
-    data class Error(val message: String, val canRetry: Boolean) : TradeUiState
+
+    /**
+     * Error branch.
+     *
+     * @property error Raw [AppError] cause — the screen resolves user-facing
+     *   text via [eu.eurostat.ui.component.states.localizedMessage], so the
+     *   copy follows the app locale (including runtime language switches).
+     * @property canRetry Whether the [TradeIntent.Retry] action should be offered.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : TradeUiState
 }

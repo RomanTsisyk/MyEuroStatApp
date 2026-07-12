@@ -26,3 +26,6 @@ WHERE country_code IN ? AND year BETWEEN ? AND ?;
 deleteByCountriesAndYears:
 DELETE FROM PopulationCacheEntity
 WHERE country_code IN ? AND year BETWEEN ? AND ?;
+
+clearAll:
+DELETE FROM PopulationCacheEntity;

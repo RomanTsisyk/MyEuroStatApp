@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.EurostatSmallMultiples
@@ -49,12 +48,34 @@ import eu.eurostat.ui.component.StatTile
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.ln
 import kotlin.math.roundToInt
-import kotlin.math.roundToLong
+import myeurostatapp.feature_transport.generated.resources.Res
+import myeurostatapp.feature_transport.generated.resources.transport_empty_body
+import myeurostatapp.feature_transport.generated.resources.transport_empty_headline
+import myeurostatapp.feature_transport.generated.resources.transport_error_headline
+import myeurostatapp.feature_transport.generated.resources.transport_footer_staleness_fresh
+import myeurostatapp.feature_transport.generated.resources.transport_footer_staleness_stale
+import myeurostatapp.feature_transport.generated.resources.transport_headline_label_passengers
+import myeurostatapp.feature_transport.generated.resources.transport_mode_label_road
+import myeurostatapp.feature_transport.generated.resources.transport_mode_toggle_air
+import myeurostatapp.feature_transport.generated.resources.transport_mode_toggle_all
+import myeurostatapp.feature_transport.generated.resources.transport_mode_toggle_road
+import myeurostatapp.feature_transport.generated.resources.transport_module_tagline
+import myeurostatapp.feature_transport.generated.resources.transport_module_title
+import myeurostatapp.feature_transport.generated.resources.transport_tile_label_air
+import myeurostatapp.feature_transport.generated.resources.transport_tile_label_sea
+import myeurostatapp.feature_transport.generated.resources.transport_tile_sea_delta
+import myeurostatapp.feature_transport.generated.resources.transport_tile_sea_value
+import myeurostatapp.feature_transport.generated.resources.transport_toggle_log_label
+import myeurostatapp.feature_transport.generated.resources.transport_unit_billion
+import myeurostatapp.feature_transport.generated.resources.transport_unit_million
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Transport feature screen — wired to live Eurostat data.
@@ -75,6 +96,7 @@ import kotlin.math.roundToLong
  *  - [CountryChipsRow] derived from the country codes present in [series].
  *  - [SourceFooter] citing the underlying datasets.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -92,8 +114,8 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Transport",
-            tagline = "Mobility",
+            title = stringResource(Res.string.transport_module_title),
+            tagline = stringResource(Res.string.transport_module_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -101,47 +123,55 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(TransportIntent.Refresh) },
         )
 
-        when (val s = state) {
-            is TransportUiState.Loading -> LoadingBody()
-            is TransportUiState.Error -> ErrorState(
-                headline = "Couldn't load",
-                body = s.message,
-                onRetry = if (s.canRetry) {
-                    { component.onIntent(TransportIntent.Retry) }
-                } else {
-                    null
-                },
-            )
-            is TransportUiState.Empty -> EmptyState(
-                headline = "No data",
-                body = "No transport data for the selected filters.",
-            )
-            is TransportUiState.Content -> ContentBody(
-                series = s.series,
-                isStale = s.isStale,
-                accent = accent,
-                activeCountry = s.activeCountry,
-                availableCountries = s.availableCountries,
-                panelMode = s.displayPanelMode,
-                logScale = s.logScale,
-                selectedYear = s.selectedYear,
-                availableYears = s.availableYears,
-                onSelectCountry = { code ->
-                    component.onIntent(TransportIntent.SelectActiveCountry(code))
-                },
-                onSelectCountries = { codes ->
-                    component.onIntent(TransportIntent.SelectCountries(codes))
-                },
-                onPanelModeChange = { mode ->
-                    component.onIntent(TransportIntent.SelectPanelMode(mode))
-                },
-                onLogScaleToggle = {
-                    component.onIntent(TransportIntent.ToggleLogScale)
-                },
-                onSelectYear = { year ->
-                    component.onIntent(TransportIntent.SelectYear(year))
-                },
-            )
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            PullToRefreshBox(
+                isRefreshing = state is TransportUiState.Loading,
+                onRefresh = { component.onIntent(TransportIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    is TransportUiState.Loading -> LoadingBody()
+                    is TransportUiState.Error -> ErrorState(
+                        headline = stringResource(Res.string.transport_error_headline),
+                        body = s.error.localizedMessage(),
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(TransportIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is TransportUiState.Empty -> EmptyState(
+                        headline = stringResource(Res.string.transport_empty_headline),
+                        body = stringResource(Res.string.transport_empty_body),
+                    )
+                    is TransportUiState.Content -> ContentBody(
+                        series = s.series,
+                        isStale = s.isStale,
+                        accent = accent,
+                        activeCountry = s.activeCountry,
+                        availableCountries = s.availableCountries,
+                        panelMode = s.displayPanelMode,
+                        logScale = s.logScale,
+                        selectedYear = s.selectedYear,
+                        availableYears = s.availableYears,
+                        onSelectCountry = { code ->
+                            component.onIntent(TransportIntent.SelectActiveCountry(code))
+                        },
+                        onSelectCountries = { codes ->
+                            component.onIntent(TransportIntent.SelectCountries(codes))
+                        },
+                        onPanelModeChange = { mode ->
+                            component.onIntent(TransportIntent.SelectPanelMode(mode))
+                        },
+                        onLogScaleToggle = {
+                            component.onIntent(TransportIntent.ToggleLogScale)
+                        },
+                        onSelectYear = { year ->
+                            component.onIntent(TransportIntent.SelectYear(year))
+                        },
+                    )
+                }
+            }
         }
     }
 }
@@ -187,118 +217,171 @@ private fun ContentBody(
     val roadValue = selectedPoint?.roadPassengers
     val airValue = selectedPoint?.airPassengers
     val headlineValue = roadValue?.let { formatBillionsValue(it) } ?: "—"
-    val maxW = adaptiveContentMaxWidth()
+
+    // stringResource is @Composable — resolve every label once here, then pass
+    // the resolved Strings down into the section lambdas, ModeAndLogRow, and
+    // buildPanels()/formatBillions()/formatMillions() (which are either plain
+    // lambdas capturing these as closures, or non-composable helpers that take
+    // them as parameters).
+    val roadModeLabel = stringResource(Res.string.transport_mode_toggle_road)
+    val airModeLabel = stringResource(Res.string.transport_mode_toggle_air)
+    val allModeLabel = stringResource(Res.string.transport_mode_toggle_all)
+    val billionUnit = stringResource(Res.string.transport_unit_billion)
+    val millionUnit = stringResource(Res.string.transport_unit_million)
+    val roadLabelLower = stringResource(Res.string.transport_mode_label_road)
+    val passengersLabel = stringResource(Res.string.transport_headline_label_passengers)
+    val airTileLabel = stringResource(Res.string.transport_tile_label_air)
+    val seaTileLabel = stringResource(Res.string.transport_tile_label_sea)
+    val seaValueText = stringResource(Res.string.transport_tile_sea_value)
+    val seaDeltaText = stringResource(Res.string.transport_tile_sea_delta)
+    val logLabel = stringResource(Res.string.transport_toggle_log_label)
+    val freshLabel = stringResource(Res.string.transport_footer_staleness_fresh)
+    val staleLabel = stringResource(Res.string.transport_footer_staleness_stale)
+    // "ROAD · bn" / "AIR · M" — small-multiples panel captions built from the
+    // same mode words as the PillToggle plus the localized unit suffix.
+    val roadPanelTitle = "$roadModeLabel · $billionUnit"
+    val airPanelTitle = "$airModeLabel · $millionUnit"
+
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
+        MetricHeadline(
+            value = headlineValue,
+            unit = billionUnit,
+            subtitle = "$roadLabelLower · $passengersLabel · ${active?.countryName ?: activeCountry}",
+            year = selectedYear.toString(),
+            accent = accent,
+            modifier = Modifier.padding(top = Euro.spacing.s),
+        )
+    }
+    val yearSection: @Composable () -> Unit = {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+        ) {
+            if (availableYears.isNotEmpty()) {
+                YearDropdown(
+                    selectedYear = selectedYear,
+                    years = availableYears,
+                    onSelect = onSelectYear,
+                )
+            }
+        }
+    }
+    val modeSection: @Composable () -> Unit = {
+        ModeAndLogRow(
+            mode = panelMode,
+            onModeChange = onPanelModeChange,
+            logScale = logScale,
+            onLogChange = { onLogScaleToggle() },
+            accent = accent,
+            roadLabel = roadModeLabel,
+            airLabel = airModeLabel,
+            allLabel = allModeLabel,
+            logLabel = logLabel,
+        )
+    }
+    val panelsSection: @Composable () -> Unit = {
+        EuroCard(modifier = Modifier.fillMaxWidth()) {
+            val panels = buildPanels(
+                series = active,
+                mode = panelMode,
+                logScale = logScale,
+                accent = accent,
+                warn = Euro.colors.warn,
+                roadTitle = roadPanelTitle,
+                airTitle = airPanelTitle,
+            )
+            EurostatSmallMultiples(
+                panels = panels,
+                columns = if (panels.size >= 2) 2 else 1,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+    val tilesSection: @Composable () -> Unit = {
+        Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
+            StatTile(
+                label = roadLabelLower,
+                value = roadValue?.let { formatBillions(it, billionUnit) } ?: "—",
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+            StatTile(
+                label = airTileLabel,
+                value = airValue?.let { formatMillions(it, millionUnit) } ?: "—",
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+            StatTile(
+                label = seaTileLabel,
+                value = seaValueText,
+                delta = seaDeltaText,
+                bordered = true,
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+    val countriesSection: @Composable () -> Unit = {
+        if (countries.isNotEmpty()) {
+            CountryChipsRow(
+                countries = countries,
+                active = setOf(activeCountry),
+                onSelect = { code ->
+                    onSelectCountry(code)
+                },
+                onAdd = { showCountryPicker = true },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .then(if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-        ) {
-            MetricHeadline(
-                value = headlineValue,
-                unit = "bn",
-                subtitle = "road · passengers · ${active?.countryName ?: activeCountry}",
-                year = selectedYear.toString(),
-                accent = accent,
-                modifier = Modifier.padding(top = Euro.spacing.s),
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
-            ) {
-                if (availableYears.isNotEmpty()) {
-                    YearDropdown(
-                        selectedYear = selectedYear,
-                        years = availableYears,
-                        onSelect = onSelectYear,
-                    )
-                }
-            }
-
-            ModeAndLogRow(
-                mode = panelMode,
-                onModeChange = onPanelModeChange,
-                logScale = logScale,
-                onLogChange = { onLogScaleToggle() },
-                accent = accent,
-            )
-
-            EuroCard(modifier = Modifier.fillMaxWidth()) {
-                val panels = buildPanels(
-                    series = active,
-                    mode = panelMode,
-                    logScale = logScale,
-                    accent = accent,
-                    warn = Euro.colors.warn,
-                )
-                EurostatSmallMultiples(
-                    panels = panels,
-                    columns = if (panels.size >= 2) 2 else 1,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
-                StatTile(
-                    label = "road",
-                    value = roadValue?.let { formatBillions(it) } ?: "—",
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "air",
-                    value = airValue?.let { formatMillions(it) } ?: "—",
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-                StatTile(
-                    label = "sea",
-                    value = "n/a",
-                    delta = "port-based",
-                    bordered = true,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            if (countries.isNotEmpty()) {
-                CountryChipsRow(
-                    countries = countries,
-                    active = setOf(activeCountry),
-                    onSelect = { code ->
-                        onSelectCountry(code)
-                    },
-                    onAdd = { showCountryPicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (showCountryPicker) {
-                    CountryPickerSheet(
-                        selected = countries.toSet(),
-                        onConfirm = { selected ->
-                            onSelectCountries(selected.toList())
-                            showCountryPicker = false
-                        },
-                        onDismiss = { showCountryPicker = false },
-                    )
-                }
-            }
-        }
+        AdaptiveTwoPane(
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            controls = {
+                Spacer(Modifier.height(Euro.spacing.xs))
+                yearSection()
+                modeSection()
+                countriesSection()
+            },
+            content = {
+                headlineSection()
+                panelsSection()
+                tilesSection()
+            },
+            compact = {
+                headlineSection()
+                yearSection()
+                modeSection()
+                panelsSection()
+                tilesSection()
+                countriesSection()
+            },
+        )
 
         SourceFooter(
             dataset = "road_pa_buscoa · avia_paoc",
-            staleness = if (isStale) "stale" else "fresh",
+            staleness = if (isStale) staleLabel else freshLabel,
             stale = isStale,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),
+        )
+    }
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = countries.toSet(),
+            onConfirm = { selected ->
+                onSelectCountries(selected.toList())
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
         )
     }
 }
@@ -310,8 +393,12 @@ private fun ModeAndLogRow(
     logScale: Boolean,
     onLogChange: (Boolean) -> Unit,
     accent: Color,
+    roadLabel: String,
+    airLabel: String,
+    allLabel: String,
+    logLabel: String,
 ) {
-    val options = listOf("ROAD", "AIR", "ALL")
+    val options = listOf(roadLabel, airLabel, allLabel)
     val selectedIdx = when (mode) {
         TransportPanelMode.ROAD -> 0
         TransportPanelMode.AIR -> 1
@@ -338,7 +425,7 @@ private fun ModeAndLogRow(
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "log",
+                text = logLabel,
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
                 modifier = Modifier.padding(end = Euro.spacing.xs),
@@ -370,15 +457,17 @@ private fun buildPanels(
     logScale: Boolean,
     accent: Color,
     warn: Color,
+    roadTitle: String,
+    airTitle: String,
 ): List<SmallMultiplePanel> {
     if (series == null) return emptyList()
     val panels = mutableListOf<SmallMultiplePanel>()
     if (mode == TransportPanelMode.ROAD || mode == TransportPanelMode.ALL) {
         val pts = series.points.toRoadChartPoints(logScale, scale = 1_000_000_000.0)
         if (pts.isNotEmpty()) {
-            panels += SmallMultiplePanel("ROAD · bn") {
+            panels += SmallMultiplePanel(roadTitle) {
                 PanelChart(
-                    series = ChartSeries(label = "ROAD · bn", color = accent, points = pts),
+                    series = ChartSeries(label = roadTitle, color = accent, points = pts),
                 )
             }
         }
@@ -386,9 +475,9 @@ private fun buildPanels(
     if (mode == TransportPanelMode.AIR || mode == TransportPanelMode.ALL) {
         val pts = series.points.toAirChartPoints(logScale, scale = 1_000_000.0)
         if (pts.isNotEmpty()) {
-            panels += SmallMultiplePanel("AIR · M") {
+            panels += SmallMultiplePanel(airTitle) {
                 PanelChart(
-                    series = ChartSeries(label = "AIR · M", color = warn, points = pts),
+                    series = ChartSeries(label = airTitle, color = warn, points = pts),
                 )
             }
         }
@@ -435,25 +524,27 @@ private fun List<TransportDataPoint>.toAirChartPoints(
 private fun transform(value: Double, log: Boolean): Double =
     if (log) ln(value + 1.0) else value
 
-/** Format an absolute count into the StatTile string e.g. `"4.1 bn"` or `"57.8 M"`. */
-private fun formatBillions(value: Long): String = "${formatBillionsValue(value)} bn"
+/**
+ * Format an absolute count into the StatTile string e.g. `"4.1 bn"` or
+ * `"57.8 M"`. [unit] is the localized unit suffix (resolved at the composable
+ * call site — this helper itself is not composable).
+ */
+private fun formatBillions(value: Long, unit: String): String = "${formatBillionsValue(value)} $unit"
 
-private fun formatBillionsValue(value: Long): String {
-    val v = value.toDouble() / 1_000_000_000.0
-    val tenths = (v * 10.0).roundToLong()
-    val whole = tenths / 10
-    val frac = tenths % 10
-    return "$whole.$frac"
-}
+private fun formatBillionsValue(value: Long): String =
+    formatDecimal(value.toDouble() / 1_000_000_000.0, decimals = 1)
 
-private fun formatMillions(value: Long): String {
+/**
+ * Millions count with 1 decimal, e.g. `"57.8 M"` — but once the magnitude
+ * reaches 100 M or more, drops the decimal to a whole number (e.g. `"142 M"`)
+ * to keep the StatTile compact. [unit] is the localized unit suffix (resolved
+ * at the composable call site — this helper itself is not composable).
+ */
+private fun formatMillions(value: Long, unit: String): String {
     val v = value.toDouble() / 1_000_000.0
     return if (v >= 100.0) {
-        "${v.roundToInt()} M"
+        "${v.roundToInt()} $unit"
     } else {
-        val tenths = (v * 10.0).roundToLong()
-        val whole = tenths / 10
-        val frac = tenths % 10
-        "$whole.$frac M"
+        "${formatDecimal(v, decimals = 1)} $unit"
     }
 }

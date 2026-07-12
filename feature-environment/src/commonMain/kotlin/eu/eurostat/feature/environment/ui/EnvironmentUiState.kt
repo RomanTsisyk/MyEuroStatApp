@@ -1,5 +1,6 @@
 package eu.eurostat.feature.environment.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.environment.domain.EnvMetric
 import eu.eurostat.feature.environment.domain.EnvSector
 import eu.eurostat.feature.environment.domain.EnvironmentQuery
@@ -31,5 +32,11 @@ sealed interface EnvironmentUiState {
     ) : EnvironmentUiState
 
     data class Empty(val query: EnvironmentQuery) : EnvironmentUiState
-    data class Error(val message: String, val canRetry: Boolean) : EnvironmentUiState
+
+    /**
+     * The screen resolves user-facing text via [AppError.localizedMessage]
+     * (`eu.eurostat.ui.component.states`), so the copy localizes and follows
+     * runtime language switches instead of being fixed at emission time.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : EnvironmentUiState
 }

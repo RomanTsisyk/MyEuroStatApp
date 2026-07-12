@@ -23,6 +23,6 @@ fun featureTradeModule() = module {
     factory<ComponentFactory<Any>>(
         qualifier = named(ChildConfig.Trade::class.qualifiedName!!)
     ) {
-        ComponentFactory { ctx -> DefaultTradeComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultTradeComponent(ctx, get(), get(), get()) }
     }
 }

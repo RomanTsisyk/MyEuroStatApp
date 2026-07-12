@@ -7,6 +7,8 @@ import com.arkivanov.essenty.lifecycle.resume
 import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.prefs.AppPreferences
+import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.feature.population.domain.GetPopulationTimeSeriesUseCase
 import eu.eurostat.feature.population.domain.PopulationCohort
 import eu.eurostat.feature.population.domain.PopulationData
@@ -87,6 +89,18 @@ private class TestDispatcherProviderLocal(dispatcher: kotlinx.coroutines.test.Te
     override val default: CoroutineDispatcher = dispatcher
 }
 
+/** In-memory [AppPreferences] fake; only [defaultCountry] matters to the component. */
+private class FakeAppPreferences(
+    defaultCountry: String = AppPreferences.DEFAULT_COUNTRY,
+) : AppPreferences {
+    override val themePreference: Flow<ThemePreference> = MutableStateFlow(ThemePreference.SYSTEM)
+    override val language: Flow<String> = MutableStateFlow(AppPreferences.DEFAULT_LANGUAGE)
+    override val defaultCountry: Flow<String> = MutableStateFlow(defaultCountry)
+    override suspend fun setThemePreference(value: ThemePreference) = Unit
+    override suspend fun setLanguage(value: String) = Unit
+    override suspend fun setDefaultCountry(value: String) = Unit
+}
+
 // ---------------------------------------------------------------------------
 // Sample data
 // ---------------------------------------------------------------------------
@@ -129,10 +143,11 @@ class PopulationComponentTest {
     private fun buildComponent(
         repo: FakePopulationRepository,
         dispatcher: kotlinx.coroutines.test.TestDispatcher,
+        preferences: AppPreferences = FakeAppPreferences(),
     ): DefaultPopulationComponent {
         val useCase = GetPopulationTimeSeriesUseCase(repo)
         val dispatchers = TestDispatcherProviderLocal(dispatcher)
-        return DefaultPopulationComponent(context, useCase, dispatchers)
+        return DefaultPopulationComponent(context, useCase, dispatchers, preferences)
     }
 
     @Test
@@ -183,6 +198,7 @@ class PopulationComponentTest {
 
         val state = component.state.value
         assertIs<PopulationUiState.Error>(state)
+        assertEquals(AppError.NoNetwork, state.error)
         assertTrue(state.canRetry)
     }
 
@@ -251,6 +267,26 @@ class PopulationComponentTest {
         testScheduler.advanceUntilIdle()
 
         assertIs<PopulationUiState.Content>(component.state.value)
+    }
+
+    @Test
+    fun stored_default_country_seeds_selected_country_and_first_query() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher, FakeAppPreferences(defaultCountry = "IT"))
+
+        repo.emitSeries(
+            listOf(samplePopulationSeries("IT"), samplePopulationSeries("DE")),
+            isStale = false,
+        )
+        testScheduler.advanceUntilIdle()
+
+        // Preference country joins the list right after the EU aggregate.
+        assertEquals(listOf("EU27_2020", "IT", "DE", "FR", "PL"), repo.lastQuery?.countryCodes)
+
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertEquals("IT", state.selectedCountry)
     }
 
     // ---------------------------------------------------------------------------

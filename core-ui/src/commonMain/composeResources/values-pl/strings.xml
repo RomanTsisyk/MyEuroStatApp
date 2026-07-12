@@ -1,0 +1,35 @@
+<resources>
+    <!-- CountryPickerSheet -->
+    <string name="ui_country_picker_title">Wybierz kraje</string>
+    <string name="ui_country_picker_search_label">Szukaj po nazwie lub kodzie</string>
+    <string name="ui_country_picker_apply">Zastosuj (%1$d)</string>
+
+    <!-- ErrorState -->
+    <string name="ui_error_retry">spróbuj ponownie</string>
+
+    <!-- AppError user-facing messages (AppErrorText.kt) -->
+    <string name="ui_error_no_network">Brak połączenia — sprawdź sieć</string>
+    <string name="ui_error_http_5xx">Serwery Eurostatu są tymczasowo niedostępne (HTTP %1$d)</string>
+    <string name="ui_error_http">Żądanie do Eurostatu nie powiodło się (HTTP %1$d)</string>
+    <string name="ui_error_parse">Otrzymano nieoczekiwane dane z Eurostatu</string>
+    <string name="ui_error_cache_empty">Brak danych w pamięci podręcznej</string>
+    <string name="ui_error_unknown">Coś poszło nie tak</string>
+
+    <!-- StaleBanner -->
+    <string name="ui_stale_banner_message">dane z pamięci podręcznej · odświeżanie…</string>
+
+    <!-- CountryChip / CountryChipsRow -->
+    <string name="ui_chip_remove_country">Usuń %1$s</string>
+    <string name="ui_chip_add_country">Dodaj kraj</string>
+    <string name="ui_chip_add">dodaj</string>
+
+    <!-- YearDropdown -->
+    <string name="ui_year_dropdown_label">rok:</string>
+
+    <!-- ChartPointDetailSheet (tap a chart point) -->
+    <string name="ui_chart_detail_year">Rok</string>
+    <string name="ui_chart_detail_value">Wartość</string>
+    <string name="ui_chart_detail_unit">Jednostka</string>
+    <string name="ui_chart_detail_dataset">Zbiór danych</string>
+    <string name="ui_chart_detail_close">Zamknij</string>
+</resources>

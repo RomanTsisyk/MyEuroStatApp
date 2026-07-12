@@ -1,0 +1,35 @@
+<resources>
+    <!-- CountryPickerSheet -->
+    <string name="ui_country_picker_title">Choose countries</string>
+    <string name="ui_country_picker_search_label">Search by name or code</string>
+    <string name="ui_country_picker_apply">Apply (%1$d)</string>
+
+    <!-- ErrorState -->
+    <string name="ui_error_retry">retry</string>
+
+    <!-- AppError user-facing messages (AppErrorText.kt) -->
+    <string name="ui_error_no_network">No connection — check your network</string>
+    <string name="ui_error_http_5xx">Eurostat servers are temporarily unavailable (HTTP %1$d)</string>
+    <string name="ui_error_http">Eurostat request failed (HTTP %1$d)</string>
+    <string name="ui_error_parse">Got unexpected data from Eurostat</string>
+    <string name="ui_error_cache_empty">No cached data yet</string>
+    <string name="ui_error_unknown">Something went wrong</string>
+
+    <!-- StaleBanner -->
+    <string name="ui_stale_banner_message">showing cached data · refreshing…</string>
+
+    <!-- CountryChip / CountryChipsRow -->
+    <string name="ui_chip_remove_country">Remove %1$s</string>
+    <string name="ui_chip_add_country">Add country</string>
+    <string name="ui_chip_add">add</string>
+
+    <!-- YearDropdown -->
+    <string name="ui_year_dropdown_label">year:</string>
+
+    <!-- ChartPointDetailSheet (tap a chart point) -->
+    <string name="ui_chart_detail_year">Year</string>
+    <string name="ui_chart_detail_value">Value</string>
+    <string name="ui_chart_detail_unit">Unit</string>
+    <string name="ui_chart_detail_dataset">Dataset</string>
+    <string name="ui_chart_detail_close">Close</string>
+</resources>

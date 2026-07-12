@@ -1,0 +1,42 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="trade_module_title">Handel</string>
+    <string name="trade_module_tagline">Przepływy</string>
+
+    <!-- ErrorState (screen-level) -->
+    <string name="trade_error_headline">Nie udało się wczytać danych o handlu</string>
+
+    <!-- Empty state (no series at all) -->
+    <string name="trade_empty_headline">Brak danych</string>
+    <string name="trade_empty_body">Brak danych dla wybranych filtrów.</string>
+
+    <!-- Content-level empty (active country has no series) -->
+    <string name="trade_content_empty_headline">Brak danych dla %1$s</string>
+    <string name="trade_content_empty_body">Wybierz inny kraj z listy poniżej.</string>
+
+    <!-- Exports/Imports/Balance tabs -->
+    <string name="trade_tab_exports">Eksport</string>
+    <string name="trade_tab_imports">Import</string>
+    <string name="trade_tab_balance">Bilans</string>
+
+    <!-- MetricHeadline subtitle: "{metric} · partner EU27 · {country}" -->
+    <string name="trade_subtitle_format">%1$s · partner UE27 · %2$s</string>
+
+    <!-- Headline / KPI tile unit suffix -->
+    <string name="trade_unit_billion_eur">mld €</string>
+
+    <!-- Diverging-bar chart caption -->
+    <string name="trade_chart_caption">eksport vs. import · mln €</string>
+
+    <!-- KPI StatTile labels -->
+    <string name="trade_stat_exports_label">eksport</string>
+    <string name="trade_stat_imports_label">import</string>
+
+    <!-- Chart legend labels -->
+    <string name="trade_legend_exports">eksport</string>
+    <string name="trade_legend_imports">import</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="trade_footer_staleness_fresh">aktualne</string>
+    <string name="trade_footer_staleness_stale">nieaktualne</string>
+</resources>

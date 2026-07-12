@@ -1,0 +1,50 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="environment_module_title">Environment</string>
+    <string name="environment_module_tagline">Climate</string>
+
+    <!-- EmptyState (screen-level; reused for the chart-card empty state too) -->
+    <string name="environment_empty_headline">no data</string>
+    <string name="environment_empty_body">No environment data for the selected filters.</string>
+
+    <!-- ErrorState -->
+    <string name="environment_error_headline">Couldn't load environment</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="environment_footer_staleness_fresh">fresh</string>
+    <string name="environment_footer_staleness_stale">cached</string>
+
+    <!-- MetricDropdown -->
+    <string name="environment_metric_dropdown_label">metric</string>
+    <string name="environment_metric_ghg">GHG</string>
+    <string name="environment_metric_energy">Energy</string>
+    <string name="environment_metric_sdg">SDG</string>
+
+    <!-- Sector ChipRow -->
+    <string name="environment_sector_total">TOTAL</string>
+    <string name="environment_sector_transport">TRANSPORT</string>
+    <string name="environment_sector_industry">INDUSTRY</string>
+
+    <!-- Chart card -->
+    <string name="environment_chart_title_ghg">GHG emissions · Mt CO₂-eq</string>
+    <string name="environment_chart_title_energy">Final energy consumption · ktoe</string>
+    <string name="environment_chart_title_sdg">SDG 13 climate index · 1990=100</string>
+    <string name="environment_chart_empty_body">No values for the selected metric / sector combination.</string>
+
+    <!-- MetricHeadline -->
+    <string name="environment_headline_unit_ghg">Mt</string>
+    <string name="environment_headline_unit_energy">ktoe</string>
+    <string name="environment_headline_unit_sdg">idx</string>
+    <string name="environment_headline_subtitle_ghg">GHG · CO₂-eq</string>
+    <string name="environment_headline_subtitle_energy">Final energy</string>
+    <string name="environment_headline_subtitle_sdg">SDG 13 · 1990=100</string>
+    <string name="environment_headline_subtitle_sector">%1$s · %2$s sector</string>
+
+    <!-- Secondary StatTiles -->
+    <string name="environment_tile_label_ghg">GHG</string>
+    <string name="environment_tile_label_energy">energy use</string>
+    <string name="environment_tile_label_sdg">SDG 13 idx</string>
+    <string name="environment_tile_unit_ghg">Mt CO₂-eq</string>
+    <string name="environment_tile_unit_energy">ktoe</string>
+    <string name="environment_tile_unit_sdg">1990=100</string>
+</resources>

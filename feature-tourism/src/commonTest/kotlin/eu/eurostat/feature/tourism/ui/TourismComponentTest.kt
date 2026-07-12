@@ -7,6 +7,8 @@ import com.arkivanov.essenty.lifecycle.resume
 import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.prefs.AppPreferences
+import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.feature.tourism.domain.GetTourismTimeSeriesUseCase
 import eu.eurostat.feature.tourism.domain.TourismData
 import eu.eurostat.feature.tourism.domain.TourismDataPoint
@@ -58,6 +60,18 @@ private class TestDispatcherProviderLocal(dispatcher: kotlinx.coroutines.test.Te
     override val default: CoroutineDispatcher = dispatcher
 }
 
+/** In-memory [AppPreferences] fake; only [defaultCountry] matters to the component. */
+private class FakeAppPreferences(
+    defaultCountry: String = AppPreferences.DEFAULT_COUNTRY,
+) : AppPreferences {
+    override val themePreference: Flow<ThemePreference> = MutableStateFlow(ThemePreference.SYSTEM)
+    override val language: Flow<String> = MutableStateFlow(AppPreferences.DEFAULT_LANGUAGE)
+    override val defaultCountry: Flow<String> = MutableStateFlow(defaultCountry)
+    override suspend fun setThemePreference(value: ThemePreference) = Unit
+    override suspend fun setLanguage(value: String) = Unit
+    override suspend fun setDefaultCountry(value: String) = Unit
+}
+
 private fun sampleTourismSeries(country: String = "DE"): TourismTimeSeries =
     TourismTimeSeries(
         countryCode = country,
@@ -100,10 +114,28 @@ class TourismComponentTest {
     private fun buildComponent(
         repo: FakeTourismRepository,
         dispatcher: kotlinx.coroutines.test.TestDispatcher,
+        preferences: AppPreferences = FakeAppPreferences(),
     ): DefaultTourismComponent {
         val useCase = GetTourismTimeSeriesUseCase(repo)
         val dispatchers = TestDispatcherProviderLocal(dispatcher)
-        return DefaultTourismComponent(context, useCase, dispatchers)
+        return DefaultTourismComponent(context, useCase, dispatchers, preferences)
+    }
+
+    @Test
+    fun stored_default_country_seeds_active_country_and_first_query() = runTest {
+        val repo = FakeTourismRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher, FakeAppPreferences(defaultCountry = "IT"))
+
+        repo.emissions.value = Result.Success(sampleData("IT", "DE"), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        // "IT" is already part of the default tourism list, so the query is unchanged.
+        assertEquals(listOf("EU27_2020", "DE", "FR", "PL", "IT", "ES"), repo.lastQuery?.countryCodes)
+
+        val state = component.state.value
+        assertIs<TourismUiState.Content>(state)
+        assertEquals("IT", state.activeCountry)
     }
 
     @Test

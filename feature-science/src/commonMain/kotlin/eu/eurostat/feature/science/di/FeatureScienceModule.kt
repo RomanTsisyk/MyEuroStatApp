@@ -21,6 +21,6 @@ fun featureScienceModule() = module {
     factory<Clock> { Clock.System }
     factory { GetScienceTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(qualifier = named(ChildConfig.Science::class.qualifiedName!!)) {
-        ComponentFactory { ctx -> DefaultScienceComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultScienceComponent(ctx, get(), get(), get()) }
     }
 }

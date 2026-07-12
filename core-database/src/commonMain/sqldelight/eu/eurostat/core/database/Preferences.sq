@@ -1,0 +1,19 @@
+-- Key/value store for user preferences (theme, language, default country).
+-- One row per preference key; values are plain strings parsed by
+-- SqlDelightAppPreferences. Unset keys simply have no row — readers fall back
+-- to code-level defaults, so no seeding is required.
+--
+-- Added in schema v3 (see migrations/2.sqm — keep both definitions in sync).
+
+CREATE TABLE PreferenceEntity (
+    pref_key TEXT NOT NULL PRIMARY KEY,
+    pref_value TEXT NOT NULL
+);
+
+selectByKey:
+SELECT pref_value FROM PreferenceEntity
+WHERE pref_key = ?;
+
+upsert:
+INSERT OR REPLACE INTO PreferenceEntity(pref_key, pref_value)
+VALUES (?, ?);

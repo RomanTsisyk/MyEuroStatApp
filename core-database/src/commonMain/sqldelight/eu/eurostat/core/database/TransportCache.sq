@@ -27,3 +27,6 @@ WHERE country_code IN ? AND year BETWEEN ? AND ? AND mode = ?;
 deleteByCountriesAndYears:
 DELETE FROM TransportCacheEntity
 WHERE country_code IN ? AND year BETWEEN ? AND ? AND mode = ?;
+
+clearAll:
+DELETE FROM TransportCacheEntity;

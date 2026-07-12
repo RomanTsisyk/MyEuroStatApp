@@ -54,6 +54,39 @@ hardware token, encrypted offsite copy). Losing the key means every
 existing install has to be uninstalled before the next release can be
 installed.
 
+## Native desktop installers
+
+`composeApp/build.gradle.kts` configures `compose.desktop.application.nativeDistributions`
+with `targetFormats(Dmg, Msi, Deb)` — package name "EU Stats", bundle ID
+`eu.eurostat.app`, AGPL `LICENSE` bundled. Per-OS icons live in
+`composeApp/icons/` (`app.icns`, `app.ico`, `app.png`), generated from the
+same store icon used for the Android/F-Droid listing.
+
+```bash
+./gradlew :composeApp:packageDmg   # macOS
+./gradlew :composeApp:packageMsi   # Windows
+./gradlew :composeApp:packageDeb   # Linux
+```
+
+Each `package*` task only runs on its native OS (you cannot build a `.msi`
+on macOS). `packageDmg` has been verified locally, producing
+`EU Stats-1.0.0.dmg` (122 MB); `packageMsi` / `packageDeb` are exercised
+in CI (see below) but not yet verified against a real Windows/Linux
+install. All three installers are **unsigned** for now — macOS Gatekeeper
+and Windows SmartScreen will warn on first launch; signing is deferred to
+a post-grant phase (no Apple Developer / Windows code-signing cert
+budgeted — see `NLNET_SUBMISSION/03-milestones.md`).
+
+**Local gotcha:** `jpackage` (which the `package*` tasks shell out to)
+needs a full JDK — Android Studio's bundled JBR does not ship it. If a
+`package*` task fails with a `jpackage`-not-found error, point `JAVA_HOME`
+at a full JDK before invoking Gradle, e.g. a Gradle-provisioned Temurin
+under `~/.gradle/jdks`:
+
+```bash
+JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
+```
+
 ## Cutting a release
 
 1. Land everything intended for the release on `master`.
@@ -77,9 +110,15 @@ installed.
    git tag -s vX.Y.Z -m "EU Stats Multiplatform vX.Y.Z"
    git push origin vX.Y.Z
    ```
-8. Create a GitHub release for the tag and attach the APK. Paste the
-   `versionCode` changelog plus the SHA-256 hash from step 6 into the
-   release notes.
+8. Pushing the tag triggers
+   [`.github/workflows/release.yml`](../.github/workflows/release.yml),
+   which creates the GitHub release and attaches the release APK plus the
+   three native desktop installers (`.dmg`/`.msi`/`.deb`) automatically.
+   Paste the `versionCode` changelog plus the SHA-256 hash from step 6 into
+   the release notes. The APK is signed with the real key only when the
+   `KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`
+   repository secrets are configured; otherwise it is debug-signed (same
+   fallback as local builds).
 9. If this is a new public release: open a merge request against
    [fdroiddata](https://gitlab.com/fdroid/fdroiddata) updating
    `metadata/eu.eurostat.app.yml` to point at the new tag. See
@@ -88,6 +127,20 @@ installed.
 ## CI
 
 GitHub Actions in [`.github/workflows/build.yml`](../.github/workflows/build.yml)
-runs the test suite and assembles a debug APK on every push. The
-release workflow that signs and uploads the APK to a GitHub release is
-on the v1.0 roadmap (see [NEXT_STEPS.md](../NEXT_STEPS.md)).
+runs on push to `main`/`master`/`develop-v*` (the `develop-v*` pattern was
+added so the maintainer's actual working branches are covered, not just
+`main`) and on pull requests against `main`/`master`. Three jobs: `android`
+(assembles a debug APK, runs the full test suite, and now also runs
+`assembleRelease` so the R8/proguard pass is exercised on every push,
+falling back to the debug keystore without secrets), `desktop`
+(smoke-tests `packageUberJarForCurrentOS` on Ubuntu), and `ios-test` (runs
+the real `iosSimulatorArm64Test` suite — not just a compile — gated behind
+`android` since macOS runners bill roughly 10x an Ubuntu runner).
+
+[`release.yml`](../.github/workflows/release.yml) runs on `v*` tag pushes:
+an `android` job assembles the release APK (real signature when the
+keystore secrets are set, debug-signed otherwise) and a three-OS matrix
+packages the native installers; every job attaches its artifact to the
+GitHub release for the tag. Installers ship unsigned for now —
+Gatekeeper/SmartScreen warnings are expected until signing certificates
+are budgeted (post-grant item).

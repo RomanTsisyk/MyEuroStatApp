@@ -1,5 +1,6 @@
 package eu.eurostat.feature.tourism.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.tourism.domain.TourismResidence
 import eu.eurostat.feature.tourism.domain.TourismTimeSeries
 
@@ -35,5 +36,11 @@ sealed interface TourismUiState {
     ) : TourismUiState
 
     data object Empty : TourismUiState
-    data class Error(val message: String, val canRetry: Boolean) : TourismUiState
+
+    /**
+     * @param error the raw failure; the screen resolves user-facing text via
+     *        [AppError.localizedMessage] (composable, follows the app locale).
+     * @param canRetry whether the retry affordance should be shown.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : TourismUiState
 }

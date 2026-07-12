@@ -23,6 +23,6 @@ fun featureTransportModule() = module {
     factory<ComponentFactory<Any>>(
         qualifier = named(ChildConfig.Transport::class.qualifiedName!!)
     ) {
-        ComponentFactory { ctx -> DefaultTransportComponent(ctx, get(), get()) }
+        ComponentFactory { ctx -> DefaultTransportComponent(ctx, get(), get(), get()) }
     }
 }

@@ -1,0 +1,6 @@
+• Offline cache for population pyramids and tourism seasonality
+• Settings now persist: theme (applied app-wide), language, default country; working Clear cache
+• Compare countries on the economy chart: distinct colors + "Indexed 100" rebasing toggle
+• Numbers follow your locale's decimal and thousands separators
+• Pull-to-refresh on all eight screens; clearer error messages
+• iOS app now builds and runs (simulator-verified)

@@ -15,6 +15,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -61,7 +63,7 @@ class TradeApiServiceImplTest {
     private fun buildService(
         responseBody: String = cannedJsonStatResponse(),
         status: HttpStatusCode = HttpStatusCode.OK,
-        onRequest: (HttpRequestData) -> Unit = {},
+        onRequest: suspend (HttpRequestData) -> Unit = {},
     ): TradeApiServiceImpl {
         val engine = MockEngine { request ->
             onRequest(request)
@@ -85,11 +87,12 @@ class TradeApiServiceImplTest {
 
     @Test
     fun fetch_requestTargets_ext_lt_intratrd() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val urlStr = captured!!.url.toString()
         assertTrue(
@@ -104,11 +107,12 @@ class TradeApiServiceImplTest {
 
     @Test
     fun fetch_geoParamsPresent() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL", "DE"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val geoValues = captured!!.url.parameters.getAll("geo") ?: emptyList()
         assertTrue("PL" in geoValues, "geo filter must include PL, got: $geoValues")
@@ -121,11 +125,12 @@ class TradeApiServiceImplTest {
 
     @Test
     fun fetch_timeParamsPresentForEachYear() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL"), 2020..2022))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val timeValues = captured!!.url.parameters.getAll("time") ?: emptyList()
         assertTrue("2020" in timeValues, "time filter must include 2020, got: $timeValues")
@@ -139,11 +144,12 @@ class TradeApiServiceImplTest {
 
     @Test
     fun fetch_partnerParamPresent() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL"), 2020..2020, partner = "EU27_2020"))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val partnerValues = captured!!.url.parameters.getAll("partner") ?: emptyList()
         assertTrue("EU27_2020" in partnerValues, "partner filter must include EU27_2020, got: $partnerValues")
@@ -155,11 +161,12 @@ class TradeApiServiceImplTest {
 
     @Test
     fun fetch_indicEtParamsContainMIO_EXP_VAL_IMP_VAL_BAL_VAL() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val indicEtValues = captured!!.url.parameters.getAll("indic_et") ?: emptyList()
         assertTrue("MIO_EXP_VAL" in indicEtValues, "indic_et must include MIO_EXP_VAL, got: $indicEtValues")
@@ -173,11 +180,12 @@ class TradeApiServiceImplTest {
 
     @Test
     fun request_pins_sitc06_total() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val sitc06Values = captured!!.url.parameters.getAll("sitc06") ?: emptyList()
         assertTrue(
@@ -238,13 +246,32 @@ class TradeApiServiceImplTest {
 
     @Test
     fun fetch_formatJsonParamPresent() = runTest {
-        var captured: HttpRequestData? = null
-        val service = buildService(onRequest = { captured = it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetch(TradeQuery(listOf("PL"), 2020..2020))
 
+        val captured: HttpRequestData? = recorder.all().firstOrNull()
         assertNotNull(captured)
         val formatValues = captured!!.url.parameters.getAll("format") ?: emptyList()
         assertTrue("JSON" in formatValues, "format=JSON must be present, got: $formatValues")
     }
+}
+
+/**
+ * Thread-safe request recorder: MockEngine may invoke handlers concurrently on
+ * different threads, so unsynchronized writes from the handler can be lost or
+ * remain invisible to the asserting test thread.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val requests = mutableListOf<HttpRequestData>()
+
+    /** Records one intercepted request under the mutex. */
+    suspend fun record(request: HttpRequestData) {
+        mutex.withLock { requests += request }
+    }
+
+    /** Returns a snapshot of all recorded requests. */
+    suspend fun all(): List<HttpRequestData> = mutex.withLock { requests.toList() }
 }

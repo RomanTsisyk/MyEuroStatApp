@@ -7,6 +7,8 @@ import com.arkivanov.essenty.lifecycle.resume
 import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.prefs.AppPreferences
+import eu.eurostat.core.common.prefs.ThemePreference
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyRepository
@@ -57,6 +59,18 @@ private class TestDispatcherProviderLocal(dispatcher: kotlinx.coroutines.test.Te
     override val main: CoroutineDispatcher = dispatcher
     override val io: CoroutineDispatcher = dispatcher
     override val default: CoroutineDispatcher = dispatcher
+}
+
+/** In-memory [AppPreferences] fake; only [defaultCountry] matters to the component. */
+private class FakeAppPreferences(
+    defaultCountry: String = AppPreferences.DEFAULT_COUNTRY,
+) : AppPreferences {
+    override val themePreference: Flow<ThemePreference> = MutableStateFlow(ThemePreference.SYSTEM)
+    override val language: Flow<String> = MutableStateFlow(AppPreferences.DEFAULT_LANGUAGE)
+    override val defaultCountry: Flow<String> = MutableStateFlow(defaultCountry)
+    override suspend fun setThemePreference(value: ThemePreference) = Unit
+    override suspend fun setLanguage(value: String) = Unit
+    override suspend fun setDefaultCountry(value: String) = Unit
 }
 
 // ---------------------------------------------------------------------------
@@ -112,10 +126,11 @@ class EconomyComponentTest {
     private fun buildComponent(
         repo: FakeEconomyRepository,
         dispatcher: kotlinx.coroutines.test.TestDispatcher,
+        preferences: AppPreferences = FakeAppPreferences(),
     ): DefaultEconomyComponent {
         val useCase = GetEconomyTimeSeriesUseCase(repo)
         val dispatchers = TestDispatcherProviderLocal(dispatcher)
-        return DefaultEconomyComponent(context, useCase, dispatchers)
+        return DefaultEconomyComponent(context, useCase, dispatchers, preferences)
     }
 
     @Test
@@ -165,6 +180,7 @@ class EconomyComponentTest {
 
         val state = component.state.value
         assertIs<EconomyUiState.Error>(state)
+        assertEquals(AppError.NoNetwork, state.error)
         assertTrue(state.canRetry)
     }
 
@@ -249,6 +265,27 @@ class EconomyComponentTest {
     }
 
     @Test
+    fun stored_default_country_seeds_active_country_and_first_query() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher, FakeAppPreferences(defaultCountry = "IT"))
+
+        repo.emissions.value = Result.Success(
+            listOf(sampleEconomySeries("IT"), sampleEconomySeries("DE")),
+            isStale = false,
+        )
+        testScheduler.advanceUntilIdle()
+
+        // Preference country joins the list right after the EU aggregate; single fetch only.
+        assertEquals(listOf("EU27_2020", "IT", "DE", "FR", "PL"), repo.lastQuery?.countryCodes)
+        assertEquals(1, repo.observeCallCount)
+
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertEquals("IT", state.activeCountry)
+    }
+
+    @Test
     fun year_picker_defaults_to_latest_and_updates_without_network_call() = runTest {
         val repo = FakeEconomyRepository()
         val dispatcher = StandardTestDispatcher(testScheduler)
@@ -270,5 +307,44 @@ class EconomyComponentTest {
         assertIs<EconomyUiState.Content>(updatedState)
         assertEquals(2021, updatedState.selectedYear)
         assertEquals(observeCallsBefore, repo.observeCallCount)
+    }
+
+    @Test
+    fun set_normalized_updates_state_without_network_call_and_survives_re_emission() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(multiYearEconomySeries("DE")), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val initialState = component.state.value
+        assertIs<EconomyUiState.Content>(initialState)
+        assertFalse(initialState.normalized)
+
+        val observeCallsBefore = repo.observeCallCount
+        component.onIntent(EconomyIntent.SetNormalized(true))
+        testScheduler.advanceUntilIdle()
+
+        val updatedState = component.state.value
+        assertIs<EconomyUiState.Content>(updatedState)
+        assertTrue(updatedState.normalized)
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+
+        // The flag is owned by the component (like selectedMetric), so a fresh
+        // repository emission must not reset it.
+        repo.emissions.value = Result.Success(listOf(multiYearEconomySeries("DE")), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val reEmittedState = component.state.value
+        assertIs<EconomyUiState.Content>(reEmittedState)
+        assertTrue(reEmittedState.normalized)
+
+        component.onIntent(EconomyIntent.SetNormalized(false))
+        testScheduler.advanceUntilIdle()
+
+        val disabledState = component.state.value
+        assertIs<EconomyUiState.Content>(disabledState)
+        assertFalse(disabledState.normalized)
     }
 }

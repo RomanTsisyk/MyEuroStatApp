@@ -18,6 +18,17 @@ import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 
 /**
+ * Precomputed axis bounds for [EurostatMultiLineHighlighted], derived once per
+ * `remember(series)` key change instead of on every recomposition.
+ */
+private data class MultiLineBounds(
+    val xMin: Float,
+    val yMin: Float,
+    val xSpan: Float,
+    val ySpan: Float,
+)
+
+/**
  * Multi-line chart where a single series is emphasized in its own accent and the rest
  * are dimmed to mutedAlt at low alpha — a "you among peers" frame.
  *
@@ -36,18 +47,29 @@ fun EurostatMultiLineHighlighted(
         Box(modifier = modifier)
         return
     }
-    val allX = series.flatMap { s -> s.points.map { it.x.toFloat() } }
-    val allY = series.flatMap { s -> s.points.mapNotNull { it.y?.toFloat() } }
-    if (allY.isEmpty()) {
+    val hasYValues = remember(series) { series.any { s -> s.points.any { it.y != null } } }
+    if (!hasYValues) {
         Box(modifier = modifier)
         return
     }
-    val xMin = allX.min()
-    val xMax = allX.max()
-    val yMin = allY.min()
-    val yMax = allY.max()
-    val xSpan = (xMax - xMin).coerceAtLeast(0.0001f)
-    val ySpan = (yMax - yMin).coerceAtLeast(0.0001f)
+
+    // Axis bounds are a pure derivation of series — hoisted so the min/max scans
+    // over all points aren't repeated on every recomposition.
+    val bounds = remember(series) {
+        val allX = series.flatMap { s -> s.points.map { it.x.toFloat() } }
+        val allY = series.flatMap { s -> s.points.mapNotNull { it.y?.toFloat() } }
+        val xMin = allX.min()
+        val xMax = allX.max()
+        val yMin = allY.min()
+        val yMax = allY.max()
+        MultiLineBounds(
+            xMin = xMin,
+            yMin = yMin,
+            xSpan = (xMax - xMin).coerceAtLeast(0.0001f),
+            ySpan = (yMax - yMin).coerceAtLeast(0.0001f),
+        )
+    }
+    val (xMin, yMin, xSpan, ySpan) = bounds
 
     // Hoist Path allocations outside Canvas to avoid per-frame GC pressure.
     val paths = remember(series.size) { List(series.size) { Path() } }

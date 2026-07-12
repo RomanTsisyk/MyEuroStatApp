@@ -22,4 +22,12 @@ sealed interface EconomyIntent {
 
     /** Selects the year shown in the headline and stat tiles; client-side only, no re-fetch. */
     data class SelectYear(val year: Int) : EconomyIntent
+
+    /**
+     * Sets whether the chart is rebased to an index (first visible year = 100)
+     * instead of absolute values; client-side only, no re-fetch. Modeled as an
+     * absolute setter rather than a toggle so replayed or duplicated intents
+     * stay idempotent.
+     */
+    data class SetNormalized(val normalized: Boolean) : EconomyIntent
 }

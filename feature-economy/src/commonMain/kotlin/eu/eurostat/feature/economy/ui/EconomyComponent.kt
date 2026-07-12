@@ -2,9 +2,9 @@ package eu.eurostat.feature.economy.ui
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
-import eu.eurostat.core.common.AppError
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.Result
+import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 interface EconomyComponent {
@@ -25,6 +26,7 @@ class DefaultEconomyComponent(
     componentContext: ComponentContext,
     private val useCase: GetEconomyTimeSeriesUseCase,
     private val dispatchers: DispatcherProvider,
+    private val appPreferences: AppPreferences,
 ) : EconomyComponent, ComponentContext by componentContext {
 
     private val scope = coroutineScope(SupervisorJob() + dispatchers.main)
@@ -41,11 +43,37 @@ class DefaultEconomyComponent(
     private var selectedMetric: EconomyMetric = EconomyMetric.Gdp
     private var displayYearRange: IntRange? = null
     private var selectedYear: Int? = null
+    private var normalized: Boolean = false
 
     private var collectJob: Job? = null
 
     init {
-        load()
+        scope.launch {
+            applyDefaultCountryPreference()
+            load()
+        }
+    }
+
+    /**
+     * Seeds the active country and initial query from the persisted
+     * default-country preference ([AppPreferences.defaultCountry]).
+     *
+     * Read exactly once, before the first load, so the very first query already
+     * targets the preferred country (no double fetch, no flash of the wrong
+     * country). Changing the preference mid-session therefore takes effect on
+     * the next app start; live re-querying is intentionally out of scope.
+     * When the preference is unset (the [AppPreferences.DEFAULT_COUNTRY] EU
+     * aggregate), the historical defaults are kept unchanged.
+     */
+    private suspend fun applyDefaultCountryPreference() {
+        val preferred = appPreferences.defaultCountry.first()
+        if (preferred.isBlank() || preferred == AppPreferences.DEFAULT_COUNTRY) return
+        selectedCountry = preferred
+        if (preferred !in currentQuery.countryCodes) {
+            val codes = currentQuery.countryCodes.toMutableList()
+            codes.add(if (codes.firstOrNull() == "EU27_2020") 1 else 0, preferred)
+            currentQuery = currentQuery.copy(countryCodes = codes)
+        }
     }
 
     override fun onIntent(intent: EconomyIntent) {
@@ -84,6 +112,10 @@ class DefaultEconomyComponent(
                 selectedYear = intent.year
                 rerenderFromLastData()
             }
+            is EconomyIntent.SetNormalized -> {
+                normalized = intent.normalized
+                rerenderFromLastData()
+            }
         }
     }
 
@@ -115,7 +147,7 @@ class DefaultEconomyComponent(
                 buildContent(data, isStale, query)
             }
             is Result.Error -> EconomyUiState.Error(
-                message = cause.toUserMessage(),
+                error = cause,
                 canRetry = true,
             )
         }
@@ -153,14 +185,7 @@ class DefaultEconomyComponent(
             displayYearRange = displayYearRange,
             selectedYear = activeYear,
             availableYears = availableYears,
+            normalized = normalized,
         )
-    }
-
-    private fun AppError.toUserMessage(): String = when (this) {
-        AppError.NoNetwork -> "No network"
-        is AppError.HttpError -> "HTTP $code"
-        is AppError.ParseError -> "Parse error"
-        AppError.CacheEmpty -> "No cache"
-        is AppError.Unknown -> "Unknown error"
     }
 }

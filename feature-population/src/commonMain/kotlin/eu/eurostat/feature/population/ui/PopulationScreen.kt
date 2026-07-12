@@ -12,19 +12,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,12 +44,33 @@ import eu.eurostat.ui.component.StaleBanner
 import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatLargeNumber
+import eu.eurostat.ui.format.formatLargeNumberParts
+import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
-import eu.eurostat.ui.layout.adaptiveContentMaxWidth
 import eu.eurostat.ui.theme.Euro
-import eu.eurostat.ui.theme.EuroWindowWidth
-import eu.eurostat.ui.theme.LocalEuroWindowWidth
 import kotlin.math.abs
+import myeurostatapp.feature_population.generated.resources.Res
+import myeurostatapp.feature_population.generated.resources.population_cohort_empty_body
+import myeurostatapp.feature_population.generated.resources.population_cohort_empty_headline
+import myeurostatapp.feature_population.generated.resources.population_empty_body
+import myeurostatapp.feature_population.generated.resources.population_empty_headline
+import myeurostatapp.feature_population.generated.resources.population_error_headline
+import myeurostatapp.feature_population.generated.resources.population_footer_staleness_fresh
+import myeurostatapp.feature_population.generated.resources.population_headline_yoy
+import myeurostatapp.feature_population.generated.resources.population_legend_men
+import myeurostatapp.feature_population.generated.resources.population_legend_women
+import myeurostatapp.feature_population.generated.resources.population_metric_men
+import myeurostatapp.feature_population.generated.resources.population_metric_total
+import myeurostatapp.feature_population.generated.resources.population_metric_women
+import myeurostatapp.feature_population.generated.resources.population_module_title
+import myeurostatapp.feature_population.generated.resources.population_pyramid_cohorts_label
+import myeurostatapp.feature_population.generated.resources.population_subtitle_total
+import myeurostatapp.feature_population.generated.resources.population_tagline
+import myeurostatapp.feature_population.generated.resources.population_year_label
+import org.jetbrains.compose.resources.stringResource
 
 /** Number of discrete steps reserved for the year slider. Slider needs steps + 2 = count. */
 private const val SLIDER_STEP_PADDING = 2
@@ -60,6 +80,7 @@ private const val SLIDER_STEP_PADDING = 2
  * into a demographic pyramid plus headline total, country chips, year scrubber,
  * and a Total/Men/Women segmented control.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
     val state by component.state.collectAsState()
@@ -75,8 +96,8 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
             .background(Euro.colors.paper),
     ) {
         ModuleAppBar(
-            title = "Population",
-            tagline = "Demography",
+            title = stringResource(Res.string.population_module_title),
+            tagline = stringResource(Res.string.population_tagline),
             accent = accent,
             onBack = onBack,
             year = appBarYear,
@@ -85,33 +106,39 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
             onRefresh = { component.onIntent(PopulationIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (val s = state) {
-                PopulationUiState.Loading -> LoadingShimmer(
-                    modifier = Modifier.padding(Euro.spacing.base),
-                )
-                is PopulationUiState.Empty -> EmptyState(
-                    headline = "no data",
-                    body = "No population data for the selected filters.",
-                )
-                is PopulationUiState.Error -> ErrorState(
-                    headline = "Couldn't load population",
-                    body = s.message,
-                    onRetry = if (s.canRetry) {
-                        { component.onIntent(PopulationIntent.Retry) }
-                    } else {
-                        null
-                    },
-                )
-                is PopulationUiState.Content -> PopulationContent(
-                    state = s,
-                    accent = accent,
-                    onIntent = component::onIntent,
-                )
+            PullToRefreshBox(
+                isRefreshing = state is PopulationUiState.Loading,
+                onRefresh = { component.onIntent(PopulationIntent.Refresh) },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                when (val s = state) {
+                    PopulationUiState.Loading -> LoadingShimmer(
+                        modifier = Modifier.padding(Euro.spacing.base),
+                    )
+                    is PopulationUiState.Empty -> EmptyState(
+                        headline = stringResource(Res.string.population_empty_headline),
+                        body = stringResource(Res.string.population_empty_body),
+                    )
+                    is PopulationUiState.Error -> ErrorState(
+                        headline = stringResource(Res.string.population_error_headline),
+                        body = s.error.localizedMessage(),
+                        onRetry = if (s.canRetry) {
+                            { component.onIntent(PopulationIntent.Retry) }
+                        } else {
+                            null
+                        },
+                    )
+                    is PopulationUiState.Content -> PopulationContent(
+                        state = s,
+                        accent = accent,
+                        onIntent = component::onIntent,
+                    )
+                }
             }
         }
         SourceFooter(
             dataset = "demo_pjangroup",
-            staleness = "fresh",
+            staleness = stringResource(Res.string.population_footer_staleness_fresh),
             stale = (state as? PopulationUiState.Content)?.isStale == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
@@ -154,122 +181,119 @@ private fun PopulationContent(
         ?: state.timeSeries.firstOrNull { it.countryCode == state.selectedCountry }?.countryName
         ?: state.selectedCountry
     val headlineYoY = computeYoY(state, snapshot)
-    val (headlineValue, headlineUnit) = formatHeadline(snapshot?.total ?: fallbackTotal(state))
+    val (headlineValue, headlineUnit) = headlineParts(snapshot?.total ?: fallbackTotal(state))
 
-    val windowWidth = LocalEuroWindowWidth.current
     val pyramidHeight = adaptiveChartHeight(compact = 220.dp, medium = 320.dp, expanded = 420.dp)
-    val maxW = adaptiveContentMaxWidth()
 
-    Box(
+    var showCountryPicker by remember { mutableStateOf(false) }
+
+    // Sections shared between the compact (phone) ordering and the ≥840dp
+    // two-pane split. Purely structural — all state stays on the component.
+    val headlineSection: @Composable () -> Unit = {
+        // stringResource is @Composable — resolve labels here, then assemble the
+        // plain-string subtitle. The "YoY" suffix lives in the resource so PL/UK
+        // can localize it ("r/r" / "р/р"); the signed percent stays code-built.
+        val totalLabel = stringResource(Res.string.population_subtitle_total)
+        val yoyLabel = headlineYoY?.let { stringResource(Res.string.population_headline_yoy, it) }
+        MetricHeadline(
+            value = headlineValue,
+            unit = headlineUnit,
+            subtitle = buildString {
+                append(totalLabel)
+                append(" · ")
+                append(headlineCountryName)
+                if (yoyLabel != null) {
+                    append(" · ")
+                    append(yoyLabel)
+                }
+            },
+            year = state.selectedYear.toString(),
+            accent = accent,
+        )
+    }
+    val metricSwitcherSection: @Composable () -> Unit = {
+        SegmentedControl(
+            options = listOf(
+                stringResource(Res.string.population_metric_total),
+                stringResource(Res.string.population_metric_men),
+                stringResource(Res.string.population_metric_women),
+            ),
+            selectedIndex = state.selectedMetric,
+            onSelect = { onIntent(PopulationIntent.SelectMetric(it)) },
+            activeColor = accent,
+        )
+    }
+    val pyramidSection: @Composable () -> Unit = {
+        EuroCard {
+            PyramidCardContent(
+                cohorts = cohorts,
+                accent = accent,
+                maleAlpha = maleAlpha,
+                femaleAlpha = femaleAlpha,
+                femaleColor = femaleColor,
+                snapshot = snapshot,
+                pyramidHeight = pyramidHeight,
+            )
+        }
+    }
+    val yearSection: @Composable () -> Unit = {
+        if (state.availableYears.isNotEmpty()) {
+            YearSlider(state = state, accent = accent, onIntent = onIntent)
+        }
+    }
+    val countriesSection: @Composable () -> Unit = {
+        if (state.availableCountries.isNotEmpty()) {
+            CountryChipsRow(
+                countries = state.availableCountries,
+                active = setOf(state.selectedCountry),
+                onSelect = { onIntent(PopulationIntent.SelectActiveCountry(it)) },
+                onAdd = { showCountryPicker = true },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+
+    AdaptiveTwoPane(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .then(
-                    if (maxW != Dp.Unspecified) Modifier.widthIn(max = maxW) else Modifier,
-                )
-                .padding(horizontal = Euro.spacing.base),
-            verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-        ) {
+        controls = {
+            Spacer(Modifier.height(Euro.spacing.xs))
+            metricSwitcherSection()
+            yearSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+        content = {
             if (state.isStale) {
                 StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
             }
-
             Spacer(Modifier.height(Euro.spacing.xs))
-
-            MetricHeadline(
-                value = headlineValue,
-                unit = headlineUnit,
-                subtitle = buildString {
-                    append("total · ")
-                    append(headlineCountryName)
-                    if (headlineYoY != null) {
-                        append(" · ")
-                        append(headlineYoY)
-                    }
-                },
-                year = state.selectedYear.toString(),
-                accent = accent,
-            )
-
-            SegmentedControl(
-                options = listOf("Total", "Men", "Women"),
-                selectedIndex = state.selectedMetric,
-                onSelect = { onIntent(PopulationIntent.SelectMetric(it)) },
-                activeColor = accent,
-            )
-
-            if (windowWidth == EuroWindowWidth.Expanded) {
-                // Two-pane: pyramid on the left, country/year controls on the right.
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-                ) {
-                    EuroCard(modifier = Modifier.weight(1f)) {
-                        PyramidCardContent(
-                            cohorts = cohorts,
-                            accent = accent,
-                            maleAlpha = maleAlpha,
-                            femaleAlpha = femaleAlpha,
-                            femaleColor = femaleColor,
-                            snapshot = snapshot,
-                            pyramidHeight = pyramidHeight,
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(Euro.spacing.m),
-                    ) {
-                        if (state.availableYears.isNotEmpty()) {
-                            YearSlider(state = state, accent = accent, onIntent = onIntent)
-                        }
-                        CountrySectionExpanded(state = state, onIntent = onIntent)
-                    }
-                }
-            } else {
-                EuroCard {
-                    PyramidCardContent(
-                        cohorts = cohorts,
-                        accent = accent,
-                        maleAlpha = maleAlpha,
-                        femaleAlpha = femaleAlpha,
-                        femaleColor = femaleColor,
-                        snapshot = snapshot,
-                        pyramidHeight = pyramidHeight,
-                    )
-                }
-
-                if (state.availableYears.isNotEmpty()) {
-                    YearSlider(state = state, accent = accent, onIntent = onIntent)
-                }
-
-                if (state.availableCountries.isNotEmpty()) {
-                    var showCountryPicker by remember { mutableStateOf(false) }
-                    CountryChipsRow(
-                        countries = state.availableCountries,
-                        active = setOf(state.selectedCountry),
-                        onSelect = { onIntent(PopulationIntent.SelectActiveCountry(it)) },
-                        onAdd = { showCountryPicker = true },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    if (showCountryPicker) {
-                        CountryPickerSheet(
-                            selected = state.availableCountries.toSet(),
-                            onConfirm = { selected ->
-                                onIntent(PopulationIntent.SelectCountries(selected.toList()))
-                                showCountryPicker = false
-                            },
-                            onDismiss = { showCountryPicker = false },
-                        )
-                    }
-                }
-            }
-
+            headlineSection()
+            pyramidSection()
             Spacer(Modifier.height(Euro.spacing.s))
-        }
+        },
+        compact = {
+            if (state.isStale) {
+                StaleBanner(modifier = Modifier.padding(top = Euro.spacing.s))
+            }
+            Spacer(Modifier.height(Euro.spacing.xs))
+            headlineSection()
+            metricSwitcherSection()
+            pyramidSection()
+            yearSection()
+            countriesSection()
+            Spacer(Modifier.height(Euro.spacing.s))
+        },
+    )
+
+    if (showCountryPicker) {
+        CountryPickerSheet(
+            selected = state.availableCountries.toSet(),
+            onConfirm = { selected ->
+                onIntent(PopulationIntent.SelectCountries(selected.toList()))
+                showCountryPicker = false
+            },
+            onDismiss = { showCountryPicker = false },
+        )
     }
 }
 
@@ -295,8 +319,12 @@ private fun PyramidCardContent(
                     LoadingShimmer(height = pyramidHeight)
                 } else {
                     EmptyState(
-                        headline = "No cohort data",
-                        body = "No 5-year age cohort data available for ${snapshot.countryName} ${snapshot.year}.",
+                        headline = stringResource(Res.string.population_cohort_empty_headline),
+                        body = stringResource(
+                            Res.string.population_cohort_empty_body,
+                            snapshot.countryName,
+                            snapshot.year,
+                        ),
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -318,44 +346,23 @@ private fun PyramidCardContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "5-yr cohorts",
+                text = stringResource(Res.string.population_pyramid_cohorts_label),
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
             )
             LegendDot(
                 color = accent.copy(alpha = maleAlpha),
-                label = "men ${formatLargeNumber(snapshot?.totalMale ?: 0L)}",
+                label = stringResource(
+                    Res.string.population_legend_men,
+                    formatLargeNumber(snapshot?.totalMale ?: 0L),
+                ),
             )
             LegendDot(
                 color = femaleColor.copy(alpha = femaleAlpha),
-                label = "women ${formatLargeNumber(snapshot?.totalFemale ?: 0L)}",
-            )
-        }
-    }
-}
-
-@Composable
-private fun CountrySectionExpanded(
-    state: PopulationUiState.Content,
-    onIntent: (PopulationIntent) -> Unit,
-) {
-    if (state.availableCountries.isNotEmpty()) {
-        var showCountryPicker by remember { mutableStateOf(false) }
-        CountryChipsRow(
-            countries = state.availableCountries,
-            active = setOf(state.selectedCountry),
-            onSelect = { onIntent(PopulationIntent.SelectActiveCountry(it)) },
-            onAdd = { showCountryPicker = true },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (showCountryPicker) {
-            CountryPickerSheet(
-                selected = state.availableCountries.toSet(),
-                onConfirm = { selected ->
-                    onIntent(PopulationIntent.SelectCountries(selected.toList()))
-                    showCountryPicker = false
-                },
-                onDismiss = { showCountryPicker = false },
+                label = stringResource(
+                    Res.string.population_legend_women,
+                    formatLargeNumber(snapshot?.totalFemale ?: 0L),
+                ),
             )
         }
     }
@@ -379,7 +386,7 @@ private fun YearSlider(
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
     ) {
         Text(
-            text = "year",
+            text = stringResource(Res.string.population_year_label),
             style = Euro.typography.bodySmall,
             color = Euro.colors.muted,
         )
@@ -428,7 +435,15 @@ private fun fallbackTotal(state: PopulationUiState.Content): Long {
     return point?.totalPopulation ?: 0L
 }
 
-/** Year-over-year percent change for the selected (country, year), or null when not computable. */
+/**
+ * Year-over-year percent change for the selected (country, year) as a signed
+ * percent string (e.g. `"+0.3%"`), or null when not computable. Uses an ASCII
+ * `+`/`-` sign (not the Unicode minus used elsewhere) to match this screen's
+ * existing subtitle typography; magnitude rounding delegates to the shared
+ * [formatDecimal]. The localized "YoY" suffix is applied at the composable
+ * call site (`population_headline_yoy`) — this helper is not composable and
+ * must stay resource-free.
+ */
 private fun computeYoY(
     state: PopulationUiState.Content,
     snapshot: PopulationSnapshot?,
@@ -442,45 +457,16 @@ private fun computeYoY(
     if (previous == 0L) return null
     val pct = (current - previous).toDouble() / previous.toDouble() * 100.0
     val sign = if (pct >= 0) "+" else "-"
-    val absPct = abs(pct)
-    val whole = absPct.toInt()
-    val tenths = ((absPct - whole) * 10).toInt()
-    return "${sign}${whole}.${tenths}% YoY"
+    return "${sign}${formatDecimal(abs(pct), 1)}%"
 }
 
 /**
  * Splits a population count into a (value, unit) pair for [MetricHeadline].
- * 83_200_000 -> "83.2" + "M". 1_500_000_000 -> "1.5" + "B".
+ * 83_200_000 -> "83.2" + "M". 1_500_000_000 -> "1.5" + "B". Delegates to the
+ * shared [formatLargeNumberParts], preserving this screen's "non-positive
+ * total = no data" convention.
  */
-private fun formatHeadline(value: Long): Pair<String, String> {
+private fun headlineParts(value: Long): Pair<String, String> {
     if (value <= 0L) return "—" to ""
-    return when {
-        value >= 1_000_000_000L -> {
-            val v = value / 1_000_000_000.0
-            formatOneDecimal(v) to "B"
-        }
-        value >= 1_000_000L -> {
-            val v = value / 1_000_000.0
-            formatOneDecimal(v) to "M"
-        }
-        value >= 1_000L -> {
-            val v = value / 1_000.0
-            formatOneDecimal(v) to "K"
-        }
-        else -> value.toString() to ""
-    }
-}
-
-/** Compact human-readable count for legends: "40.9 M", "1.2 B", "873". */
-private fun formatLargeNumber(value: Long): String {
-    if (value <= 0L) return "—"
-    val (v, u) = formatHeadline(value)
-    return if (u.isEmpty()) v else "$v $u"
-}
-
-/** Round to 1 decimal without relying on platform-specific number formatting. */
-private fun formatOneDecimal(v: Double): String {
-    val whole = v.toInt()
-    val tenths = ((v - whole) * 10).toInt()
-    return "${whole}.${tenths}"
+    return formatLargeNumberParts(value)
 }

@@ -16,6 +16,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -87,7 +89,7 @@ class EconomyApiServiceImplTest {
 
     private fun buildService(
         gdpStatus: HttpStatusCode = HttpStatusCode.OK,
-        onRequest: (HttpRequestData) -> Unit = {},
+        onRequest: suspend (HttpRequestData) -> Unit = {},
     ): EconomyApiServiceImpl {
         val engine = MockEngine { request ->
             onRequest(request)
@@ -118,11 +120,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun fetchEconomy_gdpRequestTargets_nama_10_gdp() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2020))
 
+        val captured = recorder.all()
         assertNotNull(captured.firstOrNull())
         val gdpReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
@@ -143,11 +146,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun fetchEconomy_gdpRequest_geoParamsPresent() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL", "DE"), 2020..2020))
 
+        val captured = recorder.all()
         // Find GDP request (primary — not HICP or deficit)
         val gdpReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
@@ -166,11 +170,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun fetchEconomy_gdpRequest_timeParamsPresentForEachYear() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2022))
 
+        val captured = recorder.all()
         val gdpReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("hicp") && !urlStr.contains("prc") &&
@@ -189,11 +194,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun fetchEconomy_gdpRequest_naItemIsB1GQ() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2020))
 
+        val captured = recorder.all()
         val gdpReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("hicp") && !urlStr.contains("prc") &&
@@ -210,11 +216,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun fetchEconomy_gdpRequest_unitParamMatchesQueryUnit() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2020, unit = EconomyUnit.CP_MEUR))
 
+        val captured = recorder.all()
         val gdpReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             !urlStr.contains("hicp") && !urlStr.contains("prc") &&
@@ -231,11 +238,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun fetchEconomy_makeThreeParallelRequests() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2020))
 
+        val captured = recorder.all()
         assertEquals(3, captured.size, "Service must make exactly 3 requests (GDP + HICP + deficit)")
     }
 
@@ -312,11 +320,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun hicp_request_pins_coicop_cp00_not_i15() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2020))
 
+        val captured = recorder.all()
         val hicpReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             urlStr.contains("hicp") || urlStr.contains("prc")
@@ -336,11 +345,12 @@ class EconomyApiServiceImplTest {
 
     @Test
     fun deficit_request_pins_sector_s13_na_item_b9() = runTest {
-        val captured = mutableListOf<HttpRequestData>()
-        val service = buildService(onRequest = { captured += it })
+        val recorder = RequestRecorder()
+        val service = buildService(onRequest = recorder::record)
 
         service.fetchEconomy(EconomyQuery(listOf("PL"), 2020..2020))
 
+        val captured = recorder.all()
         val deficitReq = captured.firstOrNull { req ->
             val urlStr = req.url.toString()
             urlStr.contains("gov") || urlStr.contains("edpt")
@@ -352,4 +362,22 @@ class EconomyApiServiceImplTest {
         val naItemValues = deficitReq.url.parameters.getAll("na_item") ?: emptyList()
         assertTrue("B9" in naItemValues, "na_item must be B9, got: $naItemValues")
     }
+}
+
+/**
+ * Thread-safe request recorder: MockEngine may invoke handlers concurrently on
+ * different threads (the service fires 3 parallel requests), so unsynchronized
+ * appends to a plain list can lose elements.
+ */
+private class RequestRecorder {
+    private val mutex = Mutex()
+    private val requests = mutableListOf<HttpRequestData>()
+
+    /** Records one intercepted request under the mutex. */
+    suspend fun record(request: HttpRequestData) {
+        mutex.withLock { requests += request }
+    }
+
+    /** Returns a snapshot of all recorded requests. */
+    suspend fun all(): List<HttpRequestData> = mutex.withLock { requests.toList() }
 }

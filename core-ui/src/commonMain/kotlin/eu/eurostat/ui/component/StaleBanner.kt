@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_stale_banner_message
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Soft warn-tinted banner shown when cached data is displayed while a refresh
@@ -26,7 +29,7 @@ import eu.eurostat.ui.theme.Euro
 @Composable
 fun StaleBanner(
     modifier: Modifier = Modifier,
-    message: String = "showing cached data · refreshing…",
+    message: String = stringResource(Res.string.ui_stale_banner_message),
 ) {
     val shape: RoundedCornerShape = RoundedCornerShape(10.dp)
     val warn = Euro.colors.warn

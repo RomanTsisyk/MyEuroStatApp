@@ -4,6 +4,7 @@ import eu.eurostat.core.common.di.coreCommonModule
 import eu.eurostat.core.database.di.coreDatabaseModule
 import eu.eurostat.core.navigation.di.coreNavigationModule
 import eu.eurostat.core.network.di.coreNetworkModule
+import eu.eurostat.feature.compare.di.featureCompareModule
 import eu.eurostat.feature.economy.di.featureEconomyModule
 import eu.eurostat.feature.environment.di.featureEnvironmentModule
 import eu.eurostat.feature.population.di.featurePopulationModule
@@ -31,4 +32,5 @@ fun appModules(): List<Module> = listOf(
     featureScienceModule(),
     featureSettingsModule(),
     featureOverviewModule(),
+    featureCompareModule(),
 )

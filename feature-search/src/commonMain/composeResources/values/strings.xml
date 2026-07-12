@@ -1,0 +1,20 @@
+<resources>
+    <!-- SearchBar -->
+    <string name="search_bar_placeholder">Search indicators</string>
+    <string name="search_bar_back">Back</string>
+    <string name="search_bar_clear">Clear query</string>
+
+    <!-- EmptyState (no matches) -->
+    <string name="search_empty_headline">No matches</string>
+    <string name="search_empty_body">No indicator matches “%1$s”. Try a broader term like “inflation” or “emissions”.</string>
+
+    <!-- Module names (SectionHeader eyebrow + ModuleChip label; order matches SearchModule) -->
+    <string name="search_module_population">Population</string>
+    <string name="search_module_economy">Economy</string>
+    <string name="search_module_environment">Environment</string>
+    <string name="search_module_trade">Trade</string>
+    <string name="search_module_transport">Transport</string>
+    <string name="search_module_tourism">Tourism</string>
+    <string name="search_module_social">Social</string>
+    <string name="search_module_science">Science</string>
+</resources>

@@ -60,6 +60,20 @@ so M1 now concentrates squarely on closing the iOS runtime gap.
   shows one live metric per module, each tile degrading independently so a single
   broken dataset never breaks the landing. Unit-tested with 8 fake repositories.
 
+*Post-submission update (July 2026, before review):* the iOS runtime gap this
+milestone targets has been largely closed on the author's own time. The stub
+Xcode wrapper was replaced with a real project generated from `iosApp/project.yml`
+(XcodeGen, manifest checked in), the toolchain root cause was identified
+(`xcode-select` pointing at CommandLineTools) and the integration gotchas fixed
+(`-lsqlite3`, `CADisableMinimumFrameDurationOnPhone`, Kotlin/Native `doInit`
+export naming, JAVA_HOME pinning in the Xcode build phase). The app now builds
+with `xcodebuild` and launches on the iPhone 17 simulator rendering live
+Eurostat data. Still open from this milestone: physical-device verification,
+TestFlight distribution, the public `RUN_REPORT.md` with the 8-tab walk-through,
+and green `:composeApp:build` across all targets. At MoU time the author
+proposes rescoping the freed hours toward the stretch list at the bottom of
+this document.
+
 ### Acceptance
 
 - `./gradlew :composeApp:build` passes ALL targets including iOS (the iOS
@@ -97,6 +111,20 @@ country.
 
 - Tap-the-map variant of the picker (defer to a future milestone)
 
+*Post-submission update (July 2026, before review):* partially pre-delivered on
+the author's own time: a searchable `CountryPickerSheet` now opens from the
+`+ add` chip on every feature screen (Unicode-emoji flags for now — the bundled
+SVG flag set stays in this milestone), and the economy screen ships the
+multi-country overlay with an index-stable series palette plus the
+"% of base year" (Indexed 100) normalization toggle, unit-tested. The dedicated
+cross-module comparison screen has now shipped too, also on the author's own
+time: `feature-compare` lets a user pick one of 8 headline indicators from a
+dropdown and 2-5 countries, overlaid on one chart with the same series-palette
+colors and Indexed-100 toggle, reachable from a pill on the Overview header.
+Unit-tested including on-device-equivalent `iosSimulatorArm64Test`. Still open
+from this milestone: bundled SVG flags via Compose Resources (the last item —
+everything else in M2's scope is now delivered).
+
 ---
 
 ## M3 — Tablet & desktop responsive + PL/UK localization
@@ -129,6 +157,24 @@ labels natively for many dimensions; PL + UK need our translation.
 - All 8 screens render correctly at 360 / 600 / 840 / 1280 dp widths
 - Zero hardcoded user-facing strings in feature Screens
 - Language picker in Settings (placeholder today) switches PL/UK/EN at runtime
+
+*Post-submission update (July 2026, before review):* the locale-aware number
+formatting deliverable listed above shipped early, exactly as scoped:
+`core-ui/format/NumberFormat.kt` with per-platform decimal/grouping separators
+(expect/actual on Android/desktop/iOS), one rounding convention, and all eight
+screens migrated off their inline formatters (29-case test suite). The Settings
+screen is also no longer a placeholder — theme/language/default-country persist
+in SQLDelight and the theme preference is applied app-wide. Since then, and
+still on the author's own time ahead of the funded window, the string
+extraction has been completed for every module (all 8 feature modules +
+core-ui, including the error-message copy that used to be a single English
+string), with EN/PL/UK Compose Resources `strings.xml` files throughout. The
+language preference is now also *applied* at runtime — a `LocalAppLocale`
+expect/actual per platform means the Settings language picker switches the
+UI language immediately instead of on next launch. What remains funded by
+this milestone: the responsive layout pass at 360/600/840/1280 dp, and a
+native-speaker review of the PL translations (the author's working knowledge
+of Polish, not native fluency).
 
 ### Out of scope
 
@@ -166,6 +212,27 @@ That's not "for citizens."
 - `git tag v1.0.0 && git push --tags` produces all four native artifacts as a GitHub Release
 - Android APK installs on a stock Pixel from F-Droid inclusion (after F-Droid build queue)
 - Tester on macOS / Linux / Windows can double-click the installer and launch the app
+
+*Post-submission update (July 2026, before review):* a first slice of this
+milestone has also been pre-delivered on the author's own time. The
+`nativeDistributions` block (`Dmg`/`Msi`/`Deb`, package name "EU Stats",
+bundle ID `eu.eurostat.app`) is configured in `composeApp/build.gradle.kts`
+with per-OS icons generated from the store icon; `packageDmg` has been
+verified locally (`EU Stats-1.0.0.dmg`, 122 MB). CI
+(`.github/workflows/build.yml`) was extended in step: it now triggers on
+the `develop-v*` branches the author actually pushes to, runs the release
+APK build (`assembleRelease`, exercising R8/proguard) on every push instead
+of only at tag time, runs the real `iosSimulatorArm64Test` suite rather than
+a compile-only iOS gate, and gained a dedicated desktop job smoke-testing
+`packageUberJarForCurrentOS`. iOS also gained an app icon (previously
+missing entirely), and Android/Settings/iOS version strings were synced to
+0.6.0. All of this is unsigned, uncertified, dev-time-only work — it does
+not touch the certificate/notarization scope this milestone explicitly
+excludes. Still open and squarely the funded scope of M4: a real Android
+release signing keystore (currently the documented debug-keystore
+fallback), a tag-triggered release workflow that builds and uploads all
+four artifacts to a GitHub Release, F-Droid inclusion-queue submission, and
+physical-device verification.
 
 ### Notes on signing
 

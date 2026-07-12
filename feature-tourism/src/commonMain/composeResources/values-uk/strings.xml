@@ -1,0 +1,40 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="tourism_module_title">Туризм</string>
+    <string name="tourism_tagline">Дозвілля</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="tourism_empty_headline">Немає даних</string>
+    <string name="tourism_empty_body">Немає даних про туризм для вибраних фільтрів.</string>
+
+    <!-- EmptyState (content-level: no active-country series) -->
+    <string name="tourism_active_empty_body">Немає даних про туризм для вибраної країни.</string>
+
+    <!-- ErrorState -->
+    <string name="tourism_error_headline">Не вдалося завантажити дані про туризм</string>
+
+    <!-- Residence chip row -->
+    <string name="tourism_chip_domestic">Внутрішні</string>
+    <string name="tourism_chip_foreign">Іноземні</string>
+    <string name="tourism_chip_total">Усього</string>
+
+    <!-- MetricHeadline subtitle (per residence) -->
+    <string name="tourism_headline_subtitle_domestic">внутрішні ночівлі · розміщення</string>
+    <string name="tourism_headline_subtitle_foreign">іноземні ночівлі · розміщення</string>
+    <string name="tourism_headline_subtitle_total">усі ночівлі · розміщення</string>
+
+    <!-- Stacked-bar nights card -->
+    <string name="tourism_bar_caption">ночівлі · з накопиченням за резидентністю</string>
+    <string name="tourism_legend_domestic">внутрішні</string>
+    <string name="tourism_legend_foreign">іноземні</string>
+
+    <!-- Seasonality heatmap card -->
+    <string name="tourism_heatmap_caption">сезонність · місяці × роки</string>
+    <string name="tourism_month_jan">січ</string>
+    <string name="tourism_month_jul">лип</string>
+    <string name="tourism_month_dec">гру</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="tourism_footer_staleness_fresh">актуальні</string>
+    <string name="tourism_footer_staleness_stale">неактуальні</string>
+</resources>

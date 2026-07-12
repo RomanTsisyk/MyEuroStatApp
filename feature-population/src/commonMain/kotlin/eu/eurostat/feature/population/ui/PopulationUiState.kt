@@ -1,5 +1,6 @@
 package eu.eurostat.feature.population.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.population.domain.PopulationQuery
 import eu.eurostat.feature.population.domain.PopulationSnapshot
 import eu.eurostat.feature.population.domain.PopulationTimeSeries
@@ -34,5 +35,14 @@ sealed interface PopulationUiState {
     ) : PopulationUiState
 
     data class Empty(val query: PopulationQuery) : PopulationUiState
-    data class Error(val message: String, val canRetry: Boolean) : PopulationUiState
+
+    /**
+     * Error branch.
+     *
+     * @property error Raw [AppError] cause — the screen resolves user-facing
+     *   text via [eu.eurostat.ui.component.states.localizedMessage], so the
+     *   copy follows the app locale (including runtime language switches).
+     * @property canRetry Whether the [PopulationIntent.Retry] action should be offered.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : PopulationUiState
 }

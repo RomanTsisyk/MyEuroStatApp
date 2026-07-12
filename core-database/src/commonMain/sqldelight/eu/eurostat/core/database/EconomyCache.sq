@@ -27,3 +27,6 @@ WHERE country_code IN ? AND year BETWEEN ? AND ? AND unit = ?;
 deleteByCountriesAndYears:
 DELETE FROM EconomyCacheEntity
 WHERE country_code IN ? AND year BETWEEN ? AND ? AND unit = ?;
+
+clearAll:
+DELETE FROM EconomyCacheEntity;

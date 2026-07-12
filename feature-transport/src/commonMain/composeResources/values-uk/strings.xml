@@ -1,0 +1,40 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="transport_module_title">Транспорт</string>
+    <string name="transport_module_tagline">Мобільність</string>
+
+    <!-- ErrorState -->
+    <string name="transport_error_headline">Не вдалося завантажити</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="transport_empty_headline">Немає даних</string>
+    <string name="transport_empty_body">Немає даних про транспорт для вибраних фільтрів.</string>
+
+    <!-- MetricHeadline subtitle -->
+    <string name="transport_mode_label_road">автомобільний</string>
+    <string name="transport_headline_label_passengers">пасажири</string>
+
+    <!-- Unit suffixes (headline + stat tiles + panel captions) -->
+    <string name="transport_unit_billion">млрд</string>
+    <string name="transport_unit_million">млн</string>
+
+    <!-- Mode toggle (PillToggle) — also reused as the small-multiples panel caption prefix.
+         Kept short (abbreviated) because PillToggle has no maxLines/overflow/scroll and
+         shares a fillMaxWidth() row with the log switch. -->
+    <string name="transport_mode_toggle_road">АВТО</string>
+    <string name="transport_mode_toggle_air">АВІА</string>
+    <string name="transport_mode_toggle_all">УСІ</string>
+
+    <!-- Log-scale switch -->
+    <string name="transport_toggle_log_label">лог</string>
+
+    <!-- Stat tiles -->
+    <string name="transport_tile_label_air">авіаційний</string>
+    <string name="transport_tile_label_sea">морський</string>
+    <string name="transport_tile_sea_value">н/д</string>
+    <string name="transport_tile_sea_delta">портові дані</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="transport_footer_staleness_fresh">актуальні</string>
+    <string name="transport_footer_staleness_stale">застарілі</string>
+</resources>

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -45,7 +46,9 @@ fun EurostatDivergingBarChart(
         Box(modifier = modifier)
         return
     }
-    val maxSide = data.maxOf { maxOf(it.exports, it.imports) }.coerceAtLeast(0.0001f)
+    val maxSide = remember(data) {
+        data.maxOf { maxOf(it.exports, it.imports) }.coerceAtLeast(0.0001f)
+    }
     Canvas(modifier = modifier) {
         val n = data.size
         val slot = size.width / n

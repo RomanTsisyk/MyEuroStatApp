@@ -27,3 +27,6 @@ WHERE country_code IN ? AND year BETWEEN ? AND ? AND partner = ?;
 deleteByCountriesAndYears:
 DELETE FROM TradeCacheEntity
 WHERE country_code IN ? AND year BETWEEN ? AND ? AND partner = ?;
+
+clearAll:
+DELETE FROM TradeCacheEntity;

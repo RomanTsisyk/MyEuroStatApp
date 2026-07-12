@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>EU Stats Multiplatform — Dados do Eurostat, em todos os ecrãs.</title>
-  <meta name="description" content="Um cliente móvel e de secretária, independente e open-source, para a API pública do Eurostat. Oito módulos temáticos — economia, população, ambiente, comércio, transporte, turismo, social, ciência — numa única base de código Kotlin Multiplatform." />
-  <meta name="theme-color" content="#2F4969" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#0E0D0C" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="Um cliente móvel e de secretária, independente e open-source, para a API pública do Eurostat. Oito módulos temáticos, comparação entre países e pesquisa de indicadores — numa única base de código Kotlin Multiplatform para Android, iOS, macOS, Linux e Windows." />
+  <meta name="theme-color" content="#004494" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0B1120" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   <meta property="og:title" content="EU Stats Multiplatform" />
   <meta property="og:description" content="Dados do Eurostat, em todos os ecrãs. Cliente open-source para a API pública do Eurostat, desenvolvido com Kotlin Multiplatform." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="../gifs/overview.gif" />
+  <meta property="og:image" content="https://romantsisyk.github.io/MyEuroStatApp/assets/og.png" />
   <meta property="og:url" content="https://romantsisyk.github.io/MyEuroStatApp/pt/" />
   <meta property="og:locale" content="pt_PT" />
   <meta property="og:locale:alternate" content="en_GB" />
@@ -24,8 +24,8 @@
   <meta property="og:locale:alternate" content="uk_UA" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="EU Stats Multiplatform" />
-  <meta name="twitter:description" content="Cliente Kotlin Multiplatform open-source para a API pública do Eurostat. 8 módulos · Android · iOS · Desktop." />
-  <meta name="twitter:image" content="../gifs/overview.gif" />
+  <meta name="twitter:description" content="Cliente Kotlin Multiplatform open-source para a API pública do Eurostat. 8 módulos · Comparar · Pesquisar · Android · iOS · Desktop." />
+  <meta name="twitter:image" content="https://romantsisyk.github.io/MyEuroStatApp/assets/og.png" />
   <link rel="canonical" href="https://romantsisyk.github.io/MyEuroStatApp/pt/" />
   <link rel="alternate" hreflang="en" href="https://romantsisyk.github.io/MyEuroStatApp/" />
   <link rel="alternate" hreflang="de" href="https://romantsisyk.github.io/MyEuroStatApp/de/" />
@@ -38,6 +38,7 @@
   <link rel="alternate" hreflang="uk" href="https://romantsisyk.github.io/MyEuroStatApp/uk/" />
   <link rel="alternate" hreflang="x-default" href="https://romantsisyk.github.io/MyEuroStatApp/" />
   <link rel="sitemap" type="application/xml" href="../sitemap.xml" />
+  <link rel="stylesheet" href="../assets/site.css" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -47,11 +48,11 @@
         "name": "EU Stats Multiplatform",
         "applicationCategory": "EducationalApplication",
         "operatingSystem": "Android, iOS, macOS, Linux, Windows",
-        "description": "Cliente Kotlin Multiplatform open-source e independente para a API pública do Eurostat. Visualiza dados estatísticos europeus em oito módulos temáticos: economia, população, ambiente, comércio, transporte, turismo, social, ciência.",
+        "description": "Cliente Kotlin Multiplatform open-source e independente para a API pública do Eurostat. Visualiza dados estatísticos europeus em oito módulos temáticos — economia, população, ambiente, comércio, transporte, turismo, social, ciência — com comparação entre países, pesquisa de indicadores e uma interface comutável em tempo real entre inglês, polaco e ucraniano.",
         "url": "https://romantsisyk.github.io/MyEuroStatApp/",
         "license": "https://www.gnu.org/licenses/agpl-3.0.html",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
-        "softwareVersion": "0.4.0",
+        "softwareVersion": "0.7.0-dev",
         "inLanguage": ["en", "de", "fr", "it", "es", "pl", "nl", "pt", "uk"],
         "author": { "@type": "Person", "name": "Roman Tsisyk" },
         "isAccessibleForFree": true,
@@ -69,753 +70,10 @@
     ]
   }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" />
-  <style>
-    /* -------- tokens (light) -------- */
-    :root {
-      --paper: #F4F1EA;
-      --paper-alt: #FFFFFF;
-      --surface-2: #EAE6DD;
-      --ink: #1A1817;
-      --ink-subtle: #3A352E;
-      --muted: #6B6359;
-      --accent: #2F4969;
-      --accent-soft: #C6D0DC;
-      --warn: #C25A35;
-      --border: rgba(0, 0, 0, 0.07);
-      --border-strong: rgba(0, 0, 0, 0.12);
-      --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 12px rgba(0, 0, 0, .04);
-
-      /* module accents (light) */
-      --mod-economy: #2F4969;
-      --mod-population: #5E6B58;
-      --mod-environment: #6B8A76;
-      --mod-trade: #7A5C46;
-      --mod-transport: #4A4A55;
-      --mod-tourism: #B06A3A;
-      --mod-social: #7D5E76;
-      --mod-science: #4A6B7A;
-
-      /* spacing scale */
-      --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px;
-      --s-6: 24px; --s-8: 32px; --s-12: 48px; --s-16: 64px; --s-24: 96px;
-
-      /* radii */
-      --r-card: 12px;
-      --r-hero: 24px;
-      --r-pill: 999px;
-
-      /* type */
-      --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
-    }
-
-    /* -------- tokens (dark) -------- */
-    html[data-theme="dark"] {
-      --paper: #0E0D0C;
-      --paper-alt: #1A1816;
-      --surface-2: #252320;
-      --ink: #F5F2EB;
-      --ink-subtle: #E8E2D5;
-      --muted: #9C948A;
-      --accent: #7DA0C9;
-      --accent-soft: #2F4969;
-      --warn: #C25A35;
-      --border: rgba(255, 255, 255, 0.10);
-      --border-strong: rgba(255, 255, 255, 0.18);
-      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 14px rgba(0, 0, 0, .35);
-
-      --mod-economy: #7DA0C9;
-      --mod-population: #9CB394;
-      --mod-environment: #9FC3AC;
-      --mod-trade: #C2967A;
-      --mod-transport: #A8A8B8;
-      --mod-tourism: #E69664;
-      --mod-social: #C599BC;
-      --mod-science: #8FB4C7;
-    }
-
-    /* -------- base -------- */
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--paper);
-      color: var(--ink);
-      font-family: var(--font-sans);
-      font-size: 16px;
-      line-height: 1.65;
-      font-weight: 400;
-      font-feature-settings: 'ss01', 'cv01', 'cv11';
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      transition: background-color .25s ease, color .25s ease;
-    }
-    a { color: inherit; text-decoration: none; }
-    h1, h2, h3, h4 {
-      font-family: var(--font-sans);
-      color: var(--ink);
-      letter-spacing: -0.015em;
-      line-height: 1.15;
-      margin: 0;
-      font-weight: 700;
-    }
-    p { margin: 0; color: var(--ink-subtle); }
-    code, .mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
-    .num { font-variant-numeric: tabular-nums; }
-
-    .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 var(--s-6);
-    }
-
-    /* -------- nav -------- */
-    .nav {
-      position: sticky; top: 0; z-index: 50;
-      background: color-mix(in srgb, var(--paper) 86%, transparent);
-      -webkit-backdrop-filter: saturate(140%) blur(14px);
-      backdrop-filter: saturate(140%) blur(14px);
-      border-bottom: 1px solid var(--border);
-    }
-    .nav-inner {
-      display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
-    }
-    .brand { display: flex; align-items: baseline; gap: 10px; }
-    .brand-mark {
-      font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
-    }
-    .brand-sub {
-      font-size: 12px; color: var(--muted);
-      font-family: var(--font-mono); font-weight: 400;
-    }
-    .nav-links { display: flex; align-items: center; gap: var(--s-6); }
-    .nav-links a {
-      color: var(--ink-subtle);
-      font-size: 14px;
-      font-weight: 500;
-      transition: color .15s ease;
-    }
-    .nav-links a:hover { color: var(--ink); }
-    .nav-links .gh {
-      padding: 6px 12px;
-      border-radius: var(--r-pill);
-      border: 1px solid var(--border-strong);
-      color: var(--ink);
-    }
-    .nav-links .gh:hover { background: var(--surface-2); }
-    .theme-toggle {
-      width: 36px; height: 36px;
-      display: inline-grid; place-items: center;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      color: var(--ink-subtle);
-      cursor: pointer;
-      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-    }
-    .theme-toggle:hover { background: var(--surface-2); color: var(--ink); }
-    .theme-toggle svg { width: 16px; height: 16px; }
-    html[data-theme="light"] .icon-moon { display: block; }
-    html[data-theme="light"] .icon-sun  { display: none; }
-    html[data-theme="dark"]  .icon-moon { display: none; }
-    html[data-theme="dark"]  .icon-sun  { display: block; }
-    /* Language switcher — minimal native <select> styled as a pill */
-    .lang-switch {
-      appearance: none; -webkit-appearance: none; -moz-appearance: none;
-      height: 36px;
-      padding: 0 28px 0 12px;
-      background:
-        transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%236B6359" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      color: var(--ink-subtle);
-      font: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
-    }
-    .lang-switch:hover { background-color: var(--surface-2); color: var(--ink); }
-    .lang-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    html[data-theme="dark"] .lang-switch {
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="%239C948A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-    }
-    @media (max-width: 720px) {
-      .nav-links a:not(.gh) { display: none; }
-    }
-
-    /* -------- hero -------- */
-    .hero {
-      min-height: calc(100vh - 64px);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--s-12);
-      align-items: center;
-      padding: var(--s-16) 0;
-    }
-    @media (max-width: 960px) {
-      .hero { grid-template-columns: 1fr; min-height: auto; padding: var(--s-12) 0; gap: var(--s-8); }
-    }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      font-size: 12px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--muted);
-      background: var(--paper-alt);
-      margin-bottom: var(--s-6);
-    }
-    .eyebrow .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent);
-      display: inline-block;
-    }
-    .hero h1 {
-      font-size: clamp(40px, 6.4vw, 72px);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.04;
-      margin-bottom: var(--s-6);
-    }
-    .hero .lede {
-      font-size: clamp(17px, 1.4vw, 19px);
-      color: var(--ink-subtle);
-      max-width: 56ch;
-      line-height: 1.6;
-      margin-bottom: var(--s-8);
-    }
-    .cta-row {
-      display: flex; flex-wrap: wrap; gap: var(--s-3);
-      margin-bottom: var(--s-6);
-    }
-    .btn {
-      display: inline-flex; align-items: center; gap: var(--s-2);
-      padding: 12px 20px;
-      border-radius: var(--r-pill);
-      font-size: 15px; font-weight: 500;
-      transition: transform .12s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
-      cursor: pointer; border: 1px solid transparent;
-    }
-    .btn:active { transform: translateY(1px); }
-    .btn-primary { background: var(--ink); color: var(--paper); }
-    .btn-primary:hover { background: color-mix(in srgb, var(--ink) 88%, var(--accent)); }
-    .btn-secondary {
-      background: transparent;
-      color: var(--ink);
-      border-color: var(--border-strong);
-    }
-    .btn-secondary:hover { background: var(--surface-2); }
-    .btn svg { width: 16px; height: 16px; }
-    .disclaimer {
-      font-size: 13px; line-height: 1.55;
-      color: var(--muted);
-      max-width: 52ch;
-    }
-    .disclaimer .flag { margin-right: 6px; }
-
-    /* hero placeholder */
-    .hero-frame {
-      position: relative;
-      aspect-ratio: 16 / 11;
-      border-radius: var(--r-hero);
-      border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
-      background:
-        repeating-linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--accent) 8%, transparent) 0px,
-          color-mix(in srgb, var(--accent) 8%, transparent) 1px,
-          transparent 1px,
-          transparent 14px
-        ),
-        var(--paper-alt);
-      display: grid; place-items: center;
-      overflow: hidden;
-    }
-    .placeholder-label {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      color: var(--muted);
-      padding: var(--s-4) var(--s-6);
-      text-align: center;
-      max-width: 80%;
-    }
-    .placeholder-label .play { color: var(--accent); margin-right: 6px; }
-    .placeholder-tag {
-      position: absolute; top: var(--s-3); right: var(--s-3);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      background: color-mix(in srgb, var(--paper) 70%, transparent);
-      border: 1px solid var(--border);
-      padding: 4px 10px;
-      border-radius: var(--r-pill);
-    }
-
-    /* -------- at-a-glance -------- */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: var(--s-6);
-      padding: var(--s-12) 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    @media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 420px) { .stats { grid-template-columns: 1fr; } }
-    .stat .value {
-      font-size: 32px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      font-variant-numeric: tabular-nums;
-      color: var(--ink);
-      line-height: 1.1;
-    }
-    .stat .label {
-      margin-top: 6px;
-      font-size: 13px;
-      color: var(--muted);
-      letter-spacing: 0.01em;
-    }
-
-    /* -------- section common -------- */
-    section { padding: var(--s-24) 0; }
-    @media (max-width: 720px) { section { padding: var(--s-16) 0; } }
-    .section-head { max-width: 720px; margin-bottom: var(--s-12); }
-    .section-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: var(--s-3);
-    }
-    .section-head h2 {
-      font-size: clamp(28px, 3.6vw, 42px);
-      font-weight: 700;
-      letter-spacing: -0.025em;
-      margin-bottom: var(--s-4);
-    }
-    .section-head p {
-      font-size: 17px;
-      color: var(--ink-subtle);
-      line-height: 1.6;
-    }
-
-    /* -------- features grid -------- */
-    .features {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 1000px) { .features { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 640px) { .features { grid-template-columns: 1fr; } }
-    .feature-card {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-6);
-      transition: transform .15s ease, border-color .15s ease;
-    }
-    .feature-card:hover {
-      border-color: var(--border-strong);
-    }
-    .feature-card .icon {
-      width: 36px; height: 36px;
-      display: grid; place-items: center;
-      border-radius: 10px;
-      background: var(--surface-2);
-      color: var(--accent);
-      margin-bottom: var(--s-4);
-    }
-    .feature-card .icon svg { width: 18px; height: 18px; stroke-width: 1.7; }
-    .feature-card h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .feature-card p {
-      font-size: 14.5px;
-      color: var(--ink-subtle);
-      line-height: 1.55;
-    }
-
-    /* -------- modules -------- */
-    .modules { display: flex; flex-direction: column; gap: var(--s-24); }
-    .module-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--s-12);
-      align-items: center;
-    }
-    .module-row.reverse .module-frame { order: 2; }
-    @media (max-width: 880px) {
-      .module-row, .module-row.reverse { grid-template-columns: 1fr; gap: var(--s-6); }
-      .module-row.reverse .module-frame { order: 0; }
-    }
-    .module-frame {
-      position: relative;
-      aspect-ratio: 16 / 9;
-      border-radius: var(--r-card);
-      border: 1.5px dashed var(--mod-accent, var(--accent));
-      background:
-        repeating-linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--mod-accent, var(--accent)) 10%, transparent) 0px,
-          color-mix(in srgb, var(--mod-accent, var(--accent)) 10%, transparent) 1px,
-          transparent 1px,
-          transparent 12px
-        ),
-        var(--paper-alt);
-      display: grid; place-items: center;
-      overflow: hidden;
-    }
-    .module-frame .placeholder-label .play { color: var(--mod-accent, var(--accent)); }
-    .module-copy { border-left: 2px solid var(--mod-accent, var(--accent)); padding-left: var(--s-6); }
-    .module-copy h3 {
-      font-size: clamp(26px, 3vw, 34px);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--mod-accent, var(--accent));
-      margin-bottom: var(--s-2);
-    }
-    .module-copy .datasets {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      color: var(--muted);
-      letter-spacing: 0.02em;
-      margin-bottom: var(--s-4);
-    }
-    .module-copy p {
-      font-size: 16px;
-      color: var(--ink-subtle);
-      line-height: 1.7;
-      margin-bottom: var(--s-4);
-    }
-    .pill-row {
-      display: flex; flex-wrap: wrap; gap: var(--s-2);
-    }
-    .pill {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--muted);
-      padding: 4px 10px;
-      border-radius: var(--r-pill);
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      letter-spacing: 0.02em;
-    }
-
-    /* -------- tech 3-col -------- */
-    .tech-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 880px) { .tech-grid { grid-template-columns: 1fr; } }
-    .tech-card {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-8);
-    }
-    .tech-card h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: var(--s-4);
-    }
-    .tech-card ul {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-2);
-    }
-    .tech-card li {
-      font-size: 14.5px;
-      color: var(--ink-subtle);
-      display: flex; gap: 10px; align-items: baseline;
-      line-height: 1.5;
-    }
-    .tech-card li::before {
-      content: "";
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      background: var(--accent);
-      flex-shrink: 0;
-      transform: translateY(-2px);
-    }
-    .tech-card code {
-      font-size: 13px;
-      color: var(--ink);
-      background: var(--surface-2);
-      padding: 1px 6px;
-      border-radius: 4px;
-    }
-
-    /* -------- multi-platform -------- */
-    .devices {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.4fr;
-      gap: var(--s-8);
-      align-items: end;
-    }
-    @media (max-width: 880px) { .devices { grid-template-columns: 1fr; } }
-    .device-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--s-3); }
-    .device-label {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    /* phone (android) */
-    .device-android {
-      width: 100%;
-      max-width: 220px;
-      aspect-ratio: 9 / 18.5;
-      border-radius: 32px;
-      border: 8px solid var(--ink);
-      background: var(--paper-alt);
-      position: relative;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .device-android::before {
-      content: "";
-      position: absolute;
-      top: 10px; left: 50%;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: color-mix(in srgb, var(--paper) 60%, transparent);
-      transform: translateX(-50%);
-      z-index: 2;
-    }
-    /* phone (iPhone) */
-    .device-ios {
-      width: 100%;
-      max-width: 220px;
-      aspect-ratio: 9 / 19.5;
-      border-radius: 38px;
-      border: 9px solid var(--ink);
-      background: var(--paper-alt);
-      position: relative;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-    .device-ios::before {
-      content: "";
-      position: absolute;
-      top: 8px; left: 50%;
-      width: 70px; height: 22px;
-      border-radius: 14px;
-      background: var(--ink);
-      transform: translateX(-50%);
-      z-index: 2;
-    }
-    /* desktop */
-    .device-desktop {
-      width: 100%;
-      max-width: 480px;
-      aspect-ratio: 16 / 10;
-      border-radius: 12px;
-      border: 1px solid var(--border-strong);
-      background: var(--paper-alt);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      display: flex; flex-direction: column;
-    }
-    .desktop-bar {
-      height: 28px;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 6px;
-      padding: 0 12px;
-      flex-shrink: 0;
-    }
-    .desktop-bar span {
-      width: 11px; height: 11px; border-radius: 50%;
-      background: color-mix(in srgb, var(--muted) 50%, transparent);
-    }
-    .desktop-bar span:nth-child(1) { background: #FF5F57; }
-    .desktop-bar span:nth-child(2) { background: #FEBC2E; }
-    .desktop-bar span:nth-child(3) { background: #28C840; }
-    .device-screen {
-      flex: 1;
-      background:
-        repeating-linear-gradient(135deg,
-          color-mix(in srgb, var(--accent) 6%, transparent) 0px,
-          color-mix(in srgb, var(--accent) 6%, transparent) 1px,
-          transparent 1px,
-          transparent 12px
-        );
-      display: grid; place-items: center;
-      position: relative;
-    }
-    .device-screen .soon {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border: 1px solid var(--border);
-      border-radius: var(--r-pill);
-      background: var(--paper-alt);
-    }
-    .devices-caption {
-      margin-top: var(--s-8);
-      text-align: center;
-      font-size: 14.5px;
-      color: var(--muted);
-    }
-
-    /* -------- roadmap -------- */
-    .roadmap-cols {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--s-6);
-    }
-    @media (max-width: 960px) { .roadmap-cols { grid-template-columns: 1fr; } }
-    .roadmap-col {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-card);
-      padding: var(--s-8);
-    }
-    .roadmap-col h3 {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin-bottom: 4px;
-    }
-    .roadmap-col .col-sub {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: var(--s-6);
-      letter-spacing: 0.02em;
-    }
-    .roadmap-col ul {
-      list-style: none; padding: 0; margin: 0;
-      display: flex; flex-direction: column; gap: var(--s-3);
-    }
-    .roadmap-col li {
-      display: grid;
-      grid-template-columns: 18px 1fr;
-      gap: 10px;
-      font-size: 14.5px;
-      line-height: 1.55;
-      color: var(--ink-subtle);
-    }
-    .roadmap-col li svg { width: 16px; height: 16px; margin-top: 3px; }
-    .roadmap-col li.done svg { color: var(--mod-environment); }
-    .roadmap-col li.wait svg { color: var(--muted); }
-
-    /* -------- nlnet -------- */
-    .nlnet {
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: var(--r-hero);
-      padding: clamp(var(--s-8), 5vw, var(--s-16));
-      text-align: center;
-    }
-    .nlnet h2 {
-      font-size: clamp(26px, 3vw, 36px);
-      max-width: 22ch;
-      margin: 0 auto var(--s-4);
-    }
-    .nlnet p {
-      max-width: 60ch;
-      margin: 0 auto var(--s-8);
-      font-size: 17px;
-      line-height: 1.65;
-      color: var(--ink-subtle);
-    }
-
-    /* -------- footer -------- */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: var(--s-12) 0 var(--s-8);
-      margin-top: var(--s-16);
-    }
-    .footer-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1.4fr;
-      gap: var(--s-8);
-    }
-    @media (max-width: 800px) { .footer-grid { grid-template-columns: 1fr; } }
-    .footer-grid h4 {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: var(--s-4);
-    }
-    .footer-grid p, .footer-grid a {
-      font-size: 14px;
-      color: var(--ink-subtle);
-      line-height: 1.7;
-    }
-    .footer-grid a { display: block; }
-    .footer-grid a:hover { color: var(--ink); }
-    .credits {
-      margin-top: var(--s-8);
-      padding-top: var(--s-6);
-      border-top: 1px solid var(--border);
-      font-size: 12.5px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    /* -------- print -------- */
-    @media print {
-      .nav, footer, .theme-toggle { display: none !important; }
-      body { background: #fff; color: #000; }
-      section { padding: 24px 0; page-break-inside: avoid; }
-      .hero { min-height: auto; }
-    }
-
-    /* -------- a11y -------- */
-    :focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 3px;
-      border-radius: 4px;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
-      html { scroll-behavior: auto; }
-    }
-  
-    /* GIF override — phone-shaped images instead of 16/9 placeholder */
-    img.hero-frame, img.module-frame {
-      aspect-ratio: auto !important;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: 540px;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-      background: var(--paper-alt);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 12px 32px rgba(0,0,0,.08);
-      padding: 0;
-    }
-    img.hero-frame { max-height: 600px; }
-    @media (max-width: 880px) {
-      img.hero-frame, img.module-frame { max-height: 480px; }
-    }
-  
-  </style>
 </head>
 <body>
+
+  <a class="skip" href="#top">Saltar para o conteúdo</a>
 
   <!-- ============ NAV ============ -->
   <nav class="nav" aria-label="Navegação principal">
@@ -826,8 +84,9 @@
       </a>
       <div class="nav-links">
         <a href="#features">Funcionalidades</a>
+        <a href="#compare">Comparar</a>
         <a href="#modules">Módulos</a>
-        <a href="#tech">Tecnologia</a>
+        <a href="#download">Transferir</a>
         <a href="#roadmap">Roadmap</a>
         <a href="https://github.com/romantsisyk/MyEuroStatApp" class="gh">GitHub</a>
         <select class="lang-switch" id="langSwitch" aria-label="Escolher idioma" onchange="if(this.value)window.location.href=this.value;">
@@ -859,25 +118,49 @@
     <!-- ============ HERO ============ -->
     <header class="wrap hero">
       <div>
-        <span class="eyebrow"><span class="dot"></span> Phase 4 · 8 módulos com dados reais</span>
-        <h1>Dados do Eurostat,<br/>em todos os ecrãs.</h1>
-        <p class="lede">Um cliente móvel e de secretária, open-source, para a API pública do Eurostat. Oito módulos temáticos &mdash; economia, população, ambiente, comércio, transporte, turismo, social, ciência &mdash; numa única base de código Kotlin Multiplatform.</p>
+        <span class="eyebrow"><span class="dot"></span> v0.7 · Comparar · Pesquisar · 3 idiomas</span>
+        <h1>Dados do Eurostat,<br/><span class="hl-swipe">em todos os ecrãs.</span></h1>
+        <p class="lede">Um cliente móvel e de secretária, open-source, para a API pública do Eurostat. Oito módulos temáticos &mdash; economia, população, ambiente, comércio, transporte, turismo, social, ciência &mdash; mais comparação entre países e pesquisa de indicadores, tudo numa única base de código Kotlin Multiplatform.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="https://github.com/romantsisyk/MyEuroStatApp">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.69-3.88-1.36-3.88-1.36-.53-1.34-1.29-1.69-1.29-1.69-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.39.96.1-.75.41-1.26.74-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.04 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.58.23 2.75.11 3.04.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.27 5.68.42.36.79 1.08.79 2.18v3.23c0 .31.21.68.8.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
             Ver no GitHub
           </a>
-          <a class="btn btn-secondary" href="#features">
-            Ler a documentação
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          <a class="btn btn-secondary" href="#download">
+            Transferir a aplicação
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M5 21h14"/></svg>
           </a>
         </div>
         <p class="disclaimer">
-          <span class="flag">🇪🇺</span>Cliente open-source independente de terceiros. Não afiliado ao Eurostat nem à Comissão Europeia.
+          Cliente open-source independente de terceiros. Não afiliado ao Eurostat nem à Comissão Europeia.
         </p>
       </div>
 
-      <img class="hero-frame" src="../gifs/overview.gif" alt="Visão geral dos oito módulos na aplicação EU Stats" loading="lazy" />
+      <div class="hero-visual">
+        <svg class="hero-chart" viewBox="0 0 560 400" aria-hidden="true" focusable="false">
+          <g class="grid">
+            <line class="grid-line" x1="0" y1="60"  x2="560" y2="60"/>
+            <line class="grid-line" x1="0" y1="130" x2="560" y2="130"/>
+            <line class="grid-line" x1="0" y1="200" x2="560" y2="200"/>
+            <line class="grid-line" x1="0" y1="270" x2="560" y2="270"/>
+            <line class="grid-line" x1="0" y1="340" x2="560" y2="340"/>
+          </g>
+          <g>
+            <rect class="bar" x="30"  y="250" width="34" height="90"/>
+            <rect class="bar" x="76"  y="212" width="34" height="128"/>
+            <rect class="bar" x="122" y="232" width="34" height="108"/>
+            <rect class="bar" x="168" y="180" width="34" height="160"/>
+            <rect class="bar" x="214" y="200" width="34" height="140"/>
+          </g>
+          <path class="series s-a" d="M20 300 L110 268 L200 282 L290 226 L380 204 L470 156 L540 128"/>
+          <path class="series s-b" d="M20 330 L110 322 L200 290 L290 300 L380 252 L470 236 L540 196"/>
+          <path class="series s-c" d="M20 258 L110 274 L200 236 L290 248 L380 186 L470 196 L540 92"/>
+          <circle class="pt-a" cx="540" cy="128" r="4.5"/>
+          <circle class="pt-b" cx="540" cy="196" r="4.5"/>
+          <circle class="pt-c" cx="540" cy="92"  r="4.5"/>
+        </svg>
+        <img class="hero-frame" src="../gifs/overview.gif" data-still="../assets/screens/overview.png" width="420" height="933" alt="Visão geral dos oito módulos na aplicação EU Stats" />
+      </div>
     </header>
 
     <!-- ============ AT-A-GLANCE STRIP ============ -->
@@ -885,7 +168,7 @@
       <section class="stats" aria-label="Factos do projeto em síntese" style="padding-top: var(--s-12); padding-bottom: var(--s-12);">
         <div class="stat"><div class="value num">19</div><div class="label">conjuntos de dados Eurostat</div></div>
         <div class="stat"><div class="value num">8</div><div class="label">módulos temáticos</div></div>
-        <div class="stat"><div class="value num">499</div><div class="label">testes unitários aprovados</div></div>
+        <div class="stat"><div class="value num">5</div><div class="label">plataformas, uma base de código</div></div>
         <div class="stat"><div class="value">AGPL-3.0</div><div class="label">licença open-source</div></div>
       </section>
     </div>
@@ -912,15 +195,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/><circle cx="12" cy="12" r="2.5"/></svg>
           </div>
           <h3>Cache stale-while-revalidate</h3>
-          <p>Cache SQLDelight com TTL de 12 horas. Os dados em cache são apresentados de imediato; a atualização de rede ocorre em segundo plano, com um aviso discreto. Sem ligação nunca significa ecrã em branco.</p>
-        </article>
-
-        <article class="feature-card">
-          <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          </div>
-          <h3>Oito módulos temáticos</h3>
-          <p>Economia, população, ambiente, comércio, transporte, turismo, social, ciência. Cada módulo gere o seu conjunto de dados, o seu padrão de comutação e um gráfico característico adequado à forma dos dados.</p>
+          <p>Cache SQLDelight com TTL de 12 horas. Os dados em cache são apresentados de imediato; a atualização de rede ocorre em segundo plano, com um aviso discreto de desatualização, e sem ligação nunca significa ecrã em branco.</p>
         </article>
 
         <article class="feature-card">
@@ -928,23 +203,85 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M5 20V10"/><path d="M9 20V6"/><path d="M13 20v-8"/><path d="M17 20V4"/><path d="M21 20v-6"/></svg>
           </div>
           <h3>Gráficos em Compose Canvas puro</h3>
-          <p>Oito tipos de gráfico &mdash; linha, barras empilhadas, pirâmide, mapa de calor, barras divergentes, radar, small-multiples, multilinha realçado &mdash; desenhados num <code>Canvas</code> Compose sem dependências de renderização externas.</p>
+          <p>Oito tipos de gráfico &mdash; linha, barras empilhadas, pirâmide, mapa de calor, barras divergentes, radar, small-multiples, multilinha realçado &mdash; desenhados num <code>Canvas</code> Compose sem dependências de renderização de terceiros.</p>
         </article>
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="10" height="14" rx="1.5"/><rect x="14" y="3" width="8" height="17" rx="2"/><path d="M7 17h.01"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>
           </div>
-          <h3>Multiplataforma desde o início</h3>
-          <p>Telemóvel &amp; tablet Android, iPhone &amp; iPad, e um <code>.jar</code> Compose Desktop autónomo para macOS, Linux e Windows &mdash; a partir de uma única base de código Kotlin partilhada.</p>
+          <h3>Fala três idiomas</h3>
+          <p>Inglês, polaco e ucraniano em todos os ecrãs &mdash; e o seletor nas Definições muda o idioma de toda a interface em tempo real, sem reiniciar. Este próprio site está disponível em nove idiomas.</p>
         </article>
 
         <article class="feature-card">
           <div class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16"/></svg>
           </div>
-          <h3>Seletor de ano em todos os ecrãs</h3>
-          <p>Recentemente lançado: escolha qualquer ano histórico e o título com os mosaicos de estatísticas atualiza-se de imediato, sem nova chamada à rede. O gráfico mantém a série completa; o ano apenas controla os valores apresentados.</p>
+          <h3>Mestre-detalhe adaptável</h3>
+          <p>Em tablets e no ambiente de trabalho, cada um dos oito ecrãs muda para um esquema de dois painéis &mdash; um painel de controlos de 320&thinsp;dp junto ao conteúdo &mdash; enquanto os telemóveis mantêm exatamente a ordenação de coluna única.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18L10 8l4 5 6-9"/><circle cx="14" cy="13" r="2.5"/><path d="M14 15.5V21"/></svg>
+          </div>
+          <h3>Toque num gráfico, obtenha o valor</h3>
+          <p>Tocar perto de qualquer ponto de um gráfico de linhas abre uma folha de detalhe com o país, o ano, o valor formatado, a unidade e o código do conjunto de dados &mdash; mesmo em modo Indexed-100 resolve sempre o valor absoluto real.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ COMPARE + SEARCH SPOTLIGHT ============ -->
+    <section id="compare" class="wrap">
+      <div class="section-head">
+        <div class="section-eyebrow">Novo na v0.7</div>
+        <h2>Compare entre fronteiras. Pesquise tudo.</h2>
+        <p>Os dois ecrãs mais recentes transformam oito módulos separados num único atlas estatístico conectado.</p>
+      </div>
+
+      <div class="spot-grid">
+        <article class="spot-card">
+          <div class="kicker">feature-compare</div>
+          <h3>Compare 2&ndash;5 países num único gráfico</h3>
+          <p>Escolha um de oito indicadores principais &mdash; população, PIB, emissões, exportações, passageiros aéreos, dormidas turísticas, risco de pobreza, intensidade de I&amp;D &mdash; e sobreponha até cinco países. As cores mantêm-se estáveis pela ordem de seleção, e o botão Absolute&nbsp;/&nbsp;Indexed-100 reajusta todas as séries a um ponto de partida comum: a forma honesta de comparar economias de dimensões diferentes.</p>
+          <div class="mock" role="img" aria-label="Gráfico de comparação estilizado: três séries de países sobrepostas num gráfico de linhas com um botão Absolute / Indexed-100">
+            <div class="mock-chips">
+              <span class="mock-chip"><i style="background: var(--mod-economy);"></i>DE</span>
+              <span class="mock-chip"><i style="background: var(--mod-population);"></i>FR</span>
+              <span class="mock-chip"><i style="background: var(--mod-tourism);"></i>PL</span>
+            </div>
+            <svg class="mock-chart" viewBox="0 0 440 170" aria-hidden="true" focusable="false">
+              <line class="grid-line" x1="0" y1="30"  x2="440" y2="30"/>
+              <line class="grid-line" x1="0" y1="75"  x2="440" y2="75"/>
+              <line class="grid-line" x1="0" y1="120" x2="440" y2="120"/>
+              <line class="grid-line" x1="0" y1="165" x2="440" y2="165"/>
+              <path class="series" style="stroke: var(--mod-economy);"    d="M10 130 L82 122 L154 100 L226 106 L298 72 L370 62 L430 38"/>
+              <path class="series" style="stroke: var(--mod-population);" d="M10 140 L82 132 L154 128 L226 112 L298 108 L370 88 L430 76"/>
+              <path class="series" style="stroke: var(--mod-tourism);"    d="M10 150 L82 154 L154 136 L226 130 L298 118 L370 122 L430 96"/>
+              <circle cx="430" cy="38" r="4" style="fill: var(--mod-economy);"/>
+              <circle cx="430" cy="76" r="4" style="fill: var(--mod-population);"/>
+              <circle cx="430" cy="96" r="4" style="fill: var(--mod-tourism);"/>
+            </svg>
+            <span class="mock-toggle"><span>Absolute</span><span class="on">Indexed 100</span></span>
+          </div>
+        </article>
+
+        <article class="spot-card gold-rule">
+          <div class="kicker">feature-search</div>
+          <h3>27 indicadores, uma caixa de pesquisa</h3>
+          <p>Um índice pré-compilado de todos os indicadores dos oito módulos &mdash; nomes, códigos de conjuntos de dados, palavras-chave &mdash; com classificação por níveis. Escreva &ldquo;pobreza&rdquo;, &ldquo;I&amp;D&rdquo; ou &ldquo;emissões&rdquo; e vá diretamente ao ecrã certo; uma pesquisa em branco percorre o catálogo módulo a módulo.</p>
+          <div class="mock" role="img" aria-label="Ecrã de pesquisa estilizado: um campo de pesquisa com resultados que ligam aos ecrãs dos módulos">
+            <div class="mock-search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              emissões&hellip;
+            </div>
+            <div class="mock-rows">
+              <div class="mock-row"><i style="background: var(--mod-environment);"></i>Emissões de gases com efeito de estufa<span class="code">env_air_gge</span></div>
+              <div class="mock-row"><i style="background: var(--mod-environment);"></i>Índice climático (ODS 13)<span class="code">sdg_13_10</span></div>
+              <div class="mock-row"><i style="background: var(--mod-transport);"></i>Passageiros do transporte aéreo<span class="code">avia_paoc</span></div>
+            </div>
+          </div>
         </article>
       </div>
     </section>
@@ -957,12 +294,13 @@
         <p>Cada módulo gere um conjunto de dados, um padrão de comutação e um gráfico característico adequado à forma dos dados. As descrições foram transcritas diretamente do README do projeto.</p>
       </div>
 
-      <div class="modules">
+      <div class="modules" style="--kicker-label: 'Módulo ';">
 
-        <!-- POPULAÇÃO -->
+        <!-- POPULATION -->
         <article class="module-row" style="--mod-accent: var(--mod-population);">
-          <img class="module-frame" src="../gifs/population.gif" alt="Módulo de população — arraste o controlo deslizante de ano para moldar a pirâmide" loading="lazy" />
+          <img class="module-frame" src="../gifs/population.gif" data-still="../assets/screens/population.png" width="420" height="933" alt="Módulo de população — arraste o controlo deslizante de ano para moldar a pirâmide" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">01</span>
             <h3>População</h3>
             <div class="datasets">demo_pjangroup &middot; 18 coortes &middot; M/F/T</div>
             <p>Uma pirâmide demográfica para 18 coortes etárias (faixas de cinco anos, Y_LT5 a Y_GE85). O título mostra a população total com variação anual. Um controlo segmentado de três opções (Total / Homens / Mulheres) esbate o lado oposto da pirâmide ao selecionar um único sexo. Um controlo deslizante percorre os anos disponíveis; uma fila de chips de país muda o país ativo sem novo pedido de dados.</p>
@@ -974,10 +312,11 @@
           </div>
         </article>
 
-        <!-- ECONOMIA -->
+        <!-- ECONOMY -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-economy);">
-          <img class="module-frame" src="../gifs/economy.gif" alt="Módulo de economia — PIB, inflação IHPC e défice" loading="lazy" />
+          <img class="module-frame" src="../gifs/economy.gif" data-still="../assets/screens/economy.png" width="420" height="933" alt="Módulo de economia — PIB, inflação IHPC e défice" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">02</span>
             <h3>Economia</h3>
             <div class="datasets">nama_10_gdp &middot; prc_hicp_aind &middot; gov_10dd_edpt1</div>
             <p>Três indicadores macroeconómicos &mdash; PIB a preços correntes (mil milhões EUR), índice de inflação IHPC (2015 = 100), e capacidade/necessidade líquida de financiamento do setor público em % do PIB &mdash; apresentados como um gráfico de várias linhas e vários países. Um controlo segmentado comuta o indicador ativo; os dois indicadores inativos permanecem visíveis como mosaicos secundários esbatidos. Um controlo deslizante com dois pontos limita o intervalo do eixo x; um menu suspenso de ano distinto seleciona o ano do título.</p>
@@ -989,10 +328,11 @@
           </div>
         </article>
 
-        <!-- AMBIENTE -->
+        <!-- ENVIRONMENT -->
         <article class="module-row" style="--mod-accent: var(--mod-environment);">
-          <img class="module-frame" src="../gifs/environment.gif" alt="Módulo de ambiente — GEE, energia e índice climático ODS 13" loading="lazy" />
+          <img class="module-frame" src="../gifs/environment.gif" data-still="../assets/screens/environment.png" width="420" height="933" alt="Módulo de ambiente — GEE, energia e índice climático ODS 13" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">03</span>
             <h3>Ambiente</h3>
             <div class="datasets">env_air_gge &middot; nrg_bal_c &middot; sdg_13_10</div>
             <p>Três conjuntos de dados climáticos selecionáveis por menu suspenso: emissões de gases com efeito de estufa em Mt CO&#8322;-eq, consumo final de energia em ktoe, e o índice climático ODS 13 com 1990 = 100. Quando GEE ou Energia está ativo, uma fila de chips filtra por setor (TOTAL / TRANSPORTE / INDÚSTRIA). O gráfico principal é uma linha que compara o país ativo com um país de referência; dois mosaicos de estatísticas mostram os outros dois indicadores para o mesmo ano.</p>
@@ -1004,10 +344,11 @@
           </div>
         </article>
 
-        <!-- COMÉRCIO -->
+        <!-- TRADE -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-trade);">
-          <img class="module-frame" src="../gifs/trade.gif" alt="Módulo de comércio — barras divergentes para exportações, importações e saldo" loading="lazy" />
+          <img class="module-frame" src="../gifs/trade.gif" data-still="../assets/screens/trade.png" width="420" height="933" alt="Módulo de comércio — barras divergentes para exportações, importações e saldo" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">04</span>
             <h3>Comércio</h3>
             <div class="datasets">ext_lt_intratrd</div>
             <p>Fluxos de comércio intra-UE de bens &mdash; exportações, importações e balança comercial em mil milhões EUR. O gráfico principal é um diagrama de barras divergentes que abrange os oito anos mais recentes, com as exportações a estender-se para a direita e as importações para a esquerda. Três separadores sublinhados (Exportações / Importações / Saldo) realçam a direção relevante. Dois mosaicos de estatísticas compactos mostram os valores do país ativo para o ano selecionado.</p>
@@ -1019,10 +360,11 @@
           </div>
         </article>
 
-        <!-- TRANSPORTE -->
+        <!-- TRANSPORT -->
         <article class="module-row" style="--mod-accent: var(--mod-transport);">
-          <img class="module-frame" src="../gifs/transport.gif" alt="Módulo de transporte — small multiples de passageiros rodoviários e aéreos" loading="lazy" />
+          <img class="module-frame" src="../gifs/transport.gif" data-still="../assets/screens/transport.png" width="420" height="933" alt="Módulo de transporte — small multiples de passageiros rodoviários e aéreos" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">05</span>
             <h3>Transporte</h3>
             <div class="datasets">road_pa_buscoa &middot; avia_paoc</div>
             <p>Volumes de passageiros rodoviários e aéreos apresentados como gráficos de linhas small-multiples lado a lado. Os dados rodoviários (mil milhões de passageiros) e os dados aéreos (milhões de passageiros) são escalados de forma independente por painel. Um botão de alternância em pílula (RODOVIÁRIO / AÉREO / TODOS) controla quais os painéis visíveis. Uma opção de escala logarítmica comprime o eixo para países com grandezas muito díspares. Três mosaicos de estatísticas resumem rodoviário, aéreo e um mosaico "mar: n/d" que explica honestamente por que o conjunto de dados baseado em portos foi intencionalmente excluído.</p>
@@ -1034,10 +376,11 @@
           </div>
         </article>
 
-        <!-- TURISMO -->
+        <!-- TOURISM -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-tourism);">
-          <img class="module-frame" src="../gifs/tourism.gif" alt="Módulo de turismo — dormidas empilhadas e mapa de calor de sazonalidade" loading="lazy" />
+          <img class="module-frame" src="../gifs/tourism.gif" data-still="../assets/screens/tourism.png" width="420" height="933" alt="Módulo de turismo — dormidas empilhadas e mapa de calor de sazonalidade" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">06</span>
             <h3>Turismo</h3>
             <div class="datasets">tour_occ_ninat &middot; tour_occ_nim</div>
             <p>Dormidas em estabelecimentos de alojamento turístico &mdash; dormidas nacionais, estrangeiras e totais &mdash; apresentadas como um gráfico de barras empilhadas que cobre os nove anos mais recentes. Uma fila de chips controla qual o indicador que define o valor do título. Abaixo das barras empilhadas, um mapa de calor de sazonalidade mensal (células = mês &times; ano) mostra a distribuição das dormidas ao longo do calendário.</p>
@@ -1051,10 +394,11 @@
 
         <!-- SOCIAL -->
         <article class="module-row" style="--mod-accent: var(--mod-social);">
-          <img class="module-frame" src="../gifs/social.gif" alt="Módulo social — mosaicos KPI conduzem um gráfico de linhas realçado" loading="lazy" />
+          <img class="module-frame" src="../gifs/social.gif" data-still="../assets/screens/social.png" width="420" height="933" alt="Módulo social — mosaicos KPI conduzem um gráfico de linhas realçado" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">07</span>
             <h3>Social</h3>
-            <div class="datasets">ilc_li02 &middot; ilc_peps01 &middot; hlth_silc_01</div>
+            <div class="datasets">ilc_li02 &middot; ilc_peps01n &middot; hlth_silc_01</div>
             <p>Três indicadores percentuais de bem-estar extraídos dos inquéritos EU-SILC: taxa de risco de pobreza, taxa de risco de pobreza ou exclusão social, e a percentagem da população que declara um estado de saúde muito bom. Os três são traçados em simultâneo num gráfico multilinha realçado; tocar num mosaico KPI desloca a ênfase para essa série e atualiza o valor do título.</p>
             <div class="pill-row">
               <span class="pill">multilinha realçado</span>
@@ -1064,10 +408,11 @@
           </div>
         </article>
 
-        <!-- CIÊNCIA -->
+        <!-- SCIENCE -->
         <article class="module-row reverse" style="--mod-accent: var(--mod-science);">
-          <img class="module-frame" src="../gifs/science.gif" alt="Módulo de ciência — gráfico radar de I&D, utilização da internet e ensino superior" loading="lazy" />
+          <img class="module-frame" src="../gifs/science.gif" data-still="../assets/screens/science.png" width="420" height="933" alt="Módulo de ciência — gráfico radar de I&D, utilização da internet e ensino superior" loading="lazy" decoding="async" />
           <div class="module-copy">
+            <span class="ghost-num" aria-hidden="true">08</span>
             <h3>Ciência</h3>
             <div class="datasets">rd_e_gerdtot &middot; isoc_ci_ifp_iu &middot; edat_lfse_03</div>
             <p>Três indicadores de inovação &mdash; despesa em I&amp;D em % do PIB, taxa de utilização da internet, e nível de habilitações superiores entre 25&ndash;64 anos &mdash; apresentados simultaneamente num gráfico radar. O radar sobrepõe o país ativo a um país par (preferindo DE, depois FR, depois EU27). Três sparklines abaixo mostram sempre a tendência completa. Não existe comutador de indicador; o radar apresenta os três eixos de uma só vez.</p>
@@ -1087,7 +432,7 @@
       <div class="section-head">
         <div class="section-eyebrow">Por baixo do capô</div>
         <h2>Escolhas sólidas e conservadoras &mdash; por decisão própria.</h2>
-        <p>Clean Architecture distribuída por 18 módulos Gradle. Cada camada tem um contrato sealed. Sem operador <code>!!</code>; sem gráficos de terceiros; sem fugas de dispatcher.</p>
+        <p>Clean Architecture distribuída por 20 módulos Gradle, protegida por mais de 600 testes unitários &mdash; incluindo um conjunto de testes real no simulador iOS. Cada camada tem um contrato sealed. Sem operador <code>!!</code> em lado nenhum; sem gráficos de terceiros; sem fugas de dispatcher.</p>
       </div>
 
       <div class="tech-grid">
@@ -1107,7 +452,7 @@
           <ul>
             <li>Ktor Client &mdash; motor Darwin no iOS, OkHttp no Android</li>
             <li>kotlinx.serialization para JSON &amp; blobs de cache</li>
-            <li>Esquemas SQLDelight com DAOs tipados</li>
+            <li>Esquemas SQLDelight com DAOs tipados &amp; migrações</li>
             <li>Analisador JSON-stat 2.0 desenvolvido internamente em <code>core-jsonstat</code></li>
             <li>Coroutines + Flow + StateFlow em toda a base de código</li>
           </ul>
@@ -1118,9 +463,9 @@
           <ul>
             <li>Compose Multiplatform &mdash; Android, iOS, Desktop</li>
             <li>Tokens de design <code>object Euro</code> &mdash; cores, tipografia, espaçamento, formas</li>
-            <li>~25 composables reutilizáveis em <code>core-ui</code></li>
+            <li>~25 composables reutilizáveis em <code>core-ui</code> &middot; tipos de letra Inter + IBM Plex Mono integrados</li>
             <li>Oito tipos de gráfico em Compose <code>Canvas</code> puro &mdash; sem Koalaplot</li>
-            <li>kotlin.test &amp; Turbine para testes unitários e de fluxo</li>
+            <li><code>AdaptiveTwoPane</code> mestre-detalhe &middot; mudança de idioma em tempo real</li>
           </ul>
         </article>
       </div>
@@ -1131,40 +476,93 @@
       <div class="section-head">
         <div class="section-eyebrow">Três fatores de forma</div>
         <h2>Telemóvel, tablet, secretária &mdash; o mesmo código Compose.</h2>
-        <p>Um jornalista na secretária, um estudante num tablet, um cidadão no telemóvel &mdash; os mesmos dados, os mesmos componentes, a mesma renderização. Já implementado ao nível da infraestrutura.</p>
+        <p>Um jornalista na secretária, um estudante num tablet, um cidadão no telemóvel &mdash; os mesmos dados, os mesmos componentes, a mesma renderização. A partir dos 840&thinsp;dp, cada ecrã muda para um esquema mestre-detalhe de dois painéis.</p>
       </div>
 
       <div class="devices">
         <div class="device-wrap">
-          <div class="device-android" aria-label="Maqueta de telemóvel e tablet Android">
+          <div class="device-android">
             <div class="device-screen" style="height: 100%;">
-              <span class="soon">Android</span>
+              <img class="device-shot" src="../assets/screens/economy.png" width="420" height="933" alt="Módulo de economia em execução no Android" loading="lazy" decoding="async" />
             </div>
           </div>
           <div class="device-label">Android telemóvel &middot; tablet</div>
         </div>
 
         <div class="device-wrap">
-          <div class="device-ios" aria-label="Maquete de iPhone">
+          <div class="device-ios">
             <div class="device-screen" style="height: 100%;">
-              <span class="soon">iOS</span>
+              <img class="device-shot" src="../assets/screens/population.png" width="420" height="933" alt="Pirâmide de população em execução no iPhone" loading="lazy" decoding="async" />
             </div>
           </div>
           <div class="device-label">iPhone &middot; iPad</div>
         </div>
 
         <div class="device-wrap">
-          <div class="device-desktop" aria-label="Maquete de janela de secretária">
+          <div class="device-desktop" aria-label="Maqueta de janela de secretária">
             <div class="desktop-bar"><span></span><span></span><span></span></div>
             <div class="device-screen">
-              <span class="soon">macOS &middot; Linux &middot; Windows</span>
+              <span class="soon">A mesma interface Compose &middot; .dmg &middot; .msi &middot; .deb</span>
             </div>
           </div>
           <div class="device-label">Compose Desktop</div>
         </div>
       </div>
 
-      <p class="devices-caption">Uma base de código Kotlin. Interface Compose Multiplatform. Elementos nativos em cada plataforma.</p>
+      <p class="devices-caption">Uma base de código Kotlin. Interface Compose Multiplatform. Janelas nativas em cada plataforma.</p>
+    </section>
+
+    <!-- ============ DOWNLOADS ============ -->
+    <section id="download" class="wrap">
+      <div class="section-head">
+        <div class="section-eyebrow">Obtenha a aplicação</div>
+        <h2>Transfira para a sua plataforma.</h2>
+        <p>Cada versão marcada é compilada pela CI &mdash; um APK universal para Android mais instaladores nativos de secretária, anexados automaticamente à Release do GitHub.</p>
+      </div>
+
+      <div class="dl-grid">
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>
+          </div>
+          <h3>Android</h3>
+          <p>APK universal para Android 8.0+. Os metadados F-Droid já estão prontos no repositório; a submissão à loja está no roadmap.</p>
+          <div class="dl-files">
+            <span class="pill">.apk</span>
+            <span class="pill">F-Droid: planeado</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases no GitHub</a>
+        </article>
+
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3>Desktop</h3>
+          <p>Instaladores nativos para macOS, Windows e Debian/Ubuntu. Atualmente sem assinatura &mdash; o sistema operativo pedirá confirmação no primeiro arranque.</p>
+          <div class="dl-files">
+            <span class="pill">.dmg</span>
+            <span class="pill">.msi</span>
+            <span class="pill">.deb</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases no GitHub</a>
+        </article>
+
+        <article class="dl-card">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10 5h4"/></svg>
+          </div>
+          <h3>iOS</h3>
+          <p>Compila e executa no simulador de iPhone com dados reais do Eurostat. Compile a partir do código-fonte com o projeto XcodeGen; a distribuição via TestFlight é um objetivo de financiamento.</p>
+          <div class="dl-files">
+            <span class="pill">Xcode + XcodeGen</span>
+            <span class="pill">TestFlight: planeado</span>
+          </div>
+          <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/iosApp/README.md">Guia de compilação</a>
+        </article>
+      </div>
+
+      <p class="dl-note">A primeira versão marcada está a ser preparada &mdash; o fluxo de CI acionado por tag (APK + os três instaladores) já está integrado e verificado. Acompanhe o repositório no GitHub para ser notificado assim que ficar disponível.</p>
     </section>
 
     <!-- ============ ROADMAP ============ -->
@@ -1172,13 +570,13 @@
       <div class="section-head">
         <div class="section-eyebrow">Roadmap</div>
         <h2>Transparentes sobre o que existe, o que vem a seguir e o que precisa de financiamento.</h2>
-        <p>O projeto está na Phase 4: os oito módulos apresentam dados reais no Android. A Phase 5 conclui a shell &mdash; visão geral, seletor de país, definições &mdash; e a Phase 6 lança a primeira versão.</p>
+        <p>O projeto está na v0.7: todo o trabalho de produto da Phase 5 &mdash; visão geral, comparar, pesquisar, definições, localização &mdash; já foi lançado. A Phase 6 prepara a primeira versão pública.</p>
       </div>
 
       <div class="roadmap-cols">
         <div class="roadmap-col">
           <h3>Disponível hoje</h3>
-          <div class="col-sub">Phase 4 &middot; verificado</div>
+          <div class="col-sub">v0.7 &middot; verificado</div>
           <ul>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
@@ -1186,77 +584,77 @@
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Painel de visão geral &middot; Comparação entre módulos &middot; Pesquisa de indicadores</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Definições com mudança de idioma em tempo real &middot; EN, PL, UK</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Esquemas mestre-detalhe de dois painéis nos oito ecrãs</span>
+            </li>
+            <li class="done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
               <span>Cache stale-while-revalidate &middot; offline sobrevive a um voo</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Seletor de ano em todos os módulos &middot; título atualiza sem novo pedido</span>
+              <span>Instaladores de secretária compilados por um fluxo de CI acionado por tag</span>
             </li>
             <li class="done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Oito tipos de gráfico em Compose <code>Canvas</code> puro</span>
-            </li>
-            <li class="done">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>APK Android compilado &middot; <code>.jar</code> Compose Desktop funciona em macOS/Linux/Windows</span>
-            </li>
-            <li class="done">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span>Lançado sob AGPL-3.0</span>
+              <span>Mais de 600 testes unitários &middot; incluindo um conjunto de testes real no simulador iOS</span>
             </li>
           </ul>
         </div>
 
         <div class="roadmap-col">
-          <h3>Próximo marco (M1)</h3>
-          <div class="col-sub">Phase 5 &middot; em curso</div>
+          <h3>A seguir: primeira versão pública</h3>
+          <div class="col-sub">Phase 6 &middot; em curso</div>
           <ul>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Ecrã de visão geral &mdash; grelha de mosaicos de entrada</span>
+              <span>Versão v0.7.0 marcada &mdash; APK + instaladores anexados pela CI</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Seletor de país &mdash; lista pesquisável e toque no mapa</span>
+              <span>Chave de assinatura de lançamento real para Android &mdash; a substituir o modo de depuração</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Teste de fumo iOS no simulador &middot; verificar os oito separadores</span>
+              <span>Teste de fumo num dispositivo Android físico &middot; percurso completo no iOS</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Persistência de definições &middot; tema, país predefinido, idioma</span>
-            </li>
-            <li class="wait">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Renderização real de bandeiras &middot; tipo de letra Inter integrado</span>
+              <span>Submissão ao F-Droid &mdash; metadados fastlane já no repositório</span>
             </li>
           </ul>
         </div>
 
         <div class="roadmap-col">
-          <h3>Objetivos de financiamento (M2 &middot; M3)</h3>
-          <div class="col-sub">Phase 6 &middot; candidato NLnet</div>
+          <h3>Objetivos de financiamento</h3>
+          <div class="col-sub">Candidatura NLnet em avaliação</div>
           <ul>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Localização &middot; traduções para polaco e ucraniano</span>
+              <span>Instaladores assinados e notarizados &mdash; certificados Apple e Windows</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Instaladores nativos &middot; <code>.dmg</code>, <code>.msi</code>, <code>.deb</code>, Flatpak</span>
+              <span>Flatpak no Flathub &middot; presença no TestFlight / App Store</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Comparação entre países &middot; sobreposição ou small-multiples</span>
+              <span>Seletor de país por toque no mapa &middot; gráficos choropleth</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Pesquisa transversal &middot; índice de indicadores nos oito módulos</span>
+              <span>Auditoria de acessibilidade &mdash; TalkBack e VoiceOver</span>
             </li>
             <li class="wait">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12"/><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 22v-6a6 6 0 0 1 12 0v6"/></svg>
-              <span>Esquemas mestre-detalhe em ecrã largo para tablet e secretária</span>
+              <span>Mais idiomas da UE na interface da aplicação</span>
             </li>
           </ul>
         </div>
@@ -1266,10 +664,21 @@
     <!-- ============ NLNET ============ -->
     <section id="nlnet" class="wrap">
       <div class="nlnet">
+        <svg class="nlnet-motif" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
+          <g fill="currentColor">
+            <rect x="10"  y="150" width="30" height="70" rx="2"/>
+            <rect x="52"  y="118" width="30" height="102" rx="2"/>
+            <rect x="94"  y="134" width="30" height="86" rx="2"/>
+            <rect x="136" y="88"  width="30" height="132" rx="2"/>
+            <rect x="178" y="106" width="30" height="114" rx="2"/>
+            <rect x="220" y="56"  width="30" height="164" rx="2"/>
+            <rect x="262" y="24"  width="30" height="196" rx="2"/>
+          </g>
+        </svg>
         <div class="section-eyebrow" style="text-align: center; margin-bottom: var(--s-3);">Open source &middot; interesse público</div>
         <h2>Desenvolvido de forma independente. Lançado sob AGPL-3.0.</h2>
-        <p>Estamos a explorar a submissão a um open-call da NLnet para financiar os próximos marcos. Cidadãos, jornalistas e estudantes devem poder explorar dados públicos europeus sem depender de um único fornecedor &mdash; em qualquer dispositivo que já possuam.</p>
-        <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/NEXT_STEPS.md">
+        <p>Uma candidatura ao NLnet NGI Zero Commons Fund está em avaliação para financiar os próximos marcos. Cidadãos, jornalistas e estudantes devem poder explorar dados públicos europeus sem depender de um único fornecedor &mdash; em qualquer dispositivo que já possuam.</p>
+        <a class="btn btn-secondary" href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/NEXT_STEPS.md">
           Ler o roadmap
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
         </a>
@@ -1284,14 +693,16 @@
       <div class="footer-grid">
         <div>
           <h4>EU Stats Multiplatform</h4>
-          <p>Cliente open-source para a API pública do Eurostat. Lançado sob AGPL-3.0-or-later. Composto em Inter do Google Fonts.</p>
+          <p>Cliente open-source para a API pública do Eurostat. Lançado sob AGPL-3.0-or-later. Composto com a pilha tipográfica do sistema &mdash; sem tipos de letra externos, sem rastreadores.</p>
         </div>
         <div>
           <h4>Projeto</h4>
           <a href="https://github.com/romantsisyk/MyEuroStatApp">Repositório GitHub</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/releases">Releases</a>
           <a href="https://github.com/romantsisyk/MyEuroStatApp/issues">Problemas</a>
-          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/CONTRIBUTING.md">Contribuir</a>
-          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/main/LICENSE">Licença (AGPL-3.0)</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/CONTRIBUTING.md">Contribuir</a>
+          <a href="https://github.com/romantsisyk/MyEuroStatApp/blob/master/LICENSE">Licença (AGPL-3.0)</a>
+          <a href="../technical/">Visão geral técnica</a>
         </div>
         <div>
           <h4>Aviso Legal</h4>
@@ -1334,6 +745,15 @@
             }
           });
         }
+      }
+    })();
+
+    // ---- reduced motion: swap animated GIFs for their still frames ----
+    (function () {
+      if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+      var imgs = document.querySelectorAll("img[data-still]");
+      for (var i = 0; i < imgs.length; i++) {
+        imgs[i].src = imgs[i].getAttribute("data-still");
       }
     })();
   </script>

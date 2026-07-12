@@ -1,5 +1,6 @@
 package eu.eurostat.feature.transport.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.feature.transport.domain.TransportQuery
 import eu.eurostat.feature.transport.domain.TransportTimeSeries
 
@@ -26,5 +27,10 @@ sealed interface TransportUiState {
         val availableYears: List<Int>,
     ) : TransportUiState
     data class Empty(val query: TransportQuery) : TransportUiState
-    data class Error(val message: String, val canRetry: Boolean) : TransportUiState
+    /**
+     * The raw [AppError] is carried here rather than a pre-resolved message
+     * String so the screen can resolve localized, locale-switch-aware copy
+     * via `AppError.localizedMessage()` (core-ui) at render time.
+     */
+    data class Error(val error: AppError, val canRetry: Boolean) : TransportUiState
 }

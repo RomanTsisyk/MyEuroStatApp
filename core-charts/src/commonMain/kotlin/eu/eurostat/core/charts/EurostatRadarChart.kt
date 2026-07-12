@@ -57,6 +57,13 @@ fun EurostatRadarChart(
     // One shared path reused for each ring and series to avoid per-frame allocation.
     val sharedPath = remember { Path() }
 
+    // Per-axis spoke angle only depends on the axis count — hoisted so it isn't
+    // recomputed with trig calls on every ring/spoke/series iteration below.
+    val axisAngles = remember(axes.size) {
+        val n = axes.size
+        FloatArray(n) { i -> (-PI / 2 + i * 2 * PI / n).toFloat() }
+    }
+
     Canvas(modifier = modifier) {
         val n = axes.size
         val cx = size.width / 2f
@@ -71,7 +78,7 @@ fun EurostatRadarChart(
             val r = radius * s / ringSteps
             sharedPath.reset()
             for (i in 0 until n) {
-                val angle = (-PI / 2 + i * 2 * PI / n).toFloat()
+                val angle = axisAngles[i]
                 val x = cx + r * cos(angle)
                 val y = cy + r * sin(angle)
                 if (i == 0) sharedPath.moveTo(x, y) else sharedPath.lineTo(x, y)
@@ -80,7 +87,7 @@ fun EurostatRadarChart(
             drawPath(path = sharedPath, color = ringColor, style = ringStroke)
         }
         for (i in 0 until n) {
-            val angle = (-PI / 2 + i * 2 * PI / n).toFloat()
+            val angle = axisAngles[i]
             drawLine(
                 color = spokeColor,
                 start = Offset(cx, cy),
@@ -93,7 +100,7 @@ fun EurostatRadarChart(
             sharedPath.reset()
             for (i in 0 until n) {
                 val v = s.values[i].coerceIn(0f, 1f)
-                val angle = (-PI / 2 + i * 2 * PI / n).toFloat()
+                val angle = axisAngles[i]
                 val r = radius * v
                 val x = cx + r * cos(angle)
                 val y = cy + r * sin(angle)

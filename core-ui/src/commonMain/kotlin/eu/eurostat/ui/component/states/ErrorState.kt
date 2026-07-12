@@ -14,6 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_error_retry
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Replaces the legacy `ErrorView` from `core.ui.components`. Centered layout
@@ -61,7 +64,7 @@ fun ErrorState(
                     contentColor = androidx.compose.ui.graphics.Color.White,
                 ),
             ) {
-                Text("retry", style = Euro.typography.labelLarge)
+                Text(stringResource(Res.string.ui_error_retry), style = Euro.typography.labelLarge)
             }
         }
     }

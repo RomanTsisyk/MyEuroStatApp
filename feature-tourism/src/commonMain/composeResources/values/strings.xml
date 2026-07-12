@@ -1,0 +1,40 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="tourism_module_title">Tourism</string>
+    <string name="tourism_tagline">Leisure</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="tourism_empty_headline">No data</string>
+    <string name="tourism_empty_body">No tourism data for the selected filters.</string>
+
+    <!-- EmptyState (content-level: no active-country series) -->
+    <string name="tourism_active_empty_body">No tourism data available for the selected country.</string>
+
+    <!-- ErrorState -->
+    <string name="tourism_error_headline">Couldn’t load tourism</string>
+
+    <!-- Residence chip row -->
+    <string name="tourism_chip_domestic">Domestic</string>
+    <string name="tourism_chip_foreign">Foreign</string>
+    <string name="tourism_chip_total">Total</string>
+
+    <!-- MetricHeadline subtitle (per residence) -->
+    <string name="tourism_headline_subtitle_domestic">domestic nights · accommodation</string>
+    <string name="tourism_headline_subtitle_foreign">foreign nights · accommodation</string>
+    <string name="tourism_headline_subtitle_total">total nights · accommodation</string>
+
+    <!-- Stacked-bar nights card -->
+    <string name="tourism_bar_caption">nights · stacked by residence</string>
+    <string name="tourism_legend_domestic">domestic</string>
+    <string name="tourism_legend_foreign">foreign</string>
+
+    <!-- Seasonality heatmap card -->
+    <string name="tourism_heatmap_caption">seasonality · months × yrs</string>
+    <string name="tourism_month_jan">jan</string>
+    <string name="tourism_month_jul">jul</string>
+    <string name="tourism_month_dec">dec</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="tourism_footer_staleness_fresh">fresh</string>
+    <string name="tourism_footer_staleness_stale">stale</string>
+</resources>

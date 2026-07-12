@@ -24,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import eu.eurostat.ui.theme.Euro
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_year_dropdown_label
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Pill-shaped dropdown for selecting a single year. Renders `"year: 2024 ▾"`
@@ -62,7 +65,7 @@ fun YearDropdown(
             .padding(horizontal = Euro.spacing.m, vertical = Euro.spacing.xs),
     ) {
         Text(
-            text = "year: ",
+            text = "${stringResource(Res.string.ui_year_dropdown_label)} ",
             style = Euro.typography.labelLarge,
             color = Euro.colors.muted,
         )

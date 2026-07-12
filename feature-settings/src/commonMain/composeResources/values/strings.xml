@@ -1,0 +1,31 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="settings_module_title">Settings</string>
+
+    <!-- Theme row -->
+    <string name="settings_theme_label">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+
+    <!-- Language row (English/Polski/Українська are endonyms and stay
+         identical across all locales; only "System" translates) -->
+    <string name="settings_language_label">Language</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_polski">Polski</string>
+    <string name="settings_language_ukrainska">Українська</string>
+
+    <!-- Default country row -->
+    <string name="settings_default_country_label">Default country</string>
+
+    <!-- Clear cache row -->
+    <string name="settings_clear_cache_label">Clear cache</string>
+    <string name="settings_clear_cache_clearing">Clearing…</string>
+    <string name="settings_clear_cache_cleared">Cache cleared</string>
+    <string name="settings_clear_cache_subtitle">Remove all downloaded statistics</string>
+
+    <!-- About row -->
+    <string name="settings_about_label">About</string>
+    <string name="settings_about_version">v%1$s · independent Eurostat API client</string>
+</resources>

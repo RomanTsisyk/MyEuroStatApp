@@ -1,0 +1,40 @@
+<resources>
+    <!-- ModuleAppBar -->
+    <string name="transport_module_title">Transport</string>
+    <string name="transport_module_tagline">Mobilność</string>
+
+    <!-- ErrorState -->
+    <string name="transport_error_headline">Nie udało się wczytać</string>
+
+    <!-- EmptyState (screen-level) -->
+    <string name="transport_empty_headline">Brak danych</string>
+    <string name="transport_empty_body">Brak danych o transporcie dla wybranych filtrów.</string>
+
+    <!-- MetricHeadline subtitle -->
+    <string name="transport_mode_label_road">drogowy</string>
+    <string name="transport_headline_label_passengers">pasażerowie</string>
+
+    <!-- Unit suffixes (headline + stat tiles + panel captions) -->
+    <string name="transport_unit_billion">mld</string>
+    <string name="transport_unit_million">mln</string>
+
+    <!-- Mode toggle (PillToggle) — also reused as the small-multiples panel caption prefix.
+         Kept short (abbreviated) because PillToggle has no maxLines/overflow/scroll and
+         shares a fillMaxWidth() row with the log switch. -->
+    <string name="transport_mode_toggle_road">DROG.</string>
+    <string name="transport_mode_toggle_air">LOT.</string>
+    <string name="transport_mode_toggle_all">WSZ.</string>
+
+    <!-- Log-scale switch -->
+    <string name="transport_toggle_log_label">log</string>
+
+    <!-- Stat tiles -->
+    <string name="transport_tile_label_air">lotniczy</string>
+    <string name="transport_tile_label_sea">morski</string>
+    <string name="transport_tile_sea_value">n/d</string>
+    <string name="transport_tile_sea_delta">dane portowe</string>
+
+    <!-- SourceFooter staleness -->
+    <string name="transport_footer_staleness_fresh">aktualne</string>
+    <string name="transport_footer_staleness_stale">nieaktualne</string>
+</resources>

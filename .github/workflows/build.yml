@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, 'develop-v*']
   pull_request:
     branches: [main, master]
 
@@ -27,9 +27,73 @@ jobs:
       - name: Run common tests
         run: ./gradlew allTests
 
+      - name: Assemble Release APK
+        # Exercises the real proguard/R8 minification pass. Falls back to the
+        # debug keystore when keystore.properties is absent, so this works in
+        # CI without release signing secrets.
+        run: ./gradlew :composeApp:assembleRelease
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: composeApp-debug
           path: composeApp/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+  desktop:
+    # Desktop packaging smoke test: catches packaging regressions on the
+    # JVM/desktop target. Kept as its own ubuntu job (independent of
+    # `android`) so failures are attributable and it doesn't add to the
+    # critical-path time of the APK build.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Package desktop uber jar
+        run: ./gradlew :composeApp:packageUberJarForCurrentOS
+
+  ios-test:
+    # Runs the real iosSimulatorArm64Test suite (not just a compile) across
+    # all modules. A `\p{L}` regex once passed JVM tests AND iOS compile but
+    # crashed at runtime on Kotlin/Native — see CLAUDE.md — so compile-only
+    # is not a sufficient gate. GitHub's macos-latest runners ship with
+    # Xcode + simulators preinstalled, so no DEVELOPER_DIR override is
+    # needed here (that's only required on the maintainer's local Mac).
+    # macOS runners bill ~10x an ubuntu runner, so this stays gated behind
+    # the fast `android` job.
+    needs: android
+    runs-on: macos-latest
+    # First cold run compiles+links Native test binaries for ~20 modules and
+    # downloads the Kotlin/Native toolchain — it blew through a 45-minute
+    # budget. The ~/.konan cache below makes warm runs much faster; the
+    # timeout covers the cold case.
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache Kotlin/Native toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Run iOS simulator tests (arm64)
+        run: ./gradlew iosSimulatorArm64Test
