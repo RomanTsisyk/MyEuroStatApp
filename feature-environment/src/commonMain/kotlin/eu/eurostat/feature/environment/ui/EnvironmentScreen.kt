@@ -32,6 +32,7 @@ import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.model.ChartAxis
 import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
+import eu.eurostat.core.charts.model.yearAxis
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.environment.domain.EnvMetric
 import eu.eurostat.feature.environment.domain.EnvSector
@@ -53,9 +54,11 @@ import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatGrouped
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
+import kotlin.math.roundToLong
 import myeurostatapp.feature_environment.generated.resources.Res
 import myeurostatapp.feature_environment.generated.resources.environment_chart_empty_body
 import myeurostatapp.feature_environment.generated.resources.environment_chart_title_energy
@@ -358,7 +361,7 @@ private fun EnvironmentContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = "year"),
+                        xAxis = yearAxis(label = "year"),
                         yAxis = ChartAxis(label = yAxisLabel(metric)),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -498,8 +501,8 @@ private fun yAxisLabel(metric: EnvMetric): String = when (metric) {
 
 /** Format a metric value for compact display in the headline / tiles. */
 private fun formatValue(value: Double, metric: EnvMetric): String = when (metric) {
-    EnvMetric.Ghg -> formatDecimal(value, decimals = 0)
-    EnvMetric.Energy -> formatDecimal(value, decimals = 0)
+    EnvMetric.Ghg -> formatGrouped(value.roundToLong())
+    EnvMetric.Energy -> formatGrouped(value.roundToLong())
     EnvMetric.Sdg -> formatDecimal(value, decimals = 1)
 }
 

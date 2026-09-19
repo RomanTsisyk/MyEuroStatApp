@@ -34,6 +34,7 @@ import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.charts.model.rebaseToIndex
+import eu.eurostat.core.charts.model.yearAxis
 import eu.eurostat.feature.compare.domain.CompareIndicator
 import eu.eurostat.feature.compare.domain.CompareSeries
 import eu.eurostat.ui.component.ChartPointDetailSheet
@@ -281,7 +282,7 @@ private fun CompareContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = stringResource(Res.string.compare_chart_axis_year)),
+                        xAxis = yearAxis(label = stringResource(Res.string.compare_chart_axis_year)),
                         yAxis = ChartAxis(
                             label = if (state.normalized) {
                                 stringResource(Res.string.compare_chart_axis_index)

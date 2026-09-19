@@ -33,6 +33,7 @@ import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.charts.model.rebaseToIndex
+import eu.eurostat.core.charts.model.yearAxis
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyMetric
@@ -59,6 +60,7 @@ import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
+import kotlin.math.roundToLong
 import myeurostatapp.feature_economy.generated.resources.Res
 import myeurostatapp.feature_economy.generated.resources.economy_axis_deficit
 import myeurostatapp.feature_economy.generated.resources.economy_axis_gdp
@@ -296,7 +298,7 @@ private fun EconomyContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = stringResource(Res.string.economy_chart_axis_year)),
+                        xAxis = yearAxis(label = stringResource(Res.string.economy_chart_axis_year)),
                         yAxis = ChartAxis(
                             label = if (state.normalized) {
                                 stringResource(Res.string.economy_chart_axis_index)
@@ -648,11 +650,12 @@ private fun yoyDeltaText(
 
 /**
  * Million-EUR → billion-EUR, with locale-aware thousands grouping (e.g.
- * `"3,451"` in en, `"3.451"` in de). Uses truncating integer billions (not
- * rounded), matching this tile's original compactness convention.
+ * `"3,451"` in en, `"3.451"` in de). Rounds to the nearest billion so the
+ * figure agrees with the Overview dashboard (a truncating conversion showed
+ * 4,386 here against 4,387 there for the same 4,386.6 B € value).
  */
 private fun formatBillions(millionEur: Long): String =
-    formatGrouped(millionEur / M_TO_B)
+    formatGrouped((millionEur / M_TO_B.toDouble()).roundToLong())
 
 /**
  * Signed percent-point delta, e.g. `"+6.2%"`, `"−0.4%"`. Exact zero renders
