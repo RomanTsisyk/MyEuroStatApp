@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.ui.layout.AdaptiveTwoPane
@@ -256,6 +257,7 @@ private fun ScienceContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(radarHeight),
+                    showAxisLabels = true,
                 )
                 Spacer(Modifier.height(Euro.spacing.s))
                 Row(
@@ -401,7 +403,7 @@ private fun buildRadarSeries(
     return ordered.mapIndexedNotNull { i, code ->
         val pt = pointAtYear[code] ?: return@mapIndexedNotNull null
         RadarSeries(
-            label = code,
+            label = EurostatCountries.byCode(code)?.name ?: code,
             color = if (i == 0) primaryColor else secondaryColor,
             values = listOf(
                 safeNormalize(pt.rdSpendPctGdp, maxR),
@@ -451,25 +453,29 @@ private fun SparkTile(
     val displayValue = series?.points?.maxByOrNull { it.x }?.y?.formatPct() ?: "—"
     EuroCard(modifier = modifier) {
         Column {
+            // Label, value and unit are each a single line so every tile has
+            // the same height and the values / sparklines line up across tiles.
             Text(
                 text = label,
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = displayValue,
-                    style = Euro.typography.tabularNumLarge,
-                    color = Euro.colors.ink,
-                )
-                Spacer(Modifier.width(Euro.spacing.xs))
-                Text(
-                    text = unit,
-                    style = Euro.typography.bodySmall,
-                    color = Euro.colors.muted,
-                    modifier = Modifier.padding(bottom = 4.dp),
-                )
-            }
+            Text(
+                text = displayValue,
+                style = Euro.typography.tabularNumLarge,
+                color = Euro.colors.ink,
+                maxLines = 1,
+                softWrap = false,
+            )
+            Text(
+                text = unit,
+                style = Euro.typography.bodySmall,
+                color = Euro.colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             Spacer(Modifier.height(Euro.spacing.xs))
             EurostatLineChart(
                 series = if (series != null && series.points.isNotEmpty()) listOf(series) else emptyList(),
