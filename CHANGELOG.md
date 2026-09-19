@@ -66,6 +66,27 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Transport: the air-passengers series was always empty. `avia_paoc` was
+  queried with `schedule=TOT`, but the Eurostat code is `TOTAL`; the API
+  silently accepts unknown codes and returns zero rows, so the AIR tile
+  and AIR chart never showed data (the Overview teaser quietly fell back
+  to road passengers). Regression tests assert
+  the `schedule=TOTAL` filter; the default year now follows the latest
+  road year so the headline is not "—" when air data runs one year further
+- Line-chart year axis rendered `2K … 2K` instead of `2010 … 2024` on
+  Economy, Environment and Compare — the default compact K/M/B axis
+  formatter was applied to years; new `yearAxis()` in `core-charts`
+- Trade: the Exports / Imports / Balance tabs collapsed (first tab took
+  the whole row, the others wrapped one letter per line and left a blank
+  gap) — `UnderlineTabs` now sizes each tab to its label
+- Number formatting consistency: Economy and Trade truncated whole billions
+  (4,386 / 839) while Overview rounded (4,387 / 840) — all three now round;
+  Trade uses the typographic minus (`−14`); Environment energy/GHG values
+  use locale grouping (`177,745` instead of `177745`)
+- KPI tiles no longer break units mid-word (`G/DP`, `ilc_li/02`) on Social
+  and Science and now have equal heights; Transport stat values stay on one
+  line (`200 M`); the Science radar draws its axis labels and names the
+  compared regions ("Germany", "EU (27)") instead of raw codes
 - Search crashed on Kotlin/Native (iOS): a top-level
   `Regex("[^\\p{L}\\p{N}&]+")` threw at construction (Native rejects the
   `\p{L}`/`\p{N}` Unicode-property classes) and took the whole file's

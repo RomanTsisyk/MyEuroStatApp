@@ -20,6 +20,8 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 5. Rotate device → verify Compose state (selected country, year range, switcher selection) survives.
 6. Record findings as `RUN_REPORT.md` with screenshots.
 
+**Update (2026-09-20, ✅ emulator walk-through done):** all 8 modules were walked on an API 36 emulator in EN, PL and UK — live data, no crashes. It found 8 defects (notably `avia_paoc` was queried with `schedule=TOT` instead of `TOTAL`, so Transport air data never loaded), all fixed; see [`RUN_REPORT.md`](RUN_REPORT.md). **Still open:** offline/airplane recovery, rotation, refresh, Search/Compare/Settings-persistence checks, tablet/desktop layouts, and a run on a physical device.
+
 **Files involved:** none to edit. Pure verification.
 
 **Acceptance:** all 8 tabs render real data without crash on at least one Android device. Any crashes become P0 bug tickets.
@@ -376,7 +378,7 @@ Original notes below.
 
 1. ✅ Android APK installs and launches on a fresh device.
 2. ✅ iOS app builds AND launches in the simulator (real XcodeGen project; Overview renders live Eurostat data); full 8-tab walk-through pending alongside the Android one.
-3. ⏳ All 8 feature tabs render real Eurostat data on first open (needs the on-device smoke run).
+3. ✅ All 8 feature tabs render real Eurostat data on first open (Android emulator, EN/PL/UK — see `RUN_REPORT.md`; physical device and iOS walk-through still pending).
 4. ✅ Refresh button + pull-to-refresh both work (pull-to-refresh on all 8 screens).
 5. ✅ Offline state shows cached data with stale indicator (incl. cohort pyramid + tourism heatmap via the blob cache).
 6. ✅ Error states recover via retry button, with per-subtype localized messages (`AppError.localizedMessage()`, EN/PL/UK).
@@ -387,4 +389,4 @@ Original notes below.
 11. ✅ No `mock*()` calls remain in any feature Screen.
 12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 11/12. Remaining: the interactive 8-tab walk-throughs on an Android device and in the iOS simulator (item 3).
+Currently 12/12 on the Android emulator. Still open: the iOS simulator walk-through (this Mac currently has only Command Line Tools — a full Xcode install plus `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` is needed), a physical-device run, and the offline / rotation checks listed in `RUN_REPORT.md`.
