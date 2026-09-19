@@ -188,7 +188,7 @@ All codes + filter values verified against live Eurostat API. Do not edit withou
 | environment | `sdg_13_10`        | `unit=I90`  *(NOT `I15`)*                                            |
 | trade       | `ext_lt_intratrd`  | `indic_et=MIO_EXP_VAL/MIO_IMP_VAL/MIO_BAL_VAL`, `sitc06=TOTAL`  (no `unit` dim) |
 | transport   | `road_pa_buscoa`   | `unit=THS_PAS`, `tra_cov=TOTAL` (NO `vehicle` — dim not defined; ×1000 in mapper) |
-| transport   | `avia_paoc`        | `unit=PAS`, `tra_meas=PAS_CRD`, `tra_cov=TOTAL`, `schedule=TOT` (NO `partner` — dim not defined) |
+| transport   | `avia_paoc`        | `unit=PAS`, `tra_meas=PAS_CRD`, `tra_cov=TOTAL`, `schedule=TOTAL` (NOT `TOT` — Eurostat silently returns 0 rows for unknown codes; NO `partner` — dim not defined) |
 | transport   | (sea: disabled)    | `mar_pa_aa` uses port-based dim, not `geo` — not called              |
 | tourism     | `tour_occ_ninat`   | `c_resid=DOM/FOR/TOTAL`, `unit=NR`, `nace_r2=I551-I553`              |
 | tourism     | `tour_dem_tttot`   | `unit=NR`, `purpose=TOTAL`, `duration=N_GE1`, `c_dest=WORLD` (NOT `partner`; dim is named `c_dest`) (NO `c_resid` dim) |

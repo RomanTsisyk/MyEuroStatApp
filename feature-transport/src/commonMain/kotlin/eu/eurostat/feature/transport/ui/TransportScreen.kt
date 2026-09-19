@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -301,25 +303,33 @@ private fun ContentBody(
         }
     }
     val tilesSection: @Composable () -> Unit = {
-        Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s)) {
+        // IntrinsicSize.Min + fillMaxHeight keeps the three bordered tiles the
+        // same height even though the auto-fitted values may use different sizes.
+        Row(
+            modifier = Modifier.height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
+        ) {
             StatTile(
                 label = roadLabelLower,
                 value = roadValue?.let { formatBillions(it, billionUnit) } ?: "—",
                 bordered = true,
-                modifier = Modifier.weight(1f),
+                fitValueToWidth = true,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             )
             StatTile(
                 label = airTileLabel,
                 value = airValue?.let { formatMillions(it, millionUnit) } ?: "—",
                 bordered = true,
-                modifier = Modifier.weight(1f),
+                fitValueToWidth = true,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             )
             StatTile(
                 label = seaTileLabel,
                 value = seaValueText,
                 delta = seaDeltaText,
                 bordered = true,
-                modifier = Modifier.weight(1f),
+                fitValueToWidth = true,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }
     }
@@ -524,27 +534,34 @@ private fun List<TransportDataPoint>.toAirChartPoints(
 private fun transform(value: Double, log: Boolean): Double =
     if (log) ln(value + 1.0) else value
 
+/** No-break space (U+00A0) joining a magnitude to its unit so a tile value never wraps between them. */
+private const val NBSP = "\u00A0"
+
 /**
  * Format an absolute count into the StatTile string e.g. `"4.1 bn"` or
  * `"57.8 M"`. [unit] is the localized unit suffix (resolved at the composable
- * call site — this helper itself is not composable).
+ * call site — this helper itself is not composable). The magnitude and the
+ * unit are joined by a no-break space (U+00A0) so the value can never wrap
+ * onto two lines in a narrow tile.
  */
-private fun formatBillions(value: Long, unit: String): String = "${formatBillionsValue(value)} $unit"
+internal fun formatBillions(value: Long, unit: String): String = "${formatBillionsValue(value)}$NBSP$unit"
 
-private fun formatBillionsValue(value: Long): String =
+internal fun formatBillionsValue(value: Long): String =
     formatDecimal(value.toDouble() / 1_000_000_000.0, decimals = 1)
 
 /**
  * Millions count with 1 decimal, e.g. `"57.8 M"` — but once the magnitude
  * reaches 100 M or more, drops the decimal to a whole number (e.g. `"142 M"`)
  * to keep the StatTile compact. [unit] is the localized unit suffix (resolved
- * at the composable call site — this helper itself is not composable).
+ * at the composable call site — this helper itself is not composable). The
+ * magnitude and the unit are joined by a no-break space (U+00A0), see
+ * [formatBillions].
  */
-private fun formatMillions(value: Long, unit: String): String {
+internal fun formatMillions(value: Long, unit: String): String {
     val v = value.toDouble() / 1_000_000.0
     return if (v >= 100.0) {
-        "${v.roundToInt()} $unit"
+        "${v.roundToInt()}$NBSP$unit"
     } else {
-        "${formatDecimal(v, decimals = 1)} $unit"
+        "${formatDecimal(v, decimals = 1)}$NBSP$unit"
     }
 }
