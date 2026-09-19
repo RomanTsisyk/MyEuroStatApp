@@ -45,6 +45,8 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatSignedDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
@@ -313,12 +315,14 @@ private fun ContentBody(
                 value = exportsText,
                 bordered = true,
                 modifier = Modifier.weight(1f),
+                fitValueToWidth = true,
             )
             StatTile(
                 label = stringResource(Res.string.trade_stat_imports_label),
                 value = importsText,
                 bordered = true,
                 modifier = Modifier.weight(1f),
+                fitValueToWidth = true,
             )
         }
     }
@@ -423,22 +427,26 @@ private fun LegendItem(label: String, dot: Color) {
 }
 
 /**
- * Format a millions-of-EUR value as a signed billions string with a leading
- * ASCII sign character (e.g. `+89`, `-12`). Uses truncating integer billions
- * (not rounded), dropping fractional digits for headline compactness.
+ * Format a millions-of-EUR value as a signed whole-billions string with a
+ * leading sign: `+` for non-negative values, or the typographic minus sign
+ * (U+2212, e.g. `+89`, `−14`) — the same convention as
+ * [formatSignedDecimal] used by the other screens.
+ *
+ * The value is rounded to the nearest billion, ties away from zero (so
+ * `839_600` -> `+840`), matching the Overview screen. A value that rounds to
+ * zero (e.g. `-400`) renders as `+0`, never a signed `−0`.
  */
-private fun formatSignedBillions(valueMEur: Long): String {
-    val billions = valueMEur / 1000L
-    val sign = if (billions >= 0) "+" else "-"
-    return "$sign${billions.absoluteValue}"
-}
+internal fun formatSignedBillions(valueMEur: Long): String =
+    formatSignedDecimal(valueMEur / MILLIONS_PER_BILLION, decimals = 0)
 
 /**
- * Format a millions-of-EUR value as an unsigned billions string. Negative
- * values are rendered as their absolute magnitude — used by the export/import
- * KPI tiles where direction is implied by the label.
+ * Format a millions-of-EUR value as an unsigned whole-billions string, rounded
+ * to the nearest billion (ties away from zero, matching the Overview screen).
+ * Negative values are rendered as their absolute magnitude — used by the
+ * export/import KPI tiles where direction is implied by the label.
  */
-private fun formatBillions(valueMEur: Long): String {
-    val billions = valueMEur / 1000L
-    return billions.absoluteValue.toString()
-}
+internal fun formatBillions(valueMEur: Long): String =
+    formatDecimal(valueMEur.absoluteValue / MILLIONS_PER_BILLION, decimals = 0)
+
+/** Millions of EUR per billion of EUR, as a [Double] divisor for rounding conversions. */
+private const val MILLIONS_PER_BILLION = 1000.0
