@@ -31,6 +31,8 @@ actual fun Throwable.toAppError(): AppError {
         is SerializationException,
         -> AppError.ParseError(message ?: "Parse error")
 
-        else -> AppError.Unknown(this)
+        // Darwin reports a device that is really offline as an NSURLErrorDomain error
+        // (e.g. -1009 "not connected to the internet"), not as a Ktor timeout.
+        else -> if (isNoConnectivityUrlError()) AppError.NoNetwork else AppError.Unknown(this)
     }
 }
