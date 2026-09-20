@@ -23,7 +23,7 @@ core-database    → SQLDelight schemas + DAOs + migrations (.sqm, schema v3)
 core-ui          → Compose Multiplatform design system
                    - theme/  → EurostatTheme + object Euro (colors, typography, spacing, shapes, moduleAccents)
                    - component/  → EuroCard, ModuleAppBar (optional onSearch/onRefresh; its Back/Search/
-                                  Refresh/More descriptions are localized via ui_action_* strings),
+                                  Refresh descriptions are localized via ui_action_* strings),
                                   CountryChip(sRow), CountryFlag, CountryPickerSheet,
                                   YearScrubber, YearDropdown, MetricHeadline, StatTile, SourceFooter,
                                   StaleBanner, SegmentedControl, ChipRow, UnderlineTabs, PillToggle,
@@ -81,7 +81,9 @@ feature-search    → Search screen: compiled-in index of 27 indicators across t
                    (`onSearch` parameter, wired in EurostatApp via
                    root.onTabSelected(ChildConfig.Search); Back returns to the
                    module; Trade/Transport/Tourism show no search icon);
-                   results bringToFront the target module.
+                   Search is a transient overlay: opening a result replaces it on the
+                   root stack (DefaultRootComponent.onTabSelected), so Back returns
+                   to where Search was opened from.
 feature-overview  → Overview dashboard (the landing screen). DefaultOverviewComponent
                    aggregates one live teaser metric per feature by observing all 8
                    repositories concurrently (Koin singletons) and combine()-ing them

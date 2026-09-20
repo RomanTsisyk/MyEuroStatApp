@@ -273,9 +273,9 @@ Original notes below.
 
 ## ✅ DONE · Search & Settings screens
 
-**Status:** Both done. Settings: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header; **default-country now seeds all 9 components' first query** (read once before the first fetch; mid-session changes apply on next start). Search: `feature-search` module — compiled-in index of 27 indicators across the 8 modules with tiered ranking (label prefix > word prefix > substring > keyword > description) and browse-by-module on blank query; search pill on the Overview header; opening a result brings the target module to front. 17 ranking/component tests.
+**Status:** Both done. Settings: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header; **default-country now seeds all 9 components' first query** (read once before the first fetch; mid-session changes apply on next start). Search: `feature-search` module — compiled-in index of 27 indicators across the 8 modules with tiered ranking (label prefix > word prefix > substring > keyword > description) and browse-by-module on blank query; search pill on the Overview header; opening a result replaces Search on the stack with the target module (Search is transient), so Back returns to where it was opened. 17 ranking/component tests.
 
-**Header search icon:** now wired on Population, Economy, Environment, Social, Science and Compare (optional `onSearch` parameter, hooked up in `EurostatApp.kt` to push Search on top of the current module; Search's Back returns to it — `RootComponentTest` covers it). Trade, Transport and Tourism show no search icon; Search is still reachable from the Overview header pill. Known leftover: the `ModuleAppBar` "More" pill still has an empty `onClick` (it is drawn only when a screen passes no `onRefresh`, which no current screen does).
+**Header search icon:** now wired on Population, Economy, Environment, Social, Science and Compare (optional `onSearch` parameter, hooked up in `EurostatApp.kt` to push Search on top of the current module; Search's Back returns to it — `RootComponentTest` covers it). Trade, Transport and Tourism show no search icon; Search is still reachable from the Overview header pill. The dead `ModuleAppBar` "More" pill was removed.
 
 **Remaining follow-up:** none — the *language* preference is now applied at runtime (see the Translations section below).
 
@@ -322,7 +322,7 @@ Original notes below.
 
 **Acceptance met:** language switcher in Settings changes UI language across all screens immediately.
 
-**Country names** are localized too (`countryDisplayName`, 34 `country_*` strings; the picker search also matches the localized name), as are the `ModuleAppBar` icon descriptions (`ui_action_*`). Not localized yet: the country picker's list order (English), the Settings default-country label and the Compare legend (English name / code).
+**Country names** are localized too (`countryDisplayName`, 34 `country_*` strings; the picker search also matches the localized name), as are the `ModuleAppBar` icon descriptions (`ui_action_*`). The country picker now sorts by the localized name (`CountryNameOrder`) and the Settings default-country label and the Compare legend use localized names too.
 
 **Still open:** localizing the shared `SourceFooter` "fresh/stale" word is a nice-to-have, not blocking; native-speaker PL review of the author's own-knowledge translations is still worth doing before v1.0.
 
@@ -337,6 +337,21 @@ Original notes below.
 ## ✅ DONE · Pull-to-refresh
 
 **Status:** ✅ Done. Material3 `PullToRefreshBox` wraps the state-branch content on all 8 feature screens, dispatching the existing `Refresh` intents; the indicator follows the `Loading` state.
+
+---
+
+## 🔲 OPEN · "Refresh failed" hint
+
+**Problem:** a manual refresh that fails while a within-TTL cache exists is swallowed, so the footer still says "fresh" and the user cannot tell the refresh did not happen (RUN_REPORT, "Found, not fixed"). Repositories already throw from `refresh()`, so the signal reaches every component; nothing shows it.
+
+**Design (investigated, not implemented; no change to `Result<T>`, `AppError` or any repository):**
+- `core-ui` `SourceFooter`: new `refreshFailed: Boolean = false`. When true the dot turns warn-coloured and the staleness text becomes a new `ui_footer_refresh_failed` string ("refresh failed · showing saved data", plus PL/UK). It also replaces Science's hard-coded `"fresh"`.
+- Each of the 9 refresh-capable modules (Population, Economy, Environment, Trade, Transport, Tourism, Social, Science, Compare): `Content.refreshFailed: Boolean = false`; the component keeps a private flag, set from `runCatching { refresh() }.isFailure` in the `Refresh` handler and cleared by every other `load()` (query change, Retry) and by a stale emission; the screen passes it to `SourceFooter` (Trade and Transport need one extra `ContentBody` parameter).
+- About 39 files in total, each edit mechanical. Suggested rollout: `core-ui` + Economy as a pilot, verify on the emulator (airplane mode, warm cache, pull-to-refresh), then replicate.
+
+**Open decisions:** the footer versus a banner strip; the exact copy and its PL/UK wording; whether the hint should also cover a failed background revalidation (today only the manual gesture).
+
+**Adjacent polish, separate from this:** Population's footer always prints "fresh" even when stale (only the dot changes); the Overview offline banner is tappable but does not say it retries.
 
 ---
 

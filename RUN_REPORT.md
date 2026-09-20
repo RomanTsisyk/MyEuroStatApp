@@ -68,23 +68,36 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 - **Manual refresh while offline with a cache**: the data stays and the
   footer still says "fresh" (the cache is inside its 12 h TTL and a failed
   refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.
-- **Overview offline with an empty cache** shows `—` everywhere with no
-  offline hint (the module screens do show the error state).
 - **Wide screens**: a phone in landscape and a ~1070 dp-wide tablet both switch
   to the two-pane layout and scroll correctly, but on the tablet the lower
   half of the screen is empty, and in landscape the right pane's viewport is
   short (the chart needs a scroll to be seen whole).
-- Country picker list keeps English alphabetical order in PL/UK; the
-  Settings default-country label and the Compare legend still show the
-  English name / code.
 - Science tile label "Wykształcenie wyższe" is ellipsised in Polish.
 - Trade, Transport and Tourism show no header search icon (Search is still
   reachable from the Overview header).
-- The app bar's "More" pill still has an empty `onClick`. It is drawn only when
-  a screen passes no `onRefresh`, which no current screen does, so it is not
-  visible today.
 - No axis labels on Transport small multiples, Social lines, Tourism bars or
   the seasonality heatmap (months/years) — not investigated whether by design.
+
+## Fixed after the second pass (unit-tested; not yet checked on a device)
+
+Five of the items above were fixed afterwards on `fix/run-report-leftovers`. Each has
+tests that pass on Android, desktop and the iOS simulator (Kotlin/Native), but none has
+been looked at on a device or emulator yet.
+
+- **"More" pill**: removed (it was unreachable dead code).
+  `ModuleAppBarSourceGuardTest` (desktop) keeps an empty `onClick` from coming back.
+- **Overview offline, empty cache**: a localized hint banner (tap to retry) replaces the
+  wall of `—` when every teaser failed (`OverviewComponentTest`, `OverviewUiStateTest`).
+- **Country picker order in PL/UK**: rows sort by the localized name with a hand-rolled,
+  Native-safe comparator (`CountryNameOrder`, `CountryNameOrderTest`, 31 cases).
+- **Settings default-country label and Compare legend**: use `countryDisplayName`
+  (`SettingsCountryLabelTest`). Long Ukrainian names in the Compare legend may wrap or
+  overflow at phone width: check it visually.
+- **Search back stack**: after picking a result Search no longer stays under it, so Back
+  returns to the screen Search was opened from (`RootComponentTest`).
+
+Still open from this list: the **"refresh failed" hint** (a failed manual refresh with a
+warm cache still leaves the footer saying "fresh"). A design is in `NEXT_STEPS.md`.
 
 ## Also covered in the second pass
 
@@ -120,7 +133,9 @@ year), `TeaserFormattingTest` and `OverviewComponentTest` (raw teaser values),
 `CountryNameResTest` and `CountryStringsParityTest` (every country has a
 localized name), `AndroidNetworkErrorMappingTest` / `DesktopNetworkErrorMappingTest` /
 `UrlErrorClassificationTest`, `SparkSeriesTest` (Science) and a
-Population → Search → Back case in `RootComponentTest`.
+Population → Search → Back case in `RootComponentTest`. The follow-up fixes add
+`CountryNameOrderTest`, `ModuleAppBarSourceGuardTest`, `OverviewUiStateTest`,
+`SettingsCountryLabelTest` and more `OverviewComponentTest` / `RootComponentTest` cases.
 
 ## iOS simulator pass
 
