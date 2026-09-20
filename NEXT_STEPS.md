@@ -340,11 +340,11 @@ Original notes below.
 
 ---
 
-## 🟡 PILOT DONE · "Refresh failed" hint (Economy only)
+## 🟡 MOSTLY DONE · "Refresh failed" hint (8 of 10 screens)
 
 **Problem:** a manual refresh that fails while a within-TTL cache exists is swallowed, so the footer still says "fresh" and the user cannot tell the refresh did not happen (RUN_REPORT, "Found, not fixed"). Repositories already throw from `refresh()`, so the signal reaches every component; nothing shows it.
 
-**Status:** piloted in `core-ui` + Economy. Unit-tested on Android, desktop and Kotlin/Native (9 new `EconomyComponentTest` cases), and checked on the API 36 emulator: airplane mode + warm cache + refresh icon gives an orange dot and "refresh failed · showing saved data" (the request takes several seconds to fail), and going back online + refresh returns the footer to "fresh". In English the text wraps to two lines at phone width; the Polish and Ukrainian copy is longer and has not been looked at. **Not done:** Population, Environment, Trade, Transport, Tourism, Social, Science, Compare. Trade and Transport have one-line `Refresh` handlers to expand; Compare needs a decision (any repository failing, or all); Overview has no manual-refresh path.
+**Status:** done in `core-ui` and in Population, Economy, Environment, Trade, Transport, Tourism, Social and Science, each with component tests (the same nine or ten cases per module) that pass on Android and on Kotlin/Native. Checked on the API 36 emulator for Economy only: airplane mode + warm cache + refresh icon gives an orange dot and "refresh failed · showing saved data" (the request takes several seconds to fail), and going back online + refresh returns the footer to "fresh". In English the text wraps to two lines at phone width; the Polish and Ukrainian copy is longer and has not been looked at. **Not done:** Compare needs a decision (its refresh goes through `CompareDataSource` over 8 repositories: does any one failing count, or all of them?), and Overview's footer is the static "live open data" string and its refresh does not force a network fetch. **Known edge:** Population's cohort query can emit a non-stale cache and then a non-stale network result, so the hint can stay next to fresh data after a failed refresh until the next load or query change.
 
 **Design (no change to `Result<T>`, `AppError` or any repository):**
 - `core-ui` `SourceFooter`: new `refreshFailed: Boolean = false`. When true the dot turns warn-coloured and the staleness text becomes a new `ui_footer_refresh_failed` string ("refresh failed · showing saved data", plus PL/UK). It also replaces Science's hard-coded `"fresh"`.
