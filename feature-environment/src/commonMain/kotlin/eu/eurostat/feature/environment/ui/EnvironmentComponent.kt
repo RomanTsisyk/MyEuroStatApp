@@ -10,6 +10,7 @@ import eu.eurostat.feature.environment.domain.EnvSector
 import eu.eurostat.feature.environment.domain.EnvironmentQuery
 import eu.eurostat.feature.environment.domain.EnvironmentTimeSeries
 import eu.eurostat.feature.environment.domain.GetEnvironmentTimeSeriesUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,9 @@ class DefaultEnvironmentComponent(
 
     /** Headline year selection — null means "latest available". */
     private var activeYear: Int? = null
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     init {
         scope.launch {
@@ -119,19 +123,48 @@ class DefaultEnvironmentComponent(
             }
             EnvironmentIntent.Refresh -> {
                 scope.launch {
-                    runCatching { useCase.refresh(currentQuery) }
-                    load()
+                    val failed = try {
+                        useCase.refresh(currentQuery)
+                        false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        true
+                    }
+                    load(refreshFailed = failed)
                 }
             }
             EnvironmentIntent.Retry -> load()
         }
     }
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
-                _state.value = result.toUiState(currentQuery, activeCountry, activeSector, activeMetric, activeYear)
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up. The
+                // qualified receiver reaches the component field, not the parameter.
+                if (result is Result.Success && result.isStale) {
+                    this@DefaultEnvironmentComponent.refreshFailed = false
+                }
+                _state.value = result.toUiState(
+                    query = currentQuery,
+                    activeCountry = activeCountry,
+                    activeSector = activeSector,
+                    activeMetric = activeMetric,
+                    activeYear = activeYear,
+                    refreshFailed = this@DefaultEnvironmentComponent.refreshFailed,
+                )
                 // Keep activeCountry and activeYear in sync when data arrives.
                 if (result is Result.Success && result.data.isNotEmpty()) {
                     val codes = result.data.map { it.countryCode }
@@ -197,6 +230,7 @@ private fun Result<List<EnvironmentTimeSeries>>.toUiState(
     activeSector: EnvSector,
     activeMetric: EnvMetric,
     activeYear: Int?,
+    refreshFailed: Boolean,
 ): EnvironmentUiState = when (this) {
     is Result.Loading -> EnvironmentUiState.Loading
     is Result.Success -> if (data.isEmpty()) {
@@ -227,6 +261,7 @@ private fun Result<List<EnvironmentTimeSeries>>.toUiState(
             activeMetric = activeMetric,
             selectedYear = resolvedYear,
             availableYears = availableYears,
+            refreshFailed = refreshFailed,
         )
     }
     is Result.Error -> EnvironmentUiState.Error(
