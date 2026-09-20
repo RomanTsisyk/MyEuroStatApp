@@ -8,6 +8,7 @@ import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.feature.science.domain.GetScienceTimeSeriesUseCase
 import eu.eurostat.feature.science.domain.ScienceQuery
 import eu.eurostat.feature.science.domain.ScienceTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,9 @@ class DefaultScienceComponent(
      * Reset to null whenever [activeCountry] changes so the default (latest) re-applies.
      */
     private var selectedYear: Int? = null
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     init {
         scope.launch {
@@ -121,15 +125,31 @@ class DefaultScienceComponent(
             }
             ScienceIntent.Refresh -> {
                 scope.launch {
-                    runCatching { useCase.refresh(currentQuery) }
-                    load()
+                    val failed = try {
+                        useCase.refresh(currentQuery)
+                        false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        true
+                    }
+                    load(refreshFailed = failed)
                 }
             }
             ScienceIntent.Retry -> load()
         }
     }
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
@@ -165,29 +185,35 @@ class DefaultScienceComponent(
     private fun Result<List<ScienceTimeSeries>>.toUiState(query: ScienceQuery): ScienceUiState =
         when (this) {
             is Result.Loading -> ScienceUiState.Loading
-            is Result.Success -> if (data.isEmpty()) {
-                ScienceUiState.Empty(query)
-            } else {
-                val countries = data.map { it.countryCode }
-                // Ensure activeCountry remains valid; prefer first non-EU aggregate.
-                if (activeCountry !in countries) {
-                    activeCountry = countries.firstOrNull { it != "EU27_2020" }
-                        ?: countries.firstOrNull()
-                        ?: DEFAULT_COUNTRY
+            is Result.Success -> {
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up.
+                if (isStale) refreshFailed = false
+                if (data.isEmpty()) {
+                    ScienceUiState.Empty(query)
+                } else {
+                    val countries = data.map { it.countryCode }
+                    // Ensure activeCountry remains valid; prefer first non-EU aggregate.
+                    if (activeCountry !in countries) {
+                        activeCountry = countries.firstOrNull { it != "EU27_2020" }
+                            ?: countries.firstOrNull()
+                            ?: DEFAULT_COUNTRY
+                    }
+                    val years = availableYearsFor(data, activeCountry)
+                    val year = resolveYear(selectedYear, data, activeCountry)
+                    // Persist so subsequent SelectYear intents remain coherent.
+                    selectedYear = year
+                    ScienceUiState.Content(
+                        series = data,
+                        isStale = isStale,
+                        query = query,
+                        activeCountry = activeCountry,
+                        availableCountries = countries,
+                        selectedYear = year,
+                        availableYears = years,
+                        refreshFailed = refreshFailed,
+                    )
                 }
-                val years = availableYearsFor(data, activeCountry)
-                val year = resolveYear(selectedYear, data, activeCountry)
-                // Persist so subsequent SelectYear intents remain coherent.
-                selectedYear = year
-                ScienceUiState.Content(
-                    series = data,
-                    isStale = isStale,
-                    query = query,
-                    activeCountry = activeCountry,
-                    availableCountries = countries,
-                    selectedYear = year,
-                    availableYears = years,
-                )
             }
             is Result.Error -> ScienceUiState.Error(
                 error = cause,
