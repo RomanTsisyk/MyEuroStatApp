@@ -179,6 +179,7 @@ fun EconomyScreen(
                 stringResource(Res.string.economy_footer_staleness_fresh)
             },
             stale = (state as? EconomyUiState.Content)?.isStale == true,
+            refreshFailed = (state as? EconomyUiState.Content)?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

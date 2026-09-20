@@ -31,6 +31,8 @@ sealed interface EconomyUiState {
      * @property availableYears sorted ascending list of observation years for the active country.
      * @property normalized true when the chart is rebased to an index (first visible
      *   year = 100) for cross-country comparison; survives rotation.
+     * @property refreshFailed true when the last manual refresh failed and the content shown
+     *   comes from cache; the footer then says so instead of reporting the data as fresh.
      */
     data class Content(
         val timeSeries: List<EconomyTimeSeries>,
@@ -43,6 +45,7 @@ sealed interface EconomyUiState {
         val selectedYear: Int = 0,
         val availableYears: List<Int> = emptyList(),
         val normalized: Boolean = false,
+        val refreshFailed: Boolean = false,
     ) : EconomyUiState
 
     data class Empty(val query: EconomyQuery) : EconomyUiState
