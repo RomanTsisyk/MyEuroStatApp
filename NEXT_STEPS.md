@@ -20,7 +20,7 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 5. Rotate device → verify Compose state (selected country, year range, switcher selection) survives.
 6. Record findings as `RUN_REPORT.md` with screenshots.
 
-**Update (2026-09-20, ✅ emulator walk-through done, two passes):** all 8 modules were walked on an API 36 emulator in EN, PL and UK — live data, no crashes — and offline (with/without cache, retry), rotation, forced refresh, Search, Compare, Settings persistence and a wide-screen layout were exercised. 13 defects were found and fixed (notably `avia_paoc` was queried with `schedule=TOT` instead of `TOTAL`, so Transport air data never loaded); see [`RUN_REPORT.md`](RUN_REPORT.md). **Still open:** a run on a physical device, an iOS run of the offline-error mapping (written, JVM-tested, not yet compiled locally), process-death restore, and the smaller leftovers listed under "Found, not fixed" in the report.
+**Update (2026-09-20, ✅ emulator walk-through done, two passes):** all 8 modules were walked on an API 36 emulator in EN, PL and UK — live data, no crashes — and offline (with/without cache, retry), rotation, forced refresh, Search, Compare, Settings persistence and a wide-screen layout were exercised. 16 defects were found and fixed (notably `avia_paoc` was queried with `schedule=TOT` instead of `TOTAL`, so Transport air data never loaded); see [`RUN_REPORT.md`](RUN_REPORT.md). **Still open:** a run on a physical device, an iOS run of the offline-error mapping (`core-network/.../UrlErrorClassification.kt` is JVM-tested; the iOS `actual` that calls it is compiled only by the CI iOS job, not yet built locally), process-death restore, and the smaller leftovers listed under "Found, not fixed" in the report.
 
 **Files involved:** none to edit. Pure verification.
 
@@ -164,7 +164,7 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ## ✅ DONE · Country picker screen + real flag rendering
 
-**Status:** ✅ Done. `CountryPickerSheet` (searchable multi-select) ships in core-ui and every feature screen wires the "+ add" chip to it; selection re-issues the query via `SelectCountries` intents. Flags render as Unicode emoji via `flagFor()` in core-common. Tap-the-map variant deferred (choropleth was removed with zero call sites). Original notes below.
+**Status:** ✅ Done. `CountryPickerSheet` (searchable multi-select) ships in core-ui and every feature screen wires the "+ add" chip to it; selection re-issues the query via `SelectCountries` intents. Flags now render from 33 bundled circle-flags (HatScripts, MIT) vector drawables via `CountryFlag` in core-ui (used by `CountryChip`, `CountryPickerSheet` and the Settings default-country row); the Unicode-emoji `flagFor()` in core-common remains only as the fallback for flagless aggregates such as `EA20`. Tap-the-map variant deferred (choropleth was removed with zero call sites). Original notes below.
 
 **Why:** `CountryChipsRow` has an "+ add" CTA that does nothing. There's no picker. Flag swatches are 14×10 dp placeholder rects.
 
@@ -275,6 +275,8 @@ Original notes below.
 
 **Status:** Both done. Settings: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header; **default-country now seeds all 9 components' first query** (read once before the first fetch; mid-session changes apply on next start). Search: `feature-search` module — compiled-in index of 27 indicators across the 8 modules with tiered ranking (label prefix > word prefix > substring > keyword > description) and browse-by-module on blank query; search pill on the Overview header; opening a result brings the target module to front. 17 ranking/component tests.
 
+**Header search icon:** now wired on Population, Economy, Environment, Social, Science and Compare (optional `onSearch` parameter, hooked up in `EurostatApp.kt` to push Search on top of the current module; Search's Back returns to it — `RootComponentTest` covers it). Trade, Transport and Tourism show no search icon; Search is still reachable from the Overview header pill. Known leftover: the `ModuleAppBar` "More" pill still has an empty `onClick` (it is drawn only when a screen passes no `onRefresh`, which no current screen does).
+
 **Remaining follow-up:** none — the *language* preference is now applied at runtime (see the Translations section below).
 
 **Why:** wireframes (`design/screens-system.jsx`) define both. Settings exposes theme/language/default-country preferences; Search lets users find indicators across all 8 modules. Both are referenced in `ModuleAppBar` (search icon dispatches nowhere).
@@ -319,6 +321,8 @@ Original notes below.
 **Status:** ✅ Done. All 9 remaining modules (economy, environment, trade, transport, tourism, social, settings, search, overview) extracted the same way as core-ui/population/science — per-module `composeResources/values{,-pl,-uk}/strings.xml` with a plugin-derived `Res` package, screens resolving via `stringResource(...)`. Every module was adversarially reviewed for translation quality and key parity. `feature-search`'s `SearchModule.displayName` and `feature-overview`'s `ModuleTeaser.title/unit` moved from plain `String` to `StringResource` so they localize too. AppError messages also localize now (`AppError.localizedMessage()` in core-ui, EN/PL/UK; the old English-only `AppError.toUserMessage()` is deleted). The *language* preference (`AppPreferences.language`) is now applied at runtime via a `LocalAppLocale` expect/actual (Android Configuration swap, desktop JVM-locale composition local, iOS `AppleLanguages` override in `NSUserDefaults`) — `EurostatApp` observes the preference and `key()`-rebuilds the themed subtree, so the Settings language picker switches the UI language immediately, no restart needed.
 
 **Acceptance met:** language switcher in Settings changes UI language across all screens immediately.
+
+**Country names** are localized too (`countryDisplayName`, 34 `country_*` strings; the picker search also matches the localized name), as are the `ModuleAppBar` icon descriptions (`ui_action_*`). Not localized yet: the country picker's list order (English), the Settings default-country label and the Compare legend (English name / code).
 
 **Still open:** localizing the shared `SourceFooter` "fresh/stale" word is a nice-to-have, not blocking; native-speaker PL review of the author's own-knowledge translations is still worth doing before v1.0.
 
@@ -367,6 +371,7 @@ Original notes below.
 **Steps still open:**
 1. Real Android release signing keystore (currently the documented debug-keystore fallback in `docs/RELEASING.md`).
 2. iOS deployment target review.
+3. F-Droid recipe: `metadata/eu.eurostat.app.yml` still pins `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`, and no `v*` tag exists in the local repo — update it (and the `CurrentVersion*` lines) to the tag cut for the next release before filing the fdroiddata merge request.
 
 ---
 
@@ -392,4 +397,4 @@ Original notes below.
 11. ✅ No `mock*()` calls remain in any feature Screen.
 12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 12/12 on the Android emulator. Still open: the iOS simulator walk-through (this Mac currently has only Command Line Tools — a full Xcode install plus `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` is needed), a physical-device run, and the offline / rotation checks listed in `RUN_REPORT.md`.
+Currently 12/12 on the Android emulator. Still open: the iOS simulator walk-through (on this Mac `xcode-select` still points at Command Line Tools although `/Applications/Xcode.app` is installed — prefix builds with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` or run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` once), a physical-device run, and the offline / rotation checks listed in `RUN_REPORT.md`.

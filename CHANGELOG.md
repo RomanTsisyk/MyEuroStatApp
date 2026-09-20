@@ -23,6 +23,12 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   core-charts (unit-tested) shares the exact draw-pass coordinate
   mapping, wired on the Economy and Environment hero charts and the
   Compare screen
+- The header search icon now opens Search from Population, Economy,
+  Environment, Social, Science and Compare (it was a dead button); Back
+  returns to the module it was opened from. Trade, Transport and Tourism
+  show no search icon. The app bar's Back / Search / Refresh / More
+  accessibility descriptions are localized (EN/PL/UK)
+- Store changelogs for `versionCode` 60 (`fastlane/metadata/android/{en-US,pl,uk}/changelogs/60.txt`)
 - Tag-triggered release workflow (`.github/workflows/release.yml`):
   pushing a `v*` tag builds the release APK (real signature when the
   keystore secrets are configured, debug-signed fallback otherwise) and
@@ -69,6 +75,12 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the Settings About screen (no longer hardcoded to 0.4.0), and the iOS
   `Info.plist`
 
+### Changed
+
+- Documentation media regenerated from the fixed build: demo GIFs
+  (`docs/gifs`) re-recorded, landing-page stills (`docs/assets/screens`) and
+  the Android store screenshots re-shot
+
 ### Fixed
 
 - Offline errors: a device that is really offline throws plain `java.net`
@@ -97,6 +109,11 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Trade: the Exports / Imports / Balance tabs collapsed (first tab took
   the whole row, the others wrapped one letter per line and left a blank
   gap) — `UnderlineTabs` now sizes each tab to its label
+- Trade: the headline number always showed the balance while the subtitle
+  named the selected tab; it now follows Exports / Imports / Balance
+- Science: the three sparkline tiles always ended at the latest year, so
+  the value under an earlier selected year disagreed with the headline; they
+  now read "as of the selected year"
 - Number formatting consistency: Economy and Trade truncated whole billions
   (4,386 / 839) while Overview rounded (4,387 / 840) — all three now round;
   Trade uses the typographic minus (`−14`); Environment energy/GHG values
@@ -121,7 +138,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   walk-through is done — see `RUN_REPORT.md`)
 - Real Android release signing key (currently debug-keystore fallback);
   Msi/Deb installers verified via CI (only Dmg verified locally so far)
-- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
+- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata
+  MR; the recipe still pins `v0.4.0` / `versionCode` 40 and must be updated
+  to the tag cut for the next release)
 
 ## [0.5.0] — 2026-07-07
 

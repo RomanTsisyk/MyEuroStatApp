@@ -50,18 +50,22 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 | 6 | Overview vs Economy / Trade | 4,387 vs 4,386; 840 vs 839 | Overview rounded, Economy/Trade truncated | all three round; Trade uses `−` |
 | 7 | Social, Science, Transport | units broke mid-word (`G/DP`, `ilc_li/02`, `200/M`), uneven tile heights | narrow side-by-side caption; normal space in value | stacked caption, equal-height tiles, no-break space |
 | 8 | Science | radar without axis labels; legend showed `EU27_2020` | labels were passed but never drawn | `showAxisLabels`, legend uses country names |
-| 9 | every screen, offline | error said "Something went wrong" instead of "No connection" | a really offline device throws `UnknownHostException` / `SocketException`, but only Ktor timeouts were mapped to `NoNetwork` | JVM connectivity exceptions map to `NoNetwork` (Android + desktop); iOS `NSURLErrorDomain` codes too, unverified on iOS |
+| 9 | every screen, offline | error said "Something went wrong" instead of "No connection" | a really offline device throws `UnknownHostException` / `SocketException`, but only Ktor timeouts were mapped to `NoNetwork` | JVM connectivity exceptions map to `NoNetwork` (Android + desktop); iOS `NSURLErrorDomain` codes too (`UrlErrorClassification.kt`, JVM-tested; the iOS glue is unverified on iOS) |
 | 10 | every screen, dark theme | status-bar clock and icons invisible (dark on dark) | icons followed the *system* theme, not the theme picked in Settings | `StatusBarIcons(light)` applied from `EurostatTheme` |
 | 11 | Overview | dark header with dark status-bar icons | same | light icons over the Overview header |
 | 12 | Overview | `4,387` / `83.5M` in Polish after switching language, until restart | teaser strings formatted once in the component and kept in a singleton | raw values in state, formatted while composing |
 | 13 | all module headers | "Germany · DE" in Polish/Ukrainian | English-only country names | 34 localized `country_*` strings, `countryDisplayName()` |
+| 14 | Trade | the headline number was always the balance, while the subtitle under it named the selected tab (Exports / Imports) | value hard-wired to the balance | `tradeHeadlineValue` follows the selected tab (`TradeFormattingTest`) |
+| 15 | Science | the three sparkline tiles showed the latest year's value under a headline for an earlier selected year | series always ended at the latest year | `toSparkSeries(..., upToYear)` — tiles read "as of the selected year" (`SparkSeriesTest`) |
+| 16 | Population, Economy, Environment, Social, Science, Compare | header search icon did nothing (`onSearch = {}`), though Search existed and the Overview header opens it | icon handler never wired | optional `onSearch` on each screen, wired in `EurostatApp` to push Search (Back returns to the module; `RootComponentTest`); the app bar's Back / Search / Refresh / More descriptions are now localized (`ui_action_*`, EN/PL/UK) |
 
 ## Found, not fixed
 
 - **iOS offline mapping is written but unproven on a device**: Darwin
   reports `NSURLErrorDomain` codes (e.g. -1009); they are classified from the
-  error text by a JVM-tested function, but the iOS glue was never compiled or
-  run locally (no Xcode) — the CI iOS job is its first build.
+  error text by a JVM-tested function (`UrlErrorClassification.kt`), but the iOS
+  glue (`ErrorMapping.ios.kt`) was never compiled or run locally — the CI iOS
+  job is its first build.
 - **Manual refresh while offline with a cache**: the data stays and the
   footer still says "fresh" (the cache is inside its 12 h TTL and a failed
   refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.
@@ -75,6 +79,11 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
   Settings default-country label and the Compare legend still show the
   English name / code.
 - Science tile label "Wykształcenie wyższe" is ellipsised in Polish.
+- Trade, Transport and Tourism show no header search icon (Search is still
+  reachable from the Overview header).
+- The app bar's "More" pill still has an empty `onClick`. It is drawn only when
+  a screen passes no `onRefresh`, which no current screen does, so it is not
+  visible today.
 - No axis labels on Transport small multiples, Social lines, Tourism bars or
   the seasonality heatmap (months/years) — not investigated whether by design.
 
@@ -94,8 +103,10 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 
 ## Not covered
 
-- **iOS**: this Mac has no full Xcode install (only Command Line Tools), so the
-  simulator run and `iosSimulatorArm64Test` could not be executed
+- **iOS**: `xcode-select` on this Mac points at the Command Line Tools
+  (`/Applications/Xcode.app` is present but not selected — see the
+  `DEVELOPER_DIR` note in `iosApp/README.md`), so the simulator run and
+  `iosSimulatorArm64Test` were not executed in this session
 - A physical Android device, and the `Pixel_Tablet` AVD (the wide-screen check
   used `wm size` on the phone emulator instead)
 - Process death / state restore, the pull-to-refresh gesture, clearing the cache
@@ -110,5 +121,7 @@ Unit tests were run for every touched module (`testDebugUnitTest`, plus
 `TransportApiServiceImplTest` (`schedule=TOTAL`), `TransportComponentTest` (default
 year), `TeaserFormattingTest` and `OverviewComponentTest` (raw teaser values),
 `CountryNameResTest` and `CountryStringsParityTest` (every country has a
-localized name), and `AndroidNetworkErrorMappingTest` / `DesktopNetworkErrorMappingTest`.
-The iOS Native test suite has not been run locally (no Xcode).
+localized name), `AndroidNetworkErrorMappingTest` / `DesktopNetworkErrorMappingTest` /
+`UrlErrorClassificationTest`, `SparkSeriesTest` (Science) and a
+Population → Search → Back case in `RootComponentTest`. The iOS Native test
+suite has not been run locally.
