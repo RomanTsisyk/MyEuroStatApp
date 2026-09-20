@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.sp
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.ui.component.MetricHeadline
 import eu.eurostat.ui.component.SourceFooter
+import eu.eurostat.ui.component.StaleBanner
+import eu.eurostat.ui.component.states.localizedMessage
 import eu.eurostat.ui.icons.EuroIcons
 import eu.eurostat.ui.system.StatusBarIcons
 import eu.eurostat.ui.theme.Euro
@@ -118,6 +120,19 @@ fun OverviewScreen(
 
         item(span = { GridItemSpan(maxLineSpan) }) {
             HeroBlock(hero = state.hero, headlineCountryCode = state.headlineCountryCode)
+        }
+
+        // Total failure (e.g. offline with an empty cache): every tile shows "—", which is
+        // indistinguishable from "still loading" without this hint. Tap retries.
+        state.unavailableError?.let { error ->
+            item(key = "unavailable_hint", span = { GridItemSpan(maxLineSpan) }) {
+                StaleBanner(
+                    message = error.localizedMessage(),
+                    modifier = Modifier
+                        .padding(horizontal = Euro.spacing.base)
+                        .clickable { component.onRefresh() },
+                )
+            }
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
