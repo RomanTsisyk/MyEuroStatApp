@@ -21,7 +21,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   a bottom sheet with country, year, formatted value, unit and dataset
   code (localized EN/PL/UK); pure `nearestChartPoint` hit-test in
   core-charts (unit-tested) shares the exact draw-pass coordinate
-  mapping, wired on the Economy hero chart and the Compare screen
+  mapping, wired on the Economy and Environment hero charts and the
+  Compare screen
 - Tag-triggered release workflow (`.github/workflows/release.yml`):
   pushing a `v*` tag builds the release APK (real signature when the
   keystore secrets are configured, debug-signed fallback otherwise) and
