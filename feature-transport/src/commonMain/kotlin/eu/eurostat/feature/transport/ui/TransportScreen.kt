@@ -150,6 +150,7 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
                     is TransportUiState.Content -> ContentBody(
                         series = s.series,
                         isStale = s.isStale,
+                        refreshFailed = s.refreshFailed,
                         accent = accent,
                         activeCountry = s.activeCountry,
                         availableCountries = s.availableCountries,
@@ -198,6 +199,7 @@ private fun LoadingBody() {
 private fun ContentBody(
     series: List<TransportTimeSeries>,
     isStale: Boolean,
+    refreshFailed: Boolean,
     accent: Color,
     activeCountry: String,
     availableCountries: List<String>,
@@ -384,6 +386,7 @@ private fun ContentBody(
             dataset = "road_pa_buscoa · avia_paoc",
             staleness = if (isStale) staleLabel else freshLabel,
             stale = isStale,
+            refreshFailed = refreshFailed,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),
