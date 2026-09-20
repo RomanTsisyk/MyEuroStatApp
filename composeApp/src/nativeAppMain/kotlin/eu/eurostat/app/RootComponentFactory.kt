@@ -33,8 +33,9 @@ fun createRootComponent(componentContext: ComponentContext): RootComponent {
     // takes an onNavigateToModule callback into the RootComponent, which does
     // not exist yet when the Koin modules are assembled. The root reference is
     // late-bound — it is assigned below, before any UI (and therefore any
-    // search result tap) can invoke the callback. Opening a result pushes the
-    // target module on top of Search, so back returns to the results.
+    // search result tap) can invoke the callback. Opening a result replaces
+    // Search with the target module (Search is transient in the root stack),
+    // so back returns to where Search was opened from.
     var root: RootComponent? = null
     val searchKey = requireNotNull(ChildConfig.Search::class.qualifiedName)
     val searchFactory = ComponentFactory<Any> { ctx ->
