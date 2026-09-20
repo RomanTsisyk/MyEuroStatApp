@@ -8,6 +8,7 @@ import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.feature.social.domain.GetSocialTimeSeriesUseCase
 import eu.eurostat.feature.social.domain.SocialQuery
 import eu.eurostat.feature.social.domain.SocialTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,9 @@ class DefaultSocialComponent(
 
     /** Year selected via YearDropdown; null means "use latest available". */
     private var selectedYear: Int? = null
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -128,15 +132,31 @@ class DefaultSocialComponent(
             }
             SocialIntent.Refresh -> {
                 scope.launch {
-                    runCatching { useCase.refresh(currentQuery) }
-                    load()
+                    val failed = try {
+                        useCase.refresh(currentQuery)
+                        false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        true
+                    }
+                    load(refreshFailed = failed)
                 }
             }
             SocialIntent.Retry -> load()
         }
     }
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
@@ -148,39 +168,45 @@ class DefaultSocialComponent(
     private fun Result<List<SocialTimeSeries>>.toUiState(query: SocialQuery): SocialUiState =
         when (this) {
             is Result.Loading -> SocialUiState.Loading
-            is Result.Success -> if (data.isEmpty()) {
-                SocialUiState.Empty(query)
-            } else {
-                val available = data.map { it.countryCode }
-                // Ensure activeCountry is valid; prefer first non-EU aggregate.
-                if (activeCountry !in available) {
-                    activeCountry = available.firstOrNull { it != "EU27_2020" }
-                        ?: available.firstOrNull()
-                        ?: activeCountry
+            is Result.Success -> {
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up.
+                if (isStale) refreshFailed = false
+                if (data.isEmpty()) {
+                    SocialUiState.Empty(query)
+                } else {
+                    val available = data.map { it.countryCode }
+                    // Ensure activeCountry is valid; prefer first non-EU aggregate.
+                    if (activeCountry !in available) {
+                        activeCountry = available.firstOrNull { it != "EU27_2020" }
+                            ?: available.firstOrNull()
+                            ?: activeCountry
+                    }
+                    // Derive display year range from live data so the scrubber
+                    // re-anchors when the dataset bounds change.
+                    val points = data.flatMap { it.points }
+                    val dataMin = points.minOfOrNull { it.year } ?: query.yearRange.first
+                    val dataMax = points.maxOfOrNull { it.year } ?: query.yearRange.last
+                    val availableYears = data
+                        .firstOrNull { it.countryCode == activeCountry }
+                        ?.points?.map { it.year }?.sorted() ?: emptyList()
+                    val resolvedYear = availableYears.let { years ->
+                        val target = selectedYear
+                        if (target != null && target in years) target else years.maxOrNull() ?: dataMax
+                    }
+                    SocialUiState.Content(
+                        series = data,
+                        isStale = isStale,
+                        query = query,
+                        activeCountry = activeCountry,
+                        availableCountries = available,
+                        selectedKpiKey = selectedKpiKey,
+                        displayYearRange = dataMin..dataMax,
+                        selectedYear = resolvedYear,
+                        availableYears = availableYears,
+                        refreshFailed = refreshFailed,
+                    )
                 }
-                // Derive display year range from live data so the scrubber
-                // re-anchors when the dataset bounds change.
-                val points = data.flatMap { it.points }
-                val dataMin = points.minOfOrNull { it.year } ?: query.yearRange.first
-                val dataMax = points.maxOfOrNull { it.year } ?: query.yearRange.last
-                val availableYears = data
-                    .firstOrNull { it.countryCode == activeCountry }
-                    ?.points?.map { it.year }?.sorted() ?: emptyList()
-                val resolvedYear = availableYears.let { years ->
-                    val target = selectedYear
-                    if (target != null && target in years) target else years.maxOrNull() ?: dataMax
-                }
-                SocialUiState.Content(
-                    series = data,
-                    isStale = isStale,
-                    query = query,
-                    activeCountry = activeCountry,
-                    availableCountries = available,
-                    selectedKpiKey = selectedKpiKey,
-                    displayYearRange = dataMin..dataMax,
-                    selectedYear = resolvedYear,
-                    availableYears = availableYears,
-                )
             }
             is Result.Error -> SocialUiState.Error(
                 error = cause,

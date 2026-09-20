@@ -25,6 +25,11 @@ sealed interface SocialUiState {
         val selectedYear: Int = displayYearRange.last,
         /** All years available for the active country (sorted ascending). */
         val availableYears: List<Int> = emptyList(),
+        /**
+         * True when the last manual refresh failed and the content shown comes
+         * from cache; the footer then says so instead of reporting the data as fresh.
+         */
+        val refreshFailed: Boolean = false,
     ) : SocialUiState
     data class Empty(val query: SocialQuery) : SocialUiState
     /**
