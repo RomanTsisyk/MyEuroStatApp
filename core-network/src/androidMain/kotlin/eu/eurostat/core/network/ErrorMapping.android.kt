@@ -8,6 +8,9 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.serialization.JsonConvertException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 /**
  * Maps this [Throwable] to a typed [AppError].
@@ -22,6 +25,12 @@ actual fun Throwable.toAppError(): AppError {
     return when (this) {
         is ConnectTimeoutException,
         is HttpRequestTimeoutException,
+        // Real loss of connectivity (airplane mode, no route, DNS failure, refused or
+        // reset connection) surfaces as plain java.net exceptions, not Ktor timeouts.
+        // SocketException also covers ConnectException and NoRouteToHostException.
+        is UnknownHostException,
+        is SocketException,
+        is SocketTimeoutException,
         -> AppError.NoNetwork
 
         is ClientRequestException -> AppError.HttpError(response.status.value, message ?: "")
