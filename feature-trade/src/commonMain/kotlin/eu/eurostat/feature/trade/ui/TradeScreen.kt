@@ -238,7 +238,6 @@ private fun ContentBody(
         }
     }
 
-    val balanceText = latest?.balanceEur?.let(::formatSignedBillions) ?: "—"
     val exportsText = latest?.exportsEur?.let { "${formatBillions(it)} $unitBillionEur" } ?: "—"
     val importsText = latest?.importsEur?.let { "${formatBillions(it)} $unitBillionEur" } ?: "—"
     val latestYear = selectedYear.toString()
@@ -249,7 +248,12 @@ private fun ContentBody(
     val headlineSection: @Composable () -> Unit = {
         val metricLower = (tabLabels.getOrNull(selectedTabIndex) ?: tabLabels.last()).lowercase()
         MetricHeadline(
-            value = balanceText,
+            value = tradeHeadlineValue(
+                exportsEur = latest?.exportsEur,
+                importsEur = latest?.importsEur,
+                balanceEur = latest?.balanceEur,
+                tabIndex = selectedTabIndex,
+            ),
             unit = unitBillionEur,
             subtitle = stringResource(Res.string.trade_subtitle_format, metricLower, activeCountry),
             year = latestYear,
@@ -448,6 +452,24 @@ internal fun formatSignedBillions(valueMEur: Long): String =
  */
 internal fun formatBillions(valueMEur: Long): String =
     formatDecimal(valueMEur.absoluteValue / MILLIONS_PER_BILLION, decimals = 0)
+
+/**
+ * Headline number for the selected Exports / Imports / Balance tab, in whole
+ * billions: exports and imports unsigned, the balance with its sign. The
+ * subtitle under the number names the same tab, so the value must follow it
+ * (it used to show the balance on every tab). Returns "—" when the selected
+ * figure is missing. [tabIndex] 0 = Exports, 1 = Imports, anything else = Balance.
+ */
+internal fun tradeHeadlineValue(
+    exportsEur: Long?,
+    importsEur: Long?,
+    balanceEur: Long?,
+    tabIndex: Int,
+): String = when (tabIndex) {
+    0 -> exportsEur?.let(::formatBillions)
+    1 -> importsEur?.let(::formatBillions)
+    else -> balanceEur?.let(::formatSignedBillions)
+} ?: "—"
 
 /** Millions of EUR per billion of EUR, as a [Double] divisor for rounding conversions. */
 private const val MILLIONS_PER_BILLION = 1000.0

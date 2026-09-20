@@ -60,4 +60,26 @@ class TradeFormattingTest {
         assertEquals("1", formatBillions(-500L))
         assertEquals("0", formatBillions(-499L))
     }
+
+    @Test
+    fun headline_exportsTabShowsUnsignedExports() {
+        assertEquals("840", tradeHeadlineValue(839_600L, 853_900L, -14_300L, tabIndex = 0))
+    }
+
+    @Test
+    fun headline_importsTabShowsUnsignedImports() {
+        assertEquals("854", tradeHeadlineValue(839_600L, 853_900L, -14_300L, tabIndex = 1))
+    }
+
+    @Test
+    fun headline_balanceTabShowsSignedBalance() {
+        assertEquals("\u221214", tradeHeadlineValue(839_600L, 853_900L, -14_300L, tabIndex = 2))
+    }
+
+    @Test
+    fun headline_missingSelectedFigureIsDash() {
+        assertEquals("\u2014", tradeHeadlineValue(null, 853_900L, -14_300L, tabIndex = 0))
+        assertEquals("\u2014", tradeHeadlineValue(839_600L, null, -14_300L, tabIndex = 1))
+        assertEquals("\u2014", tradeHeadlineValue(839_600L, 853_900L, null, tabIndex = 2))
+    }
 }
