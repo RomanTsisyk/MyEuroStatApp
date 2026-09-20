@@ -290,21 +290,21 @@ private fun ScienceContent(
                 label = stringResource(Res.string.science_spark_rd),
                 unit = stringResource(Res.string.science_unit_pct_gdp),
                 accent = accent,
-                series = activeSeries?.toSparkSeries(accent) { it.rdSpendPctGdp },
+                series = activeSeries?.toSparkSeries(accent, selectedYear) { it.rdSpendPctGdp },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
                 label = stringResource(Res.string.science_spark_internet),
                 unit = stringResource(Res.string.science_unit_pct_individuals),
                 accent = accent,
-                series = activeSeries?.toSparkSeries(accent) { it.internetUsagePct },
+                series = activeSeries?.toSparkSeries(accent, selectedYear) { it.internetUsagePct },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
                 label = stringResource(Res.string.science_spark_tertiary),
                 unit = stringResource(Res.string.science_unit_pct_age_25_64),
                 accent = accent,
-                series = activeSeries?.toSparkSeries(accent) { it.tertiaryEducPct },
+                series = activeSeries?.toSparkSeries(accent, selectedYear) { it.tertiaryEducPct },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -437,12 +437,19 @@ private fun safeNormalize(value: Double?, max: Double): Float {
  * Materialize a [ChartSeries] from this country's points for a single metric
  * selected by [selector]. Null values are dropped (the sparkline collapses
  * to the contiguous run of known observations).
+ *
+ * The tile shows the last point of this series as its value, so points after
+ * [upToYear] are excluded: the tile then reads "as of the selected year" like
+ * the headline above it. (It used to always show the latest year, e.g. 1.41
+ * in the tile under a 0.96 headline for 2016.) `null` keeps every point.
  */
-private fun ScienceTimeSeries.toSparkSeries(
+internal fun ScienceTimeSeries.toSparkSeries(
     accent: Color,
+    upToYear: Int?,
     selector: (ScienceDataPoint) -> Double?,
 ): ChartSeries {
     val pts = points.mapNotNull { p ->
+        if (upToYear != null && p.year > upToYear) return@mapNotNull null
         val y = selector(p) ?: return@mapNotNull null
         ChartPoint(x = p.year.toDouble(), y = y)
     }
