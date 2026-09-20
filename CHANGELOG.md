@@ -155,6 +155,12 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Search is a transient overlay in the root back stack: after Population → Search →
   pick a result, Back returns to Population's origin instead of landing on Search
   again
+- Economy: when a manual refresh (pull-to-refresh or the refresh icon) fails and
+  the screen keeps showing saved data, the footer now turns the status dot orange
+  and says "refresh failed · showing saved data" (EN/PL/UK) instead of claiming
+  the data is fresh. The hint clears on the next query change, Retry or a stale
+  reload. Pilot in Economy only: `SourceFooter` gained a `refreshFailed`
+  parameter (default false), so the other screens are unchanged for now
 
 ### Planned for v0.8 / v1.0
 

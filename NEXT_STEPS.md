@@ -340,16 +340,18 @@ Original notes below.
 
 ---
 
-## 🔲 OPEN · "Refresh failed" hint
+## 🟡 PILOT DONE · "Refresh failed" hint (Economy only)
 
 **Problem:** a manual refresh that fails while a within-TTL cache exists is swallowed, so the footer still says "fresh" and the user cannot tell the refresh did not happen (RUN_REPORT, "Found, not fixed"). Repositories already throw from `refresh()`, so the signal reaches every component; nothing shows it.
 
-**Design (investigated, not implemented; no change to `Result<T>`, `AppError` or any repository):**
+**Status:** piloted in `core-ui` + Economy. Unit-tested on Android, desktop and Kotlin/Native (9 new `EconomyComponentTest` cases), and checked on the API 36 emulator: airplane mode + warm cache + refresh icon gives an orange dot and "refresh failed · showing saved data" (the request takes several seconds to fail), and going back online + refresh returns the footer to "fresh". In English the text wraps to two lines at phone width; the Polish and Ukrainian copy is longer and has not been looked at. **Not done:** Population, Environment, Trade, Transport, Tourism, Social, Science, Compare. Trade and Transport have one-line `Refresh` handlers to expand; Compare needs a decision (any repository failing, or all); Overview has no manual-refresh path.
+
+**Design (no change to `Result<T>`, `AppError` or any repository):**
 - `core-ui` `SourceFooter`: new `refreshFailed: Boolean = false`. When true the dot turns warn-coloured and the staleness text becomes a new `ui_footer_refresh_failed` string ("refresh failed · showing saved data", plus PL/UK). It also replaces Science's hard-coded `"fresh"`.
 - Each of the 9 refresh-capable modules (Population, Economy, Environment, Trade, Transport, Tourism, Social, Science, Compare): `Content.refreshFailed: Boolean = false`; the component keeps a private flag, set from `runCatching { refresh() }.isFailure` in the `Refresh` handler and cleared by every other `load()` (query change, Retry) and by a stale emission; the screen passes it to `SourceFooter` (Trade and Transport need one extra `ContentBody` parameter).
 - About 39 files in total, each edit mechanical. Suggested rollout: `core-ui` + Economy as a pilot, verify on the emulator (airplane mode, warm cache, pull-to-refresh), then replicate.
 
-**Open decisions:** the footer versus a banner strip; the exact copy and its PL/UK wording; whether the hint should also cover a failed background revalidation (today only the manual gesture).
+**Open decisions:** whether to keep the footer or use a banner strip (the pilot chose the footer); PL/UK wording review by a native speaker; whether the hint should also cover a failed background revalidation (today only the manual gesture).
 
 **Adjacent polish, separate from this:** Population's footer always prints "fresh" even when stale (only the dot changes); the Overview offline banner is tappable but does not say it retries.
 

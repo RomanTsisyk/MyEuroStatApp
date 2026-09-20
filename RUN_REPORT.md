@@ -96,8 +96,10 @@ been looked at on a device or emulator yet.
 - **Search back stack**: after picking a result Search no longer stays under it, so Back
   returns to the screen Search was opened from (`RootComponentTest`).
 
-Still open from this list: the **"refresh failed" hint** (a failed manual refresh with a
-warm cache still leaves the footer saying "fresh"). A design is in `NEXT_STEPS.md`.
+The **"refresh failed" hint** is piloted on Economy only (core-ui `SourceFooter` + the Economy
+component; verified on the emulator with airplane mode, a warm cache and the refresh icon: orange
+dot and "refresh failed · showing saved data", cleared by the next successful refresh). The other
+eight modules still leave the footer saying "fresh" after a failed manual refresh; see `NEXT_STEPS.md`.
 
 ## Also covered in the second pass
 
