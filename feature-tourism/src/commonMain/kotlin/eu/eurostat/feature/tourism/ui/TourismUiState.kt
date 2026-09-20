@@ -24,6 +24,8 @@ sealed interface TourismUiState {
      *        data for the active country.
      * @param availableYears years for which at least one residence has data for the
      *        active country. Sorted ascending so the dropdown shows them consistently.
+     * @param refreshFailed true when the last manual refresh failed and the content shown
+     *        comes from cache; the footer then says so instead of reporting the data as fresh.
      */
     data class Content(
         val timeSeries: List<TourismTimeSeries>,
@@ -33,6 +35,7 @@ sealed interface TourismUiState {
         val heatmapCells: List<List<Float>> = emptyList(),
         val selectedYear: Int = 0,
         val availableYears: List<Int> = emptyList(),
+        val refreshFailed: Boolean = false,
     ) : TourismUiState
 
     data object Empty : TourismUiState
