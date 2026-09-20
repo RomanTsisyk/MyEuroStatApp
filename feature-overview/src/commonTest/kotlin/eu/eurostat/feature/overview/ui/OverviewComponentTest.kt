@@ -61,6 +61,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 // ---------------------------------------------------------------------------
@@ -220,7 +222,10 @@ class OverviewComponentTest {
         assertEquals(TeaserStatus.Loaded, teaser.status)
         assertEquals(2023, teaser.year)
         assertEquals(Res.string.overview_module_unit_economy, teaser.unitRes)
-        assertTrue(teaser.value != "—" && teaser.value.isNotBlank(), "value=${teaser.value}")
+        // Raw value in the dataset's unit (EUR millions), not a formatted string.
+        assertEquals(4_500_000.0, teaser.value)
+        assertEquals(TeaserFormat.BillionsFromMillions, teaser.format)
+        assertEquals("4,500", teaser.displayValue("en"))
     }
 
     @Test
@@ -234,8 +239,14 @@ class OverviewComponentTest {
         )
         testScheduler.advanceUntilIdle()
 
-        assertTrue(component.state.value.teaser(ChildConfig.Social).value.endsWith("%"))
-        assertTrue(component.state.value.teaser(ChildConfig.Science).value.endsWith("%"))
+        val poverty = component.state.value.teaser(ChildConfig.Social)
+        val rnd = component.state.value.teaser(ChildConfig.Science)
+        assertEquals(14.4, poverty.value)
+        assertEquals(3.1, rnd.value)
+        assertEquals(TeaserFormat.Percent, poverty.format)
+        assertEquals(TeaserFormat.Percent, rnd.format)
+        assertEquals("14.4%", poverty.displayValue("en"))
+        assertEquals("3.1%", rnd.displayValue("en"))
     }
 
     @Test
@@ -248,11 +259,14 @@ class OverviewComponentTest {
         val pop = component.state.value.teaser(ChildConfig.Population)
         assertEquals(TeaserStatus.Loaded, pop.status)
         assertEquals(Res.string.overview_module_unit_population, pop.unitRes)
-        assertTrue(pop.value != "—")
+        assertEquals(83_000_000.0, pop.value)
+        assertEquals(TeaserFormat.Compact, pop.format)
 
         val tour = component.state.value.teaser(ChildConfig.Tourism)
         assertEquals(TeaserStatus.Loaded, tour.status)
         assertEquals(Res.string.overview_module_unit_tourism, tour.unitRes)
+        assertEquals(400_000_000.0, tour.value)
+        assertEquals(TeaserFormat.Compact, tour.format)
     }
 
     @Test
@@ -275,9 +289,18 @@ class OverviewComponentTest {
         )
         testScheduler.advanceUntilIdle()
 
-        assertEquals(TeaserStatus.Loaded, component.state.value.teaser(ChildConfig.Environment).status)
-        assertEquals(TeaserStatus.Loaded, component.state.value.teaser(ChildConfig.Trade).status)
-        assertEquals(TeaserStatus.Loaded, component.state.value.teaser(ChildConfig.Transport).status)
+        val env = component.state.value.teaser(ChildConfig.Environment)
+        val trd = component.state.value.teaser(ChildConfig.Trade)
+        val trn = component.state.value.teaser(ChildConfig.Transport)
+        assertEquals(TeaserStatus.Loaded, env.status)
+        assertEquals(TeaserStatus.Loaded, trd.status)
+        assertEquals(TeaserStatus.Loaded, trn.status)
+        assertEquals(656.0, env.value)
+        assertEquals(TeaserFormat.Grouped, env.format)
+        assertEquals(1_600_000.0, trd.value)
+        assertEquals(TeaserFormat.BillionsFromMillions, trd.format)
+        assertEquals(200_000_000.0, trn.value)
+        assertEquals(TeaserFormat.Compact, trn.format)
     }
 
     @Test
@@ -301,7 +324,8 @@ class OverviewComponentTest {
 
         val teaser = component.state.value.teaser(ChildConfig.Economy)
         assertEquals(TeaserStatus.Empty, teaser.status)
-        assertEquals("—", teaser.value)
+        assertNull(teaser.value)
+        assertEquals("—", teaser.displayValue())
     }
 
     @Test
@@ -314,7 +338,7 @@ class OverviewComponentTest {
 
         val teaser = component.state.value.teaser(ChildConfig.Economy)
         assertEquals(TeaserStatus.Loaded, teaser.status)
-        assertTrue(teaser.value != "—")
+        assertEquals(2_800_000.0, teaser.value)
     }
 
     @Test
@@ -338,6 +362,7 @@ class OverviewComponentTest {
         val teaser = component.state.value.teaser(ChildConfig.Economy)
         assertEquals(TeaserStatus.Loaded, teaser.status)
         assertEquals(2022, teaser.year)
+        assertEquals(2_000_000.0, teaser.value)
 
         // The hero subtitle is built from the actual headline country, not a fixed one.
         assertEquals("IT", component.state.value.headlineCountryCode)
@@ -350,5 +375,62 @@ class OverviewComponentTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals(ChildConfig.Economy, component.state.value.hero?.destination)
+    }
+
+    @Test
+    fun state_carries_raw_numbers_not_formatted_strings() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        population.emissions.value = Result.Success(populationDe(total = 83_500_000L))
+        economy.emissions.value = Result.Success(economyDe(gdpMEur = 4_387_400L))
+        social.emissions.value = Result.Success(
+            listOf(SocialTimeSeries("DE", "Germany", listOf(SocialDataPoint("DE", 2023, povertyRate = 15.5)))),
+        )
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        // Raw values in the dataset's own unit; no separators, suffixes or rounding applied.
+        assertEquals(83_500_000.0, state.teaser(ChildConfig.Population).value)
+        assertEquals(4_387_400.0, state.teaser(ChildConfig.Economy).value)
+        assertEquals(15.5, state.teaser(ChildConfig.Social).value)
+        // Modules that have no data yet carry no value at all (not a placeholder string).
+        assertNull(state.teaser(ChildConfig.Trade).value)
+        assertNull(state.teaser(ChildConfig.Science).value)
+    }
+
+    @Test
+    fun loading_and_error_teasers_have_no_value() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        trade.emissions.value = Result.Error(AppError.NoNetwork)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertNull(state.teaser(ChildConfig.Trade).value) // error
+        assertNull(state.teaser(ChildConfig.Economy).value) // still loading
+        assertEquals("—", state.teaser(ChildConfig.Trade).displayValue())
+        assertEquals("—", state.teaser(ChildConfig.Economy).displayValue())
+    }
+
+    @Test
+    fun one_state_snapshot_formats_differently_per_locale() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        population.emissions.value = Result.Success(populationDe(total = 83_500_000L))
+        economy.emissions.value = Result.Success(economyDe(gdpMEur = 4_387_400L))
+        social.emissions.value = Result.Success(
+            listOf(SocialTimeSeries("DE", "Germany", listOf(SocialDataPoint("DE", 2023, povertyRate = 15.5)))),
+        )
+        testScheduler.advanceUntilIdle()
+
+        // The very same emitted state, rendered for two locales: this is what a runtime
+        // language switch does — the component is never rebuilt, only the formatting re-runs.
+        val state = component.state.value
+        val popTeaser = state.teaser(ChildConfig.Population)
+        val socTeaser = state.teaser(ChildConfig.Social)
+
+        assertEquals("83.5M", popTeaser.displayValue("en"))
+        assertEquals("83,5M", popTeaser.displayValue("pl"))
+        assertEquals("15.5%", socTeaser.displayValue("en"))
+        assertEquals("15,5%", socTeaser.displayValue("pl"))
+        assertEquals("4,387", state.teaser(ChildConfig.Economy).displayValue("en"))
+        assertNotEquals(popTeaser.displayValue("en"), popTeaser.displayValue("pl"))
     }
 }
