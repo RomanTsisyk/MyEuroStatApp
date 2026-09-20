@@ -208,6 +208,11 @@ private fun IosModuleAppBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Euro.colors.glass)
+            // The glass surface extends under the status bar, but the content must
+            // start below it: iOS swallows touches in the status-bar strip (tap to
+            // scroll), so pills drawn there were untappable and the back button
+            // unreachable.
+            .statusBarsPadding()
             .border(
                 width = 0.5.dp,
                 color = Euro.colors.glassBorder,
