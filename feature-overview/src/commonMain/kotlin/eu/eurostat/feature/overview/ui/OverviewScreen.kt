@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SsidChart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.ui.component.MetricHeadline
 import eu.eurostat.ui.component.SourceFooter
+import eu.eurostat.ui.icons.EuroIcons
 import eu.eurostat.ui.system.StatusBarIcons
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroWindowWidth
@@ -176,7 +176,7 @@ private fun HeaderBar(onSearch: () -> Unit, onCompare: () -> Unit, onSettings: (
             onClick = onSearch,
         )
         HeaderIconPill(
-            icon = Icons.Default.SsidChart,
+            icon = EuroIcons.SsidChart,
             description = stringResource(Res.string.overview_header_compare_description),
             onClick = onCompare,
         )

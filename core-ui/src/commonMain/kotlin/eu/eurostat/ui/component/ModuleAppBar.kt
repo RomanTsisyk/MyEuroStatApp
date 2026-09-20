@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -34,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.eurostat.ui.icons.EuroIcons
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroPlatform
 import myeurostatapp.core_ui.generated.resources.Res
@@ -132,7 +132,7 @@ private fun AndroidModuleAppBar(
                 if (onRefresh != null) {
                     IconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
                 } else {
-                    IconPill(icon = Icons.Default.MoreHoriz, description = moreDescription, onClick = {})
+                    IconPill(icon = EuroIcons.MoreHoriz, description = moreDescription, onClick = {})
                 }
             }
         }
@@ -237,7 +237,7 @@ private fun IosModuleAppBar(
                 if (onRefresh != null) {
                     GlassIconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
                 } else {
-                    GlassIconPill(icon = Icons.Default.MoreHoriz, description = moreDescription, onClick = {})
+                    GlassIconPill(icon = EuroIcons.MoreHoriz, description = moreDescription, onClick = {})
                 }
             }
         }

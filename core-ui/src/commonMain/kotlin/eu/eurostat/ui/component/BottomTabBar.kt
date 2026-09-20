@@ -19,14 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DirectionsBus
-import androidx.compose.material.icons.outlined.Euro
-import androidx.compose.material.icons.outlined.FlightTakeoff
-import androidx.compose.material.icons.outlined.Groups
-import androidx.compose.material.icons.outlined.MoreHoriz
-import androidx.compose.material.icons.outlined.Park
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -47,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import eu.eurostat.ui.icons.EuroIcons
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroPlatform
 import kotlinx.coroutines.launch
@@ -358,14 +351,14 @@ internal fun labelFor(destination: BottomTabDestination): String = when (destina
 }
 
 internal fun iconFor(destination: BottomTabDestination): ImageVector = when (destination) {
-    BottomTabDestination.Population -> Icons.Outlined.People
-    BottomTabDestination.Economy -> Icons.Outlined.Euro
-    BottomTabDestination.Environment -> Icons.Outlined.Park
+    BottomTabDestination.Population -> EuroIcons.People
+    BottomTabDestination.Economy -> EuroIcons.Euro
+    BottomTabDestination.Environment -> EuroIcons.Park
     BottomTabDestination.Trade -> Icons.Outlined.ShoppingCart
-    BottomTabDestination.Transport -> Icons.Outlined.DirectionsBus
-    BottomTabDestination.Tourism -> Icons.Outlined.FlightTakeoff
-    BottomTabDestination.Social -> Icons.Outlined.Groups
-    BottomTabDestination.Science -> Icons.Outlined.Science
-    BottomTabDestination.More -> Icons.Outlined.MoreHoriz
+    BottomTabDestination.Transport -> EuroIcons.DirectionsBus
+    BottomTabDestination.Tourism -> EuroIcons.FlightTakeoff
+    BottomTabDestination.Social -> EuroIcons.Groups
+    BottomTabDestination.Science -> EuroIcons.Science
+    BottomTabDestination.More -> EuroIcons.MoreHoriz
     BottomTabDestination.Settings -> Icons.Outlined.Settings
 }
