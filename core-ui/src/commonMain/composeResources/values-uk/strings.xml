@@ -8,7 +8,6 @@
     <string name="ui_action_back">Назад</string>
     <string name="ui_action_search">Пошук</string>
     <string name="ui_action_refresh">Оновити</string>
-    <string name="ui_action_more">Більше</string>
 
     <!-- ErrorState -->
     <string name="ui_error_retry">повторити</string>
