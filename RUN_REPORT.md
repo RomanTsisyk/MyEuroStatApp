@@ -145,6 +145,11 @@ Population → Search → Back case in `RootComponentTest`.
   exceeded`) while building the cache for `material-icons-extended` during
   `linkDebugTestIosSimulatorArm64` of `feature-environment` and `feature-compare`
   (on the 3-CPU runner; that job has been red or cancelled since July apart from
-  one green run). Locally, with a bigger heap, all 18 test binaries link in 2 min 41 s
-  and the tests pass. See `iosApp/README.md` for the flags.
+  one green run). Locally, with a bigger heap, all 18 test binaries linked in 2 min 41 s
+  and the tests passed.
+- **Fixed on this branch:** the app used nine icons from that 11 000-icon library;
+  they are now bundled as vectors (`EuroIcons`) and `material-icons-extended` is no
+  longer a dependency. With the repository's default heap, the Native link and the
+  full iOS test run now finish in 45 s locally (the machine has far more RAM and
+  cores than the runner, so the CI run of this branch is the real confirmation).
 

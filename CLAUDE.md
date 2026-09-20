@@ -33,6 +33,10 @@ core-ui          → Compose Multiplatform design system
                    - country/  → countryDisplayName(code, fallback): localized country names
                      (34 country_* strings, EN/PL/UK). Flags: 33 circle-flags (HatScripts, MIT)
                      vector drawables in composeResources/drawable/flag_*.xml
+                   - icons/  → EuroIcons: the nine Material icons that are not in
+                     material-icons-core, bundled as vectors. Do NOT add a dependency on
+                     material-icons-extended (11 000 icons; its Kotlin/Native cache build
+                     ran the iOS CI job out of heap) — add the vector here instead
                    - system/  → StatusBarIcons(light): expect/actual status-bar icon tint
                      (Android only; applied by EurostatTheme so it follows the in-app theme)
                    - format/  → shared locale-aware number formatting

@@ -32,10 +32,12 @@ the KMP framework first, then Xcode compiles the Swift layer.
 
 The first run downloads the iOS Simulator runtime if Xcode has none
 (`xcodebuild -downloadPlatform iOS`, ~8 GB) and needs a booted or bootable
-simulator. Linking ~18 test binaries in parallel can exhaust the default
-`-Xmx4g` Kotlin daemon heap (the compiler dies with `OutOfMemoryError` while
-caching `material-icons-extended`, as on the CI runner). On a machine with
-enough RAM, override it on the command line instead of editing the repo:
+simulator. Linking ~18 test binaries in parallel is memory-hungry: with the old
+`material-icons-extended` dependency the compiler died with `OutOfMemoryError`
+at the default `-Xmx4g` (as on the CI runner); that dependency has since been
+replaced by a few bundled vectors (`EuroIcons`), so the defaults normally suffice.
+If it ever runs out of heap again, override it on the command line instead of
+editing the repo:
 
 ```sh
 ./gradlew iosSimulatorArm64Test --max-workers=6 \

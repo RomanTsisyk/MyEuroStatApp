@@ -397,4 +397,4 @@ Original notes below.
 11. ✅ No `mock*()` calls remain in any feature Screen.
 12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 12/12 on the Android emulator and the iPhone 17 simulator. Still open: a physical-device run (Android and iPhone/TestFlight), the offline / rotation checks on iOS, and making the CI `ios-test` job pass — it OOMs the Kotlin/Native compiler while caching `material-icons-extended` (used for ~10 icons by `core-ui` and `feature-overview`); options are a bigger heap, fewer parallel links, or replacing that dependency with a few bundled vectors.
+Currently 12/12 on the Android emulator and the iPhone 17 simulator. Still open: a physical-device run (Android and iPhone/TestFlight), the offline / rotation checks on iOS, and confirming that the CI `ios-test` job is green now: it used to OOM the Kotlin/Native compiler while caching `material-icons-extended`; this branch replaces that dependency with nine bundled vectors (`EuroIcons`), and locally the Native link plus all tests take 45 s at the default heap.

@@ -83,6 +83,13 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- CI `ios-test`: the Kotlin/Native compiler ran out of heap (`OutOfMemoryError`)
+  building its cache for `material-icons-extended`, an ~11 000-icon library of
+  which the app used nine icons. Those nine are now bundled as plain vectors
+  (`EuroIcons` in `core-ui`, path data from Material Icons, Apache-2.0) and the
+  dependency is gone, leaving `material-icons-core` for the rest. Locally, the
+  Native link and the whole iOS test suite now run in 45 s with the default heap;
+  the CI run of this branch is the confirmation
 - iOS: the header of every module screen (Back, Search, Refresh) was drawn under
   the system status bar, so Back could not be tapped and a user could not leave a
   module; `IosModuleAppBar` now applies the status-bar inset like the Android bar
