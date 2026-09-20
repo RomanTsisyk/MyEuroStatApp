@@ -14,6 +14,7 @@ import eu.eurostat.feature.trade.domain.TradeDataPoint
 import eu.eurostat.feature.trade.domain.TradeQuery
 import eu.eurostat.feature.trade.domain.TradeRepository
 import eu.eurostat.feature.trade.domain.TradeTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,7 @@ import kotlin.test.assertTrue
 
 private class FakeTradeRepository : TradeRepository {
     var lastQuery: TradeQuery? = null
+    var observeCallCount = 0
     var refreshCallCount = 0
     var refreshThrows: Throwable? = null
 
@@ -42,6 +44,7 @@ private class FakeTradeRepository : TradeRepository {
 
     override fun observe(query: TradeQuery): Flow<Result<List<TradeTimeSeries>>> {
         lastQuery = query
+        observeCallCount++
         return emissions.asStateFlow()
     }
 
@@ -299,5 +302,217 @@ class TradeComponentTest {
         val updatedContent = component.state.value as TradeUiState.Content
         assertEquals(2019, updatedContent.selectedYear)
         assertEquals(queryCountBefore, repo.lastQuery, "SelectYear must not trigger a new network query")
+    }
+
+    @Test
+    fun refresh_failed_is_false_initially() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun failed_refresh_with_cache_sets_refresh_failed() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertTrue(state.refreshFailed)
+        assertFalse(state.isStale)
+    }
+
+    @Test
+    fun successful_refresh_leaves_refresh_failed_false() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun successful_refresh_after_failed_one_clears_refresh_failed() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<TradeUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.refreshThrows = null
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun cancelled_refresh_is_not_reported_as_failure() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        val observeCallsBefore = repo.observeCallCount
+
+        repo.refreshThrows = CancellationException("cancelled")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // Cancellation is rethrown: no reload is started and no hint is raised.
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_select_countries() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<TradeUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(TradeIntent.SelectCountries(listOf("FR", "ES")))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_year_range_change() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<TradeUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(TradeIntent.ChangeYearRange(2018..2022))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_partner_change() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<TradeUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(TradeIntent.ChangePartner("EXT_EU27_2020"))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_survives_ui_only_rerender() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(TradeIntent.SelectYear(2019))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<TradeUiState.Content>(state)
+        assertEquals(2019, state.selectedYear)
+        assertTrue(state.refreshFailed)
+    }
+
+    @Test
+    fun stale_emission_clears_refresh_failed_and_it_stays_cleared() = runTest {
+        val repo = FakeTradeRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(TradeIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<TradeUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val staleState = component.state.value
+        assertIs<TradeUiState.Content>(staleState)
+        assertTrue(staleState.isStale)
+        assertFalse(staleState.refreshFailed)
+
+        // A later successful revalidation must not bring the hint back.
+        repo.emissions.value = Result.Success(listOf(sampleTradeSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val freshState = component.state.value
+        assertIs<TradeUiState.Content>(freshState)
+        assertFalse(freshState.isStale)
+        assertFalse(freshState.refreshFailed)
     }
 }

@@ -8,6 +8,7 @@ import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.feature.trade.domain.GetTradeTimeSeriesUseCase
 import eu.eurostat.feature.trade.domain.TradeQuery
 import eu.eurostat.feature.trade.domain.TradeTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,6 +51,9 @@ class DefaultTradeComponent(
     /** Last successfully loaded series — used for re-rendering on active-country change. */
     private var lastSeries: List<TradeTimeSeries>? = null
     private var lastStale: Boolean = false
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -110,7 +114,17 @@ class DefaultTradeComponent(
                 load()
             }
             TradeIntent.Refresh -> {
-                scope.launch { runCatching { useCase.refresh(currentQuery) }; load() }
+                scope.launch {
+                    val failed = try {
+                        useCase.refresh(currentQuery)
+                        false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        true
+                    }
+                    load(refreshFailed = failed)
+                }
             }
             TradeIntent.Retry -> load()
         }
@@ -121,7 +135,16 @@ class DefaultTradeComponent(
         _state.value = buildContent(series, lastStale, currentQuery)
     }
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
@@ -134,6 +157,9 @@ class DefaultTradeComponent(
         when (this) {
             is Result.Loading -> TradeUiState.Loading
             is Result.Success -> {
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up.
+                if (isStale) refreshFailed = false
                 if (data.isEmpty()) {
                     TradeUiState.Empty(query)
                 } else {
@@ -179,6 +205,7 @@ class DefaultTradeComponent(
             selectedTabIndex = selectedTab,
             selectedYear = resolvedYear,
             availableYears = availableYears,
+            refreshFailed = refreshFailed,
         )
     }
 }
