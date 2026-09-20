@@ -23,6 +23,9 @@
     <!-- StaleBanner -->
     <string name="ui_stale_banner_message">showing cached data · refreshing…</string>
 
+    <!-- SourceFooter refresh failure -->
+    <string name="ui_footer_refresh_failed">refresh failed · showing saved data</string>
+
     <!-- CountryChip / CountryChipsRow -->
     <string name="ui_chip_remove_country">Remove %1$s</string>
     <string name="ui_chip_add_country">Add country</string>
