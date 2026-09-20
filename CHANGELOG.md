@@ -8,6 +8,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Polish and Ukrainian country names: `countryDisplayName(code, fallback)`
+  backed by 34 `country_*` strings (EN/PL/UK) replaces the English-only
+  names in the screen headers, radar legend, headlines and country picker
+  (picker search also matches the localized name)
 - Real SVG-derived flags: 33 circle-flags (HatScripts, MIT) bundled as
   Compose vector drawables in core-ui; new `CountryFlag` composable
   (circle-cropped `Image`, emoji fallback for flagless aggregates like
@@ -66,6 +70,17 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Offline errors: a device that is really offline throws plain `java.net`
+  exceptions (`UnknownHostException`, `SocketException`, …) which were not
+  recognised as no-connectivity, so the error state said "Something went
+  wrong" instead of "No connection — check your network". Fixed for
+  Android and desktop; the iOS mapping still needs doing on a Mac
+- Status bar: icons now follow the theme chosen in Settings (dark icons on
+  a dark background made the clock invisible on every screen), and the
+  Overview's dark header gets light icons
+- Overview kept the previous locale's number format (`4,387`, `83.5M`)
+  after a language switch until restart; teasers now hold raw values and
+  are formatted while composing
 - Transport: the air-passengers series was always empty. `avia_paoc` was
   queried with `schedule=TOT`, but the Eurostat code is `TOTAL`; the API
   silently accepts unknown codes and returns zero rows, so the AIR tile
@@ -98,8 +113,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Planned for v0.8 / v1.0
 
-- Verified launch on a physical iPhone (TestFlight); on-device Android
-  smoke run; interactive 8-tab walk-through → `RUN_REPORT.md`
+- Verified launch on a physical iPhone (TestFlight) and the iOS simulator
+  walk-through; a run on a physical Android device (the emulator
+  walk-through is done — see `RUN_REPORT.md`); iOS mapping of offline
+  errors to `NoNetwork` (Darwin `NSError` codes)
 - Real Android release signing key (currently debug-keystore fallback);
   Msi/Deb installers verified via CI (only Dmg verified locally so far)
 - F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)

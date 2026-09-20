@@ -5,8 +5,11 @@
 **Locales exercised:** English, Polish, Ukrainian
 
 This is the interactive walk-through NEXT_STEPS.md listed as the last open item
-for the Android half of "100% working". It covers a single emulator only —
-not a physical device — see [Not covered](#not-covered).
+for the Android half of "100% working". It was done in two passes: the first
+walked all modules and found the layout/data defects; the second covered
+offline, rotation, refresh, Search, Compare, Settings and wide screens. It
+covers a single emulator only — not a physical device — see
+[Not covered](#not-covered).
 
 ## Method
 
@@ -47,35 +50,64 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 | 6 | Overview vs Economy / Trade | 4,387 vs 4,386; 840 vs 839 | Overview rounded, Economy/Trade truncated | all three round; Trade uses `−` |
 | 7 | Social, Science, Transport | units broke mid-word (`G/DP`, `ilc_li/02`, `200/M`), uneven tile heights | narrow side-by-side caption; normal space in value | stacked caption, equal-height tiles, no-break space |
 | 8 | Science | radar without axis labels; legend showed `EU27_2020` | labels were passed but never drawn | `showAxisLabels`, legend uses country names |
+| 9 | every screen, offline | error said "Something went wrong" instead of "No connection" | a really offline device throws `UnknownHostException` / `SocketException`, but only Ktor timeouts were mapped to `NoNetwork` | JVM connectivity exceptions map to `NoNetwork` (Android + desktop) |
+| 10 | every screen, dark theme | status-bar clock and icons invisible (dark on dark) | icons followed the *system* theme, not the theme picked in Settings | `StatusBarIcons(light)` applied from `EurostatTheme` |
+| 11 | Overview | dark header with dark status-bar icons | same | light icons over the Overview header |
+| 12 | Overview | `4,387` / `83.5M` in Polish after switching language, until restart | teaser strings formatted once in the component and kept in a singleton | raw values in state, formatted while composing |
+| 13 | all module headers | "Germany · DE" in Polish/Ukrainian | English-only country names | 34 localized `country_*` strings, `countryDisplayName()` |
 
 ## Found, not fixed
 
-- **Overview numbers keep the old locale after a runtime language switch**
-  (`4,387` / `83.5M` in Polish until the app is restarted). Cold start is
-  correct (`4 387`, `83,5M`) — the teaser strings are formatted once when data
-  arrives, not per composition.
-- **Overview status-bar icons are dark on the dark header** (clock barely
-  visible) — the header does not set light status-bar appearance.
-- **Country names are English in every locale** ("Germany · DE" in PL/UK, radar
-  legend) — the name table is English-only.
+- **iOS offline mapping**: the iOS `toAppError()` still only knows Ktor
+  timeouts; Darwin reports `NSError` codes (e.g. `NSURLErrorNotConnectedToInternet`)
+  that need mapping and can only be compiled on a Mac with Xcode.
+- **Manual refresh while offline with a cache**: the data stays and the
+  footer still says "fresh" (the cache is inside its 12 h TTL and a failed
+  refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.
+- **Overview offline with an empty cache** shows `—` everywhere with no
+  offline hint (the module screens do show the error state).
+- **Wide screens**: a phone in landscape and a ~1070 dp-wide tablet both switch
+  to the two-pane layout and scroll correctly, but on the tablet the lower
+  half of the screen is empty, and in landscape the right pane's viewport is
+  short (the chart needs a scroll to be seen whole).
+- Country picker list keeps English alphabetical order in PL/UK; the
+  Settings default-country label and the Compare legend still show the
+  English name / code.
 - Science tile label "Wykształcenie wyższe" is ellipsised in Polish.
 - No axis labels on Transport small multiples, Social lines, Tourism bars or
   the seasonality heatmap (months/years) — not investigated whether by design.
 
+## Also covered in the second pass
+
+| Scenario | Result |
+|---|---|
+| Airplane mode with a warm cache (Overview + Economy) | cached data shown, no crash |
+| Airplane mode, no cache | Overview `—`, Economy error "No connection — check your network" (after fix #9); **retry** after reconnecting loads the data |
+| Forced refresh while offline (cache present) | data stays; see "Found, not fixed" |
+| Rotation portrait → landscape → portrait on Economy | selected metric (Inflation) survives; landscape uses the two-pane layout and scrolls |
+| Search ("GDP") | opens with a browse list; results for GDP, deficit and R&D |
+| Compare | GDP for DE / FR / PL loads with the indicator picker |
+| Settings: Dark theme, force-stop, relaunch | theme persists and is applied on start |
+| Settings: language switch without restart | UI, numbers and country names follow (after fixes #12, #13) |
+| ~1070 dp-wide screen (`wm size 1600x2560`, 240 dpi) | two-pane layout |
+
 ## Not covered
 
-- Offline / airplane mode, recovery on reconnect, refresh and pull-to-refresh
-- Rotation and process-death state restore
-- Search, Compare and Settings persistence (only the Settings language picker was used)
-- Tablet / desktop layouts (`Pixel_Tablet` AVD and the desktop app)
 - **iOS**: this Mac has no full Xcode install (only Command Line Tools), so the
   simulator run and `iosSimulatorArm64Test` could not be executed
-- A physical Android device
+- A physical Android device, and the `Pixel_Tablet` AVD (the wide-screen check
+  used `wm size` on the phone emulator instead)
+- Process death / state restore, the pull-to-refresh gesture, clearing the cache
+  and changing the default country in Settings, the country picker itself
+- Other API levels and slow or flaky (as opposed to absent) networks
 
 ## Tests
 
-Module unit tests were run for every touched module. New or extended tests:
-`YearAxisTest` (4), `RadarLayoutTest` (4), `TradeFormattingTest` (7),
-`TransportFormattingTest` (4), `TransportApiServiceImplTest` (14, three new
-covering `schedule=TOTAL`), `TransportComponentTest` (18, two new covering the
-default year).
+Unit tests were run for every touched module (`testDebugUnitTest`, plus
+`desktopTest` for `core-ui` and `core-network`) and pass. New or extended tests:
+`YearAxisTest`, `RadarLayoutTest`, `TradeFormattingTest`, `TransportFormattingTest`,
+`TransportApiServiceImplTest` (`schedule=TOTAL`), `TransportComponentTest` (default
+year), `TeaserFormattingTest` and `OverviewComponentTest` (raw teaser values),
+`CountryNameResTest` and `CountryStringsParityTest` (every country has a
+localized name), and `AndroidNetworkErrorMappingTest` / `DesktopNetworkErrorMappingTest`.
+The iOS Native test suite has not been run locally (no Xcode).

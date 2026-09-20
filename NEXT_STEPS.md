@@ -20,7 +20,7 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 5. Rotate device → verify Compose state (selected country, year range, switcher selection) survives.
 6. Record findings as `RUN_REPORT.md` with screenshots.
 
-**Update (2026-09-20, ✅ emulator walk-through done):** all 8 modules were walked on an API 36 emulator in EN, PL and UK — live data, no crashes. It found 8 defects (notably `avia_paoc` was queried with `schedule=TOT` instead of `TOTAL`, so Transport air data never loaded), all fixed; see [`RUN_REPORT.md`](RUN_REPORT.md). **Still open:** offline/airplane recovery, rotation, refresh, Search/Compare/Settings-persistence checks, tablet/desktop layouts, and a run on a physical device.
+**Update (2026-09-20, ✅ emulator walk-through done, two passes):** all 8 modules were walked on an API 36 emulator in EN, PL and UK — live data, no crashes — and offline (with/without cache, retry), rotation, forced refresh, Search, Compare, Settings persistence and a wide-screen layout were exercised. 13 defects were found and fixed (notably `avia_paoc` was queried with `schedule=TOT` instead of `TOTAL`, so Transport air data never loaded); see [`RUN_REPORT.md`](RUN_REPORT.md). **Still open:** a run on a physical device, the iOS mapping of offline errors to `NoNetwork`, process-death restore, and the smaller leftovers listed under "Found, not fixed" in the report.
 
 **Files involved:** none to edit. Pure verification.
 
