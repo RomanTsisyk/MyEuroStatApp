@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
+import eu.eurostat.ui.system.StatusBarIcons
 
 private val LocalEurostatColors = staticCompositionLocalOf { lightColors() }
 private val LocalEurostatTypography = staticCompositionLocalOf { defaultTypography() }
@@ -69,6 +70,12 @@ fun EurostatTheme(
             outline = colors.muted,
         )
     }
+
+    // The theme can be overridden in Settings independently of the system
+    // setting, so the status-bar icons must follow the theme actually drawn,
+    // not the system one (dark icons on a dark background were invisible).
+    // Screens with their own coloured header override this locally.
+    StatusBarIcons(light = darkTheme)
 
     CompositionLocalProvider(
         LocalEurostatColors provides colors,
