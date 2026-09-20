@@ -32,4 +32,40 @@
     <string name="ui_chart_detail_unit">Одиниця</string>
     <string name="ui_chart_detail_dataset">Набір даних</string>
     <string name="ui_chart_detail_close">Закрити</string>
+
+    <!-- Country / area display names (CountryDisplayName.kt) — keyed country_<lowercase Eurostat code> -->
+    <string name="country_eu27_2020">ЄС (27)</string>
+    <string name="country_ea20">Єврозона (20)</string>
+    <string name="country_at">Австрія</string>
+    <string name="country_be">Бельгія</string>
+    <string name="country_bg">Болгарія</string>
+    <string name="country_hr">Хорватія</string>
+    <string name="country_cy">Кіпр</string>
+    <string name="country_cz">Чехія</string>
+    <string name="country_dk">Данія</string>
+    <string name="country_ee">Естонія</string>
+    <string name="country_fi">Фінляндія</string>
+    <string name="country_fr">Франція</string>
+    <string name="country_de">Німеччина</string>
+    <string name="country_el">Греція</string>
+    <string name="country_hu">Угорщина</string>
+    <string name="country_ie">Ірландія</string>
+    <string name="country_it">Італія</string>
+    <string name="country_lv">Латвія</string>
+    <string name="country_lt">Литва</string>
+    <string name="country_lu">Люксембург</string>
+    <string name="country_mt">Мальта</string>
+    <string name="country_nl">Нідерланди</string>
+    <string name="country_pl">Польща</string>
+    <string name="country_pt">Португалія</string>
+    <string name="country_ro">Румунія</string>
+    <string name="country_sk">Словаччина</string>
+    <string name="country_si">Словенія</string>
+    <string name="country_es">Іспанія</string>
+    <string name="country_se">Швеція</string>
+    <string name="country_is">Ісландія</string>
+    <string name="country_no">Норвегія</string>
+    <string name="country_ch">Швейцарія</string>
+    <string name="country_uk">Велика Британія</string>
+    <string name="country_tr">Туреччина</string>
 </resources>

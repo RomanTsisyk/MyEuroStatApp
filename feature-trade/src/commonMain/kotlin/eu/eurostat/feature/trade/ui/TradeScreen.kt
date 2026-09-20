@@ -45,6 +45,7 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatSignedDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
@@ -93,7 +94,7 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
     val contentState = state as? TradeUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(

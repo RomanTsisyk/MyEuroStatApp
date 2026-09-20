@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.core.charts.EurostatRadarChart
@@ -89,7 +90,7 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
     val contentState = state as? ScienceUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -374,7 +375,11 @@ private fun ScienceContent(
  *
  * If a country has no observation for the selected year its axes render as 0
  * (matching the existing behavior for null values via [safeNormalize]).
+ *
+ * Composable because each series label is the localized country name
+ * ([countryDisplayName]), which is resolved from Compose Resources.
  */
+@Composable
 private fun buildRadarSeries(
     pointAtYear: Map<String, ScienceDataPoint>,
     activeCountry: String,
@@ -400,10 +405,11 @@ private fun buildRadarSeries(
         .distinct()
         .take(2)
 
-    return ordered.mapIndexedNotNull { i, code ->
-        val pt = pointAtYear[code] ?: return@mapIndexedNotNull null
-        RadarSeries(
-            label = EurostatCountries.byCode(code)?.name ?: code,
+    val series = mutableListOf<RadarSeries>()
+    for ((i, code) in ordered.withIndex()) {
+        val pt = pointAtYear[code] ?: continue
+        series += RadarSeries(
+            label = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code),
             color = if (i == 0) primaryColor else secondaryColor,
             values = listOf(
                 safeNormalize(pt.rdSpendPctGdp, maxR),
@@ -412,6 +418,7 @@ private fun buildRadarSeries(
             ),
         )
     }
+    return series
 }
 
 private fun safeNormalize(value: Double?, max: Double): Float {

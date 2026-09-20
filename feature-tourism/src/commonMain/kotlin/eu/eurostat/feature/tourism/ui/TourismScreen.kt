@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatHeatmapChart
 import eu.eurostat.core.charts.EurostatStackedBarChart
 import eu.eurostat.core.charts.StackedBarRow
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.core.charts.model.ColorScale
@@ -99,7 +100,7 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
     val contentState = state as? TourismUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -237,13 +238,16 @@ private fun TourismContent(
 
     var showCountryPicker by remember { mutableStateOf(false) }
 
+    // Localized display name; the API-provided English label is only the fallback.
+    val headlineCountryName = countryDisplayName(active.countryCode, fallback = active.countryName)
+
     // Sections shared between the compact (phone) ordering and the ≥840dp
     // two-pane split. Purely structural — all state stays on the component.
     val headlineSection: @Composable () -> Unit = {
         MetricHeadline(
             value = headlineValue,
             unit = headlineUnit,
-            subtitle = "$headlineSubtitle · ${active.countryName}",
+            subtitle = "$headlineSubtitle · $headlineCountryName",
             year = headlineYear,
             accent = accent,
             modifier = Modifier.padding(top = Euro.spacing.s),

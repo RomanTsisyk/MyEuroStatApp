@@ -45,6 +45,7 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatLargeNumber
 import eu.eurostat.ui.format.formatLargeNumberParts
@@ -87,7 +88,7 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
     val accent = Euro.moduleAccents.forModule("Population")
     val appBarYear = (state as? PopulationUiState.Content)?.selectedYear
     val appBarCountry = (state as? PopulationUiState.Content)?.selectedCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -177,9 +178,13 @@ private fun PopulationContent(
         }
         .orEmpty()
 
-    val headlineCountryName = snapshot?.countryName
-        ?: state.timeSeries.firstOrNull { it.countryCode == state.selectedCountry }?.countryName
-        ?: state.selectedCountry
+    // Localized display name; the API-provided English label is only the fallback.
+    val headlineCountryName = countryDisplayName(
+        code = snapshot?.countryCode ?: state.selectedCountry,
+        fallback = snapshot?.countryName
+            ?: state.timeSeries.firstOrNull { it.countryCode == state.selectedCountry }?.countryName
+            ?: state.selectedCountry,
+    )
     val headlineYoY = computeYoY(state, snapshot)
     val (headlineValue, headlineUnit) = headlineParts(snapshot?.total ?: fallbackTotal(state))
 
@@ -322,7 +327,7 @@ private fun PyramidCardContent(
                         headline = stringResource(Res.string.population_cohort_empty_headline),
                         body = stringResource(
                             Res.string.population_cohort_empty_body,
-                            snapshot.countryName,
+                            countryDisplayName(snapshot.countryCode, fallback = snapshot.countryName),
                             snapshot.year,
                         ),
                         modifier = Modifier.fillMaxWidth(),

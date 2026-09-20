@@ -51,6 +51,7 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
@@ -107,7 +108,7 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
     val contentState = state as? TransportUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -243,6 +244,11 @@ private fun ContentBody(
     // same mode words as the PillToggle plus the localized unit suffix.
     val roadPanelTitle = "$roadModeLabel · $billionUnit"
     val airPanelTitle = "$airModeLabel · $millionUnit"
+    // Localized display name; the data-layer label (a code placeholder) is only the fallback.
+    val headlineCountryName = countryDisplayName(
+        activeCountry,
+        fallback = active?.countryName ?: activeCountry,
+    )
 
     // Sections shared between the compact (phone) ordering and the ≥840dp
     // two-pane split. Purely structural — all state stays on the component.
@@ -250,7 +256,7 @@ private fun ContentBody(
         MetricHeadline(
             value = headlineValue,
             unit = billionUnit,
-            subtitle = "$roadLabelLower · $passengersLabel · ${active?.countryName ?: activeCountry}",
+            subtitle = "$roadLabelLower · $passengersLabel · $headlineCountryName",
             year = selectedYear.toString(),
             accent = accent,
             modifier = Modifier.padding(top = Euro.spacing.s),
