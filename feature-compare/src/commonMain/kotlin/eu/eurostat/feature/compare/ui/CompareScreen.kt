@@ -35,6 +35,7 @@ import eu.eurostat.core.charts.model.ChartSeries
 import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.charts.model.rebaseToIndex
 import eu.eurostat.core.charts.model.yearAxis
+import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.compare.domain.CompareIndicator
 import eu.eurostat.feature.compare.domain.CompareSeries
 import eu.eurostat.ui.component.ChartPointDetailSheet
@@ -50,6 +51,7 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
@@ -369,7 +371,12 @@ private fun CompareContent(
         val resolvedValue = absolute ?: point.y.takeUnless { state.normalized }
         val valueText = resolvedValue?.let { state.indicator.formatValue(it) } ?: "—"
         ChartPointDetailSheet(
-            seriesLabel = label,
+            // `label` is the country code (the chart series identity key); show the
+            // localized name in the sheet title.
+            seriesLabel = countryDisplayName(
+                label,
+                fallback = EurostatCountries.byCode(label)?.name ?: label,
+            ),
             year = year.toString(),
             value = valueText,
             unit = unitLabel,
@@ -381,7 +388,7 @@ private fun CompareContent(
 
 /**
  * Legend row: one entry per country in selection order, each showing the
- * palette dot, the country code and the latest available absolute value
+ * palette dot, the localized country name and the latest available absolute value
  * (formatted per the indicator). Absolute values are shown even in Indexed-100
  * mode, since the index scale is a chart-only transform.
  */
@@ -399,9 +406,13 @@ private fun CompareLegend(
         series.forEachIndexed { index, s ->
             val latest = s.points.lastOrNull { it.value != null }?.value
             val valueText = latest?.let { indicator.formatValue(it) } ?: "—"
+            val name = countryDisplayName(
+                s.countryCode,
+                fallback = EurostatCountries.byCode(s.countryCode)?.name ?: s.countryCode,
+            )
             LegendEntry(
                 color = SeriesPalette.colorAt(index),
-                code = s.countryCode,
+                name = name,
                 value = valueText,
             )
         }
@@ -409,7 +420,7 @@ private fun CompareLegend(
 }
 
 @Composable
-private fun LegendEntry(color: Color, code: String, value: String) {
+private fun LegendEntry(color: Color, name: String, value: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -418,7 +429,7 @@ private fun LegendEntry(color: Color, code: String, value: String) {
         )
         Spacer(Modifier.size(Euro.spacing.xs))
         Text(
-            text = code,
+            text = name,
             style = Euro.typography.bodySmall,
             color = Euro.colors.ink,
         )

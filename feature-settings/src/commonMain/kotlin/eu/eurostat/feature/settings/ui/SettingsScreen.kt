@@ -33,6 +33,7 @@ import eu.eurostat.ui.component.MetricDropdown
 import eu.eurostat.ui.component.ModuleAppBar
 import eu.eurostat.ui.component.SegmentedControl
 import eu.eurostat.ui.component.states.LoadingShimmer
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.feature_settings.generated.resources.Res
 import myeurostatapp.feature_settings.generated.resources.settings_about_label
@@ -107,6 +108,12 @@ private fun SettingsContent(
     val clearCacheSubtitle = stringResource(Res.string.settings_clear_cache_subtitle)
     val aboutLabel = stringResource(Res.string.settings_about_label)
     val aboutVersion = stringResource(Res.string.settings_about_version, content.appVersion)
+    // countryDisplayName is @Composable too: resolve the localized default-country
+    // name here so the plain countryLabel() helper can build the row text from it.
+    val defaultCountryName = countryDisplayName(
+        content.defaultCountry,
+        fallback = EurostatCountries.byCode(content.defaultCountry)?.name ?: content.defaultCountry,
+    )
 
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         item {
@@ -126,7 +133,7 @@ private fun SettingsContent(
         item {
             SettingsListItem(
                 headline = defaultCountryLabel,
-                supporting = countryLabel(content.defaultCountry),
+                supporting = countryLabel(content.defaultCountry, defaultCountryName),
                 supportingLeading = {
                     CountryFlag(code = content.defaultCountry, size = 16.dp)
                 },
@@ -302,8 +309,14 @@ private fun SettingsListItem(
     )
 }
 
-/** Name + code line for the default-country row (the flag renders separately via [CountryFlag]). */
-private fun countryLabel(code: String): String {
-    val country = EurostatCountries.byCode(code) ?: return code
-    return "${country.name} · ${country.code}"
-}
+/**
+ * Name + code line for the default-country row (the flag renders separately via [CountryFlag]).
+ *
+ * @param code Eurostat country/area code shown after the name (e.g. `"DE"`).
+ * @param displayName the country name already localized for the current app locale
+ *   (from `countryDisplayName`, which is @Composable and so is resolved by the caller).
+ *   When blank or identical to [code] there is no real name to show, so the bare
+ *   [code] is returned instead of a redundant `"XX · XX"`.
+ */
+internal fun countryLabel(code: String, displayName: String): String =
+    if (displayName.isBlank() || displayName == code) code else "$displayName · $code"
