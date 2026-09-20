@@ -4,6 +4,12 @@
     <string name="ui_country_picker_search_label">Szukaj po nazwie lub kodzie</string>
     <string name="ui_country_picker_apply">Zastosuj (%1$d)</string>
 
+    <!-- ModuleAppBar icon-button content descriptions -->
+    <string name="ui_action_back">Wstecz</string>
+    <string name="ui_action_search">Szukaj</string>
+    <string name="ui_action_refresh">Odśwież</string>
+    <string name="ui_action_more">Więcej</string>
+
     <!-- ErrorState -->
     <string name="ui_error_retry">spróbuj ponownie</string>
 
@@ -32,4 +38,40 @@
     <string name="ui_chart_detail_unit">Jednostka</string>
     <string name="ui_chart_detail_dataset">Zbiór danych</string>
     <string name="ui_chart_detail_close">Zamknij</string>
+
+    <!-- Country / area display names (CountryDisplayName.kt) — keyed country_<lowercase Eurostat code> -->
+    <string name="country_eu27_2020">UE (27)</string>
+    <string name="country_ea20">Strefa euro (20)</string>
+    <string name="country_at">Austria</string>
+    <string name="country_be">Belgia</string>
+    <string name="country_bg">Bułgaria</string>
+    <string name="country_hr">Chorwacja</string>
+    <string name="country_cy">Cypr</string>
+    <string name="country_cz">Czechy</string>
+    <string name="country_dk">Dania</string>
+    <string name="country_ee">Estonia</string>
+    <string name="country_fi">Finlandia</string>
+    <string name="country_fr">Francja</string>
+    <string name="country_de">Niemcy</string>
+    <string name="country_el">Grecja</string>
+    <string name="country_hu">Węgry</string>
+    <string name="country_ie">Irlandia</string>
+    <string name="country_it">Włochy</string>
+    <string name="country_lv">Łotwa</string>
+    <string name="country_lt">Litwa</string>
+    <string name="country_lu">Luksemburg</string>
+    <string name="country_mt">Malta</string>
+    <string name="country_nl">Niderlandy</string>
+    <string name="country_pl">Polska</string>
+    <string name="country_pt">Portugalia</string>
+    <string name="country_ro">Rumunia</string>
+    <string name="country_sk">Słowacja</string>
+    <string name="country_si">Słowenia</string>
+    <string name="country_es">Hiszpania</string>
+    <string name="country_se">Szwecja</string>
+    <string name="country_is">Islandia</string>
+    <string name="country_no">Norwegia</string>
+    <string name="country_ch">Szwajcaria</string>
+    <string name="country_uk">Wielka Brytania</string>
+    <string name="country_tr">Turcja</string>
 </resources>

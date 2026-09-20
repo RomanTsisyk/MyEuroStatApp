@@ -19,6 +19,28 @@ enum class TeaserStatus {
 }
 
 /**
+ * How a [ModuleTeaser.value] is rendered to text by [formatTeaserValue].
+ *
+ * The UI state deliberately carries the raw number plus one of these
+ * discriminators instead of a pre-formatted string: number formatting depends
+ * on the runtime app locale, which can change while the (singleton)
+ * component is alive, so it must happen at composition time.
+ */
+enum class TeaserFormat {
+    /** Compact K/M/B count of a raw quantity (people, nights, passengers), e.g. `83.5M`. */
+    Compact,
+
+    /** Amount reported in millions of EUR, shown as whole, grouped billions, e.g. `4,387`. */
+    BillionsFromMillions,
+
+    /** Plain whole number with digit grouping (e.g. megatonnes CO2-eq), e.g. `650`. */
+    Grouped,
+
+    /** Percentage with one decimal digit, e.g. `15.5%`. */
+    Percent,
+}
+
+/**
  * One module's at-a-glance card on the Overview dashboard.
  *
  * [titleRes] and [unitRes] are Compose string resources rather than plain
@@ -28,11 +50,19 @@ enum class TeaserStatus {
  * `OverviewScreen.kt`). See `feature-search`'s `SearchModule.titleRes` for
  * the same pattern.
  *
+ * For the same reason [value] is the *raw* number, not text: the screen turns
+ * it into a string with [formatTeaserValue] while composing, so it always
+ * follows the locale currently in effect (a runtime language switch must not
+ * leave previously formatted strings behind).
+ *
  * @property destination the navigation target opened when the tile is tapped.
  * @property accentKey key passed to `Euro.moduleAccents.forModule(...)`.
  * @property titleRes localized user-facing module name (e.g. "Population" / "Ludność" / "Населення").
  * @property emoji leading glyph shown on the tile.
- * @property value formatted headline value for the default country (or `"—"`).
+ * @property value raw headline value for the headline country in the source unit
+ *   of the dataset (people, EUR millions, Mt CO2-eq, percent, ...), or null while
+ *   there is nothing to show (loading, empty, error). Interpreted per [format].
+ * @property format how [value] is rendered; fixed per module.
  * @property unitRes localized short qualifier for [value] (e.g. `"people"`, `"B € · GDP"`).
  * @property year the year [value] belongs to, or null when unknown.
  * @property status current load state.
@@ -42,7 +72,8 @@ data class ModuleTeaser(
     val accentKey: String,
     val titleRes: StringResource,
     val emoji: String,
-    val value: String,
+    val value: Double?,
+    val format: TeaserFormat,
     val unitRes: StringResource,
     val year: Int?,
     val status: TeaserStatus,

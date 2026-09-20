@@ -45,6 +45,7 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatLargeNumber
 import eu.eurostat.ui.format.formatLargeNumberParts
@@ -79,15 +80,22 @@ private const val SLIDER_STEP_PADDING = 2
  * Editorial Population feature screen — wires real Eurostat `demo_pjan` data
  * into a demographic pyramid plus headline total, country chips, year scrubber,
  * and a Total/Men/Women segmented control.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
+fun PopulationScreen(
+    component: PopulationComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Population")
     val appBarYear = (state as? PopulationUiState.Content)?.selectedYear
     val appBarCountry = (state as? PopulationUiState.Content)?.selectedCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -102,7 +110,7 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(PopulationIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -177,9 +185,13 @@ private fun PopulationContent(
         }
         .orEmpty()
 
-    val headlineCountryName = snapshot?.countryName
-        ?: state.timeSeries.firstOrNull { it.countryCode == state.selectedCountry }?.countryName
-        ?: state.selectedCountry
+    // Localized display name; the API-provided English label is only the fallback.
+    val headlineCountryName = countryDisplayName(
+        code = snapshot?.countryCode ?: state.selectedCountry,
+        fallback = snapshot?.countryName
+            ?: state.timeSeries.firstOrNull { it.countryCode == state.selectedCountry }?.countryName
+            ?: state.selectedCountry,
+    )
     val headlineYoY = computeYoY(state, snapshot)
     val (headlineValue, headlineUnit) = headlineParts(snapshot?.total ?: fallbackTotal(state))
 
@@ -322,7 +334,7 @@ private fun PyramidCardContent(
                         headline = stringResource(Res.string.population_cohort_empty_headline),
                         body = stringResource(
                             Res.string.population_cohort_empty_body,
-                            snapshot.countryName,
+                            countryDisplayName(snapshot.countryCode, fallback = snapshot.countryName),
                             snapshot.year,
                         ),
                         modifier = Modifier.fillMaxWidth(),

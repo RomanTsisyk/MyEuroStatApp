@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.common.EurostatCountries
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.core_ui.generated.resources.Res
 import myeurostatapp.core_ui.generated.resources.ui_country_picker_apply
@@ -41,8 +42,9 @@ import org.jetbrains.compose.resources.stringResource
 /**
  * Multi-select country picker presented as a [ModalBottomSheet].
  *
- * Shows a search [OutlinedTextField] that filters [EurostatCountries.ALL] by name
- * or code, a [LazyColumn] of rows with a flag/code badge, name, and [Checkbox], and
+ * Shows a search [OutlinedTextField] that filters [EurostatCountries.ALL] by code,
+ * English name or localized display name (see [countryDisplayName]), a
+ * [LazyColumn] of rows with a flag/code badge, localized name, and [Checkbox], and
  * a primary "Apply" button that calls [onConfirm] with the locally accumulated
  * selection. Enforces [maxSelection]: additional checkboxes are disabled when the
  * limit is reached.
@@ -68,13 +70,21 @@ fun CountryPickerSheet(
     var selectedLocal by remember(selected) { mutableStateOf(selected) }
     var query by remember { mutableStateOf("") }
 
-    val filtered = remember(query) {
+    // Localized name per code. Resolved in composition (stringResource is @Composable)
+    // over a fixed-size list, so the composable call order is stable across recompositions.
+    val displayNames: Map<String, String> = EurostatCountries.ALL.associate { country ->
+        country.code to countryDisplayName(country.code, fallback = country.name)
+    }
+
+    val filtered = remember(query, displayNames) {
         val q = query.trim().lowercase()
         if (q.isEmpty()) {
             EurostatCountries.ALL
         } else {
             EurostatCountries.ALL.filter { country ->
-                country.code.lowercase().contains(q) || country.name.lowercase().contains(q)
+                country.code.lowercase().contains(q) ||
+                    country.name.lowercase().contains(q) ||
+                    displayNames[country.code].orEmpty().lowercase().contains(q)
             }
         }
     }
@@ -146,7 +156,7 @@ fun CountryPickerSheet(
                         Spacer(Modifier.width(Euro.spacing.s))
 
                         Text(
-                            text = country.name,
+                            text = displayNames[country.code] ?: country.name,
                             style = Euro.typography.bodyMedium,
                             color = if (atLimit) Euro.colors.muted else Euro.colors.ink,
                             modifier = Modifier.weight(1f),

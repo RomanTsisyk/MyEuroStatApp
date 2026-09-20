@@ -26,8 +26,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.charts.EurostatLineChart
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.core.charts.EurostatRadarChart
@@ -79,16 +81,23 @@ import org.jetbrains.compose.resources.stringResource
  *
  * No metric switcher — the radar already presents all three normalized %
  * metrics at once.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
+fun ScienceScreen(
+    component: ScienceComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Science")
     val contentState = state as? ScienceUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -103,7 +112,7 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(ScienceIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -256,6 +265,7 @@ private fun ScienceContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(radarHeight),
+                    showAxisLabels = true,
                 )
                 Spacer(Modifier.height(Euro.spacing.s))
                 Row(
@@ -280,21 +290,21 @@ private fun ScienceContent(
                 label = stringResource(Res.string.science_spark_rd),
                 unit = stringResource(Res.string.science_unit_pct_gdp),
                 accent = accent,
-                series = activeSeries?.toSparkSeries(accent) { it.rdSpendPctGdp },
+                series = activeSeries?.toSparkSeries(accent, selectedYear) { it.rdSpendPctGdp },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
                 label = stringResource(Res.string.science_spark_internet),
                 unit = stringResource(Res.string.science_unit_pct_individuals),
                 accent = accent,
-                series = activeSeries?.toSparkSeries(accent) { it.internetUsagePct },
+                series = activeSeries?.toSparkSeries(accent, selectedYear) { it.internetUsagePct },
                 modifier = Modifier.weight(1f),
             )
             SparkTile(
                 label = stringResource(Res.string.science_spark_tertiary),
                 unit = stringResource(Res.string.science_unit_pct_age_25_64),
                 accent = accent,
-                series = activeSeries?.toSparkSeries(accent) { it.tertiaryEducPct },
+                series = activeSeries?.toSparkSeries(accent, selectedYear) { it.tertiaryEducPct },
                 modifier = Modifier.weight(1f),
             )
         }
@@ -372,7 +382,11 @@ private fun ScienceContent(
  *
  * If a country has no observation for the selected year its axes render as 0
  * (matching the existing behavior for null values via [safeNormalize]).
+ *
+ * Composable because each series label is the localized country name
+ * ([countryDisplayName]), which is resolved from Compose Resources.
  */
+@Composable
 private fun buildRadarSeries(
     pointAtYear: Map<String, ScienceDataPoint>,
     activeCountry: String,
@@ -398,10 +412,11 @@ private fun buildRadarSeries(
         .distinct()
         .take(2)
 
-    return ordered.mapIndexedNotNull { i, code ->
-        val pt = pointAtYear[code] ?: return@mapIndexedNotNull null
-        RadarSeries(
-            label = code,
+    val series = mutableListOf<RadarSeries>()
+    for ((i, code) in ordered.withIndex()) {
+        val pt = pointAtYear[code] ?: continue
+        series += RadarSeries(
+            label = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code),
             color = if (i == 0) primaryColor else secondaryColor,
             values = listOf(
                 safeNormalize(pt.rdSpendPctGdp, maxR),
@@ -410,6 +425,7 @@ private fun buildRadarSeries(
             ),
         )
     }
+    return series
 }
 
 private fun safeNormalize(value: Double?, max: Double): Float {
@@ -421,12 +437,19 @@ private fun safeNormalize(value: Double?, max: Double): Float {
  * Materialize a [ChartSeries] from this country's points for a single metric
  * selected by [selector]. Null values are dropped (the sparkline collapses
  * to the contiguous run of known observations).
+ *
+ * The tile shows the last point of this series as its value, so points after
+ * [upToYear] are excluded: the tile then reads "as of the selected year" like
+ * the headline above it. (It used to always show the latest year, e.g. 1.41
+ * in the tile under a 0.96 headline for 2016.) `null` keeps every point.
  */
-private fun ScienceTimeSeries.toSparkSeries(
+internal fun ScienceTimeSeries.toSparkSeries(
     accent: Color,
+    upToYear: Int?,
     selector: (ScienceDataPoint) -> Double?,
 ): ChartSeries {
     val pts = points.mapNotNull { p ->
+        if (upToYear != null && p.year > upToYear) return@mapNotNull null
         val y = selector(p) ?: return@mapNotNull null
         ChartPoint(x = p.year.toDouble(), y = y)
     }
@@ -451,25 +474,29 @@ private fun SparkTile(
     val displayValue = series?.points?.maxByOrNull { it.x }?.y?.formatPct() ?: "—"
     EuroCard(modifier = modifier) {
         Column {
+            // Label, value and unit are each a single line so every tile has
+            // the same height and the values / sparklines line up across tiles.
             Text(
                 text = label,
                 style = Euro.typography.bodySmall,
                 color = Euro.colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = displayValue,
-                    style = Euro.typography.tabularNumLarge,
-                    color = Euro.colors.ink,
-                )
-                Spacer(Modifier.width(Euro.spacing.xs))
-                Text(
-                    text = unit,
-                    style = Euro.typography.bodySmall,
-                    color = Euro.colors.muted,
-                    modifier = Modifier.padding(bottom = 4.dp),
-                )
-            }
+            Text(
+                text = displayValue,
+                style = Euro.typography.tabularNumLarge,
+                color = Euro.colors.ink,
+                maxLines = 1,
+                softWrap = false,
+            )
+            Text(
+                text = unit,
+                style = Euro.typography.bodySmall,
+                color = Euro.colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             Spacer(Modifier.height(Euro.spacing.xs))
             EurostatLineChart(
                 series = if (series != null && series.points.isNotEmpty()) listOf(series) else emptyList(),

@@ -14,10 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import eu.eurostat.core.charts.internal.ChartDefaults
+import eu.eurostat.core.charts.internal.computeRadarLayout
+import eu.eurostat.core.charts.internal.radarLabelOffset
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.min
 import kotlin.math.sin
 
 /**
@@ -40,15 +46,20 @@ data class RadarSeries(
  * Each series's `values` list must have the same size as [axes]; otherwise that
  * series is skipped.
  *
- * @param axes Axis labels (decorative; positions are rendered as guide spokes).
+ * @param axes Axis labels, one per spoke. Drawn at the spoke tips only when
+ *             [showAxisLabels] is true; otherwise they are decorative.
  * @param series Series to overlay. Each value is expected to be normalized to 0..1.
  * @param modifier Layout modifier.
+ * @param showAxisLabels When true, draws each axis label just outside its spoke
+ *                       tip and shrinks the polygon so the labels stay inside the
+ *                       canvas. Defaults to false (no labels, full-size polygon).
  */
 @Composable
 fun EurostatRadarChart(
     axes: List<String>,
     series: List<RadarSeries>,
     modifier: Modifier = Modifier,
+    showAxisLabels: Boolean = false,
 ) {
     if (axes.size < 3) {
         Box(modifier = modifier)
@@ -64,11 +75,37 @@ fun EurostatRadarChart(
         FloatArray(n) { i -> (-PI / 2 + i * 2 * PI / n).toFloat() }
     }
 
+    val textMeasurer = rememberTextMeasurer()
+
     Canvas(modifier = modifier) {
         val n = axes.size
-        val cx = size.width / 2f
-        val cy = size.height / 2f
-        val radius = min(cx, cy) * 0.9f
+        // Labels are measured single-line, ellipsized at 40% of the canvas width.
+        val labelLayouts: List<TextLayoutResult> = if (showAxisLabels) {
+            val maxLabelWidth = (size.width * 0.4f).toInt().coerceAtLeast(1)
+            axes.map { label ->
+                textMeasurer.measure(
+                    text = label,
+                    style = ChartDefaults.CategoryLabelStyle,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                    constraints = Constraints(maxWidth = maxLabelWidth),
+                )
+            }
+        } else {
+            emptyList()
+        }
+        val labelGap = ChartDefaults.AxisLabelGapDp.toPx()
+        val layout = computeRadarLayout(
+            width = size.width,
+            height = size.height,
+            angles = axisAngles,
+            labelWidths = FloatArray(labelLayouts.size) { labelLayouts[it].size.width.toFloat() },
+            labelHeights = FloatArray(labelLayouts.size) { labelLayouts[it].size.height.toFloat() },
+            gap = labelGap,
+        )
+        val cx = layout.centerX
+        val cy = layout.centerY
+        val radius = layout.radius
         val ringColor = ChartDefaults.Ink.copy(alpha = 0.18f)
         val spokeColor = ChartDefaults.Ink.copy(alpha = 0.12f)
         val dash = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
@@ -114,6 +151,16 @@ fun EurostatRadarChart(
                 style = Stroke(width = ChartDefaults.DefaultStrokeDp.toPx()),
             )
         }
+        labelLayouts.forEachIndexed { i, label ->
+            val o = radarLabelOffset(
+                radius = radius,
+                angle = axisAngles[i],
+                labelWidth = label.size.width.toFloat(),
+                labelHeight = label.size.height.toFloat(),
+                gap = labelGap,
+            )
+            drawText(textLayoutResult = label, topLeft = Offset(cx + o.x, cy + o.y))
+        }
     }
 }
 
@@ -131,6 +178,11 @@ fun EurostatRadarChartPreview() {
             .aspectRatio(1f)
             .background(ChartDefaults.Paper)
     ) {
-        EurostatRadarChart(axes = axes, series = series, modifier = Modifier.fillMaxSize())
+        EurostatRadarChart(
+            axes = axes,
+            series = series,
+            modifier = Modifier.fillMaxSize(),
+            showAxisLabels = true,
+        )
     }
 }

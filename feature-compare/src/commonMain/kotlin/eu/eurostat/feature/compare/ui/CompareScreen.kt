@@ -34,6 +34,7 @@ import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.charts.model.rebaseToIndex
+import eu.eurostat.core.charts.model.yearAxis
 import eu.eurostat.feature.compare.domain.CompareIndicator
 import eu.eurostat.feature.compare.domain.CompareSeries
 import eu.eurostat.ui.component.ChartPointDetailSheet
@@ -76,10 +77,17 @@ import org.jetbrains.compose.resources.stringResource
  * branch renders the indicator selector, the 2–5-country chip row with a
  * picker, an Absolute / Indexed-100 line chart overlaying one palette-coloured
  * line per country, and a value legend.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CompareScreen(component: CompareComponent, onBack: () -> Unit = {}) {
+fun CompareScreen(
+    component: CompareComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
 
     // The screen accent follows the selected indicator's module, so switching
@@ -105,7 +113,7 @@ fun CompareScreen(component: CompareComponent, onBack: () -> Unit = {}) {
             tagline = stringResource(Res.string.compare_module_tagline),
             accent = accent,
             onBack = onBack,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(CompareIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -281,7 +289,7 @@ private fun CompareContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = stringResource(Res.string.compare_chart_axis_year)),
+                        xAxis = yearAxis(label = stringResource(Res.string.compare_chart_axis_year)),
                         yAxis = ChartAxis(
                             label = if (state.normalized) {
                                 stringResource(Res.string.compare_chart_axis_index)

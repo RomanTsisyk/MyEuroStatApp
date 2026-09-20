@@ -95,10 +95,17 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
    `## [X.Y.Z] — YYYY-MM-DD` heading, and start a fresh empty
    `## [Unreleased]` above it.
 3. Bump `versionName` and `versionCode` in
-   [`composeApp/build.gradle.kts`](../composeApp/build.gradle.kts).
+   [`composeApp/build.gradle.kts`](../composeApp/build.gradle.kts) (currently
+   `0.6.0` / `60`), and keep the same version in the two other places that
+   repeat it: `APP_VERSION` in
+   [`SettingsComponent.kt`](../feature-settings/src/commonMain/kotlin/eu/eurostat/feature/settings/ui/SettingsComponent.kt)
+   (shown on the Settings About row) and `CFBundleShortVersionString` /
+   `CFBundleVersion` in [`iosApp/iosApp/Info.plist`](../iosApp/iosApp/Info.plist).
+   The desktop `packageVersion` (currently `1.0.0`, which is what names the
+   `.dmg` and the uber JAR) is a separate setting in the same Gradle file.
 4. Add a new file `fastlane/metadata/android/{en-US,pl,uk}/changelogs/<versionCode>.txt`
    summarising the release in 1–3 sentences per locale (F-Droid reads
-   these in its catalogue listing).
+   these in its catalogue listing). `60.txt` already exists for `0.6.0`.
 5. Commit and push the release-prep changes.
 6. Build the upstream APK locally:
    ```bash
@@ -122,7 +129,11 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
 9. If this is a new public release: open a merge request against
    [fdroiddata](https://gitlab.com/fdroid/fdroiddata) updating
    `metadata/eu.eurostat.app.yml` to point at the new tag. See
-   [`docs/FDROID.md`](FDROID.md).
+   [`docs/FDROID.md`](FDROID.md). **TODO before the first submission:** the
+   recipe still lists `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`
+   (and `CurrentVersion` / `CurrentVersionCode`), while the app is at 0.6.0 /
+   60 — and no `v*` tag exists in the local repository. Update the recipe to
+   the tag that is actually cut.
 
 ## CI
 

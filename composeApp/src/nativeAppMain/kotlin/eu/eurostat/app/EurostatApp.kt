@@ -92,6 +92,10 @@ private fun AppContent(root: RootComponent, darkTheme: Boolean) {
                     .fillMaxSize()
                     .background(Euro.colors.paper),
             ) { child ->
+                // Header search icon: push Search on top of the current module,
+                // exactly like the Overview header does. Search's own back button
+                // pops back to the screen that opened it.
+                val onSearch: () -> Unit = { root.onTabSelected(ChildConfig.Search) }
                 when (val c = child.instance) {
                     // Home resolves to the Overview dashboard aggregator component.
                     is OverviewComponent -> OverviewScreen(
@@ -102,14 +106,17 @@ private fun AppContent(root: RootComponent, darkTheme: Boolean) {
                     is PopulationComponent  -> PopulationScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is EconomyComponent     -> EconomyScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is EnvironmentComponent -> EnvironmentScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is TradeComponent       -> TradeScreen(
                         component = c,
@@ -126,10 +133,12 @@ private fun AppContent(root: RootComponent, darkTheme: Boolean) {
                     is SocialComponent      -> SocialScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is ScienceComponent     -> ScienceScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is SettingsComponent    -> SettingsScreen(
                         component = c,
@@ -142,6 +151,7 @@ private fun AppContent(root: RootComponent, darkTheme: Boolean) {
                     is CompareComponent     -> CompareScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     else -> error("Unknown child instance: $c")
                 }

@@ -8,6 +8,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Polish and Ukrainian country names: `countryDisplayName(code, fallback)`
+  backed by 34 `country_*` strings (EN/PL/UK) replaces the English-only
+  names in the screen headers, radar legend, headlines and country picker
+  (picker search also matches the localized name)
 - Real SVG-derived flags: 33 circle-flags (HatScripts, MIT) bundled as
   Compose vector drawables in core-ui; new `CountryFlag` composable
   (circle-cropped `Image`, emoji fallback for flagless aggregates like
@@ -17,7 +21,14 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   a bottom sheet with country, year, formatted value, unit and dataset
   code (localized EN/PL/UK); pure `nearestChartPoint` hit-test in
   core-charts (unit-tested) shares the exact draw-pass coordinate
-  mapping, wired on the Economy hero chart and the Compare screen
+  mapping, wired on the Economy and Environment hero charts and the
+  Compare screen
+- The header search icon now opens Search from Population, Economy,
+  Environment, Social, Science and Compare (it was a dead button); Back
+  returns to the module it was opened from. Trade, Transport and Tourism
+  show no search icon. The app bar's Back / Search / Refresh / More
+  accessibility descriptions are localized (EN/PL/UK)
+- Store changelogs for `versionCode` 60 (`fastlane/metadata/android/{en-US,pl,uk}/changelogs/60.txt`)
 - Tag-triggered release workflow (`.github/workflows/release.yml`):
   pushing a `v*` tag builds the release APK (real signature when the
   keystore secrets are configured, debug-signed fallback otherwise) and
@@ -64,8 +75,63 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the Settings About screen (no longer hardcoded to 0.4.0), and the iOS
   `Info.plist`
 
+### Changed
+
+- Documentation media regenerated from the fixed build: demo GIFs
+  (`docs/gifs`) re-recorded, landing-page stills (`docs/assets/screens`) and
+  the Android store screenshots re-shot
+
 ### Fixed
 
+- CI `ios-test`: the Kotlin/Native compiler ran out of heap (`OutOfMemoryError`)
+  building its cache for `material-icons-extended`, an ~11 000-icon library of
+  which the app used nine icons. Those nine are now bundled as plain vectors
+  (`EuroIcons` in `core-ui`, path data from Material Icons, Apache-2.0) and the
+  dependency is gone, leaving `material-icons-core` for the rest. Locally, the
+  Native link and the whole iOS test suite now run in 45 s with the default heap,
+  and the CI `ios-test` job passes again
+- iOS: the header of every module screen (Back, Search, Refresh) was drawn under
+  the system status bar, so Back could not be tapped and a user could not leave a
+  module; `IosModuleAppBar` now applies the status-bar inset like the Android bar
+- Offline errors: a device that is really offline throws plain `java.net`
+  exceptions (`UnknownHostException`, `SocketException`, …) which were not
+  recognised as no-connectivity, so the error state said "Something went
+  wrong" instead of "No connection — check your network". Fixed for
+  Android and desktop (`java.net` exceptions) and iOS (`NSURLErrorDomain`
+  codes, classified from the Darwin error text; the classifier is unit-tested
+  on the JVM, the iOS glue is compiled only by the CI iOS job)
+- Status bar: icons now follow the theme chosen in Settings (dark icons on
+  a dark background made the clock invisible on every screen), and the
+  Overview's dark header gets light icons
+- Overview kept the previous locale's number format (`4,387`, `83.5M`)
+  after a language switch until restart; teasers now hold raw values and
+  are formatted while composing
+- Transport: the air-passengers series was always empty. `avia_paoc` was
+  queried with `schedule=TOT`, but the Eurostat code is `TOTAL`; the API
+  silently accepts unknown codes and returns zero rows, so the AIR tile
+  and AIR chart never showed data (the Overview teaser quietly fell back
+  to road passengers). Regression tests assert
+  the `schedule=TOTAL` filter; the default year now follows the latest
+  road year so the headline is not "—" when air data runs one year further
+- Line-chart year axis rendered `2K … 2K` instead of `2010 … 2024` on
+  Economy, Environment and Compare — the default compact K/M/B axis
+  formatter was applied to years; new `yearAxis()` in `core-charts`
+- Trade: the Exports / Imports / Balance tabs collapsed (first tab took
+  the whole row, the others wrapped one letter per line and left a blank
+  gap) — `UnderlineTabs` now sizes each tab to its label
+- Trade: the headline number always showed the balance while the subtitle
+  named the selected tab; it now follows Exports / Imports / Balance
+- Science: the three sparkline tiles always ended at the latest year, so
+  the value under an earlier selected year disagreed with the headline; they
+  now read "as of the selected year"
+- Number formatting consistency: Economy and Trade truncated whole billions
+  (4,386 / 839) while Overview rounded (4,387 / 840) — all three now round;
+  Trade uses the typographic minus (`−14`); Environment energy/GHG values
+  use locale grouping (`177,745` instead of `177745`)
+- KPI tiles no longer break units mid-word (`G/DP`, `ilc_li/02`) on Social
+  and Science and now have equal heights; Transport stat values stay on one
+  line (`200 M`); the Science radar draws its axis labels and names the
+  compared regions ("Germany", "EU (27)") instead of raw codes
 - Search crashed on Kotlin/Native (iOS): a top-level
   `Regex("[^\\p{L}\\p{N}&]+")` threw at construction (Native rejects the
   `\p{L}`/`\p{N}` Unicode-property classes) and took the whole file's
@@ -77,11 +143,14 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Planned for v0.8 / v1.0
 
-- Verified launch on a physical iPhone (TestFlight); on-device Android
-  smoke run; interactive 8-tab walk-through → `RUN_REPORT.md`
+- Verified launch on a physical iPhone (TestFlight) and the iOS simulator
+  walk-through; a run on a physical Android device (the emulator
+  walk-through is done — see `RUN_REPORT.md`)
 - Real Android release signing key (currently debug-keystore fallback);
   Msi/Deb installers verified via CI (only Dmg verified locally so far)
-- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
+- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata
+  MR; the recipe still pins `v0.4.0` / `versionCode` 40 and must be updated
+  to the tag cut for the next release)
 
 ## [0.5.0] — 2026-07-07
 

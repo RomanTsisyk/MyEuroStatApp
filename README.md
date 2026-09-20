@@ -6,15 +6,15 @@
 [![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/docs/multiplatform.html)
 [![F-Droid](https://img.shields.io/badge/F--Droid-pending%20submission-1976D2)](docs/FDROID.md)
 
-Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windows) that visualizes European statistical data from the official Eurostat public API. Eight thematic modules — economy, population, environment, trade, transport, tourism, social, science — each with its own dataset, switcher pattern, and signature chart.
+Kotlin Multiplatform app (Android · iOS · JVM desktop on macOS / Linux / Windows) that visualizes European statistical data from the official Eurostat public API. Eight thematic modules — economy, population, environment, trade, transport, tourism, social, science — each with its own dataset, switcher pattern, and signature chart, plus an Overview dashboard, a Search screen, a cross-module Compare screen and Settings.
 
 > **Disclaimer.** This is an independent, third-party open-source mobile client for the public Eurostat HTTP API. It is **not** affiliated with, endorsed by, or sponsored by Eurostat, the European Statistical Office, or the European Commission. The name "Eurostat" appears throughout this project solely to reference the public data source. The app is published under the AGPL-3.0 license and the underlying data is published by Eurostat under Creative Commons Attribution 4.0.
 
 **Phone · tablet · desktop** — single codebase, three form factors. Android handles phone + tablet via responsive layouts; iOS does iPhone + iPad; the JVM/Compose Desktop target packages a self-contained `.jar` (~99 MB) that runs on macOS/Linux/Windows.
 
-**Status:** v0.4.0 · Phase 4 complete · all 8 modules wired end-to-end to real public-API data · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian app strings · **iOS app builds and launches on the iPhone 17 simulator, rendering live Eurostat data**, via a real XcodeGen-generated Xcode project (see [iosApp/README.md](iosApp/README.md)).
+**Status:** v0.6.0 (`versionCode` 60) · Phase 5 complete, Phase 6 (release) in progress · all 8 modules wired end-to-end to real public-API data, plus the Overview, Search, Compare and Settings screens · Android APK assembles, installs and ships with an adaptive launcher icon plus English/Polish/Ukrainian UI (Compose Resources, switchable at runtime) · walked through on an API 36 Android emulator in EN/PL/UK ([RUN_REPORT.md](RUN_REPORT.md)) · **iOS app builds and launches on the iPhone 17 simulator, rendering live Eurostat data**, via a real XcodeGen-generated Xcode project (see [iosApp/README.md](iosApp/README.md)).
 
-**Known limitations:** iOS has not yet been verified on a physical device or shipped via TestFlight; native desktop installers (`.dmg`/`.msi`/`.deb`) are configured and `.dmg` is verified locally, but they are unsigned and not yet published via CI. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
+**Known limitations:** Android has been exercised on an emulator only, not on a physical device; iOS has not yet been verified on a physical device or shipped via TestFlight; native desktop installers (`.dmg`/`.msi`/`.deb`) are configured and `.dmg` is verified locally, but they are unsigned and not yet published via CI. See [CHANGELOG.md](CHANGELOG.md) and [NEXT_STEPS.md](NEXT_STEPS.md) for the full picture.
 
 See [`CLAUDE.md`](CLAUDE.md) for the project conventions and the Eurostat dataset/filter table, and [`NEXT_STEPS.md`](NEXT_STEPS.md) for the prioritized roadmap.
 
@@ -40,19 +40,19 @@ A demographic pyramid for 18 age cohorts (five-year bands, Y_LT5 through Y_GE85)
 
 ![Economy](docs/gifs/economy.gif)
 
-Three macro indicators — GDP in current prices (billion EUR, `nama_10_gdp`), HICP inflation index (2015 = 100, `prc_hicp_aind`), and government net lending/borrowing as % of GDP (`gov_10dd_edpt1`) — displayed as a multi-country line chart. A segmented control (GDP / Inflation / Deficit) switches the active metric; the two inactive metrics remain visible as dimmed secondary stat tiles. A dual-handle year scrubber trims the chart's x-range; a separate year dropdown picks the year used by the headline and stat tiles. Country chips and a country picker control which series appear on the chart.
+Three macro indicators — GDP in current prices (billion EUR, `nama_10_gdp`), HICP inflation index (2015 = 100, `prc_hicp_aind`), and government net lending/borrowing as % of GDP (`gov_10dd_edpt1`) — displayed as a multi-country line chart. A segmented control (GDP / Inflation / Deficit) switches the active metric; the two inactive metrics remain visible as dimmed secondary stat tiles. A dual-handle year scrubber trims the chart's x-range; a separate year dropdown picks the year used by the headline and stat tiles. Country chips and a country picker control which series appear on the chart. Tapping near a point on the chart opens a detail sheet with the country, year, value, unit and dataset code.
 
 ### Environment
 
 ![Environment](docs/gifs/environment.gif)
 
-Three climate datasets selectable via a dropdown (GHG / Energy / SDG): greenhouse gas emissions in Mt CO₂-eq (`env_air_gge`), final energy consumption in ktoe (`nrg_bal_c`), and the SDG 13 climate index at 1990 = 100 (`sdg_13_10`). When GHG or Energy is active, a chip row filters by sector (TOTAL / TRANSPORT / INDUSTRY). A year dropdown next to the metric dropdown picks which year the headline reports; the chart keeps the full history. The hero is a line chart comparing the active country against one peer; two secondary stat tiles show the other two metrics' values for the same year. A country chips row and picker control the comparison set.
+Three climate datasets selectable via a dropdown (GHG / Energy / SDG): greenhouse gas emissions in Mt CO₂-eq (`env_air_gge`), final energy consumption in ktoe (`nrg_bal_c`), and the SDG 13 climate index at 1990 = 100 (`sdg_13_10`). When GHG or Energy is active, a chip row filters by sector (TOTAL / TRANSPORT / INDUSTRY). A year dropdown next to the metric dropdown picks which year the headline reports; the chart keeps the full history. The hero is a line chart comparing the active country against one peer; two secondary stat tiles show the other two metrics' values for the same year. A country chips row and picker control the comparison set. Tapping near a point on the hero chart opens a detail sheet with the country, sector, year, value, unit and dataset code.
 
 ### Trade
 
 ![Trade](docs/gifs/trade.gif)
 
-Intra-EU goods trade flows from `ext_lt_intratrd` — exports, imports, and trade balance in billion EUR. The hero is a diverging bar chart spanning the eight most recent years, with exports extending to the right and imports to the left. Three underline tabs (Exports / Imports / Balance) highlight the relevant direction. A year dropdown picks the year shown in the headline and stat tiles. Two compact stat tiles show the active country's exports and imports figures for that year. Country chips switch the active country; the "+" picker adds more.
+Intra-EU goods trade flows from `ext_lt_intratrd` — exports, imports, and trade balance in billion EUR. The hero is a diverging bar chart spanning the eight most recent years, with exports extending to the right and imports to the left. Three underline tabs (Exports / Imports / Balance) highlight the relevant direction and drive the headline figure (exports and imports unsigned, balance signed). A year dropdown picks the year shown in the headline and stat tiles. Two compact stat tiles show the active country's exports and imports figures for that year. Country chips switch the active country; the "+" picker adds more.
 
 ### Transport
 
@@ -76,7 +76,7 @@ Three welfare percentage indicators drawn from EU-SILC surveys: at-risk-of-pover
 
 ![Science](docs/gifs/science.gif)
 
-Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), internet usage rate (`isoc_ci_ifp_iu`), and tertiary education attainment among 25–64 year-olds (`edat_lfse_03`) — shown simultaneously on a radar chart. The radar overlays the active country against a single peer (preferring DE, then FR, then EU27). A year dropdown picks the year drawn by the radar; the three sparklines beneath always show the full trend. There is no metric switcher; the radar presents all three axes at once. Country chips switch the active country.
+Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), internet usage rate (`isoc_ci_ifp_iu`), and tertiary education attainment among 25–64 year-olds (`edat_lfse_03`) — shown simultaneously on a radar chart. The radar overlays the active country against a single peer (preferring DE, then FR, then EU27). A year dropdown picks the year drawn by the radar; the three sparklines beneath end at that same year, so each tile reads "as of the selected year". There is no metric switcher; the radar presents all three axes at once. Country chips switch the active country.
 
 ---
 
@@ -94,18 +94,29 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 | 8 chart types on pure Compose Canvas | done | `core-charts/` — line, stacked-bar, pyramid, heatmap, diverging-bar, radar, small-multiples, multi-line-highlighted |
 | Responsive layout — phone, tablet, desktop | done | `AdaptiveTwoPane` in `core-ui/layout/` — three-slot master-detail wrapper (exact phone ordering below 840dp; 320dp controls pane + content pane at ≥840dp), adopted by all 8 feature screens |
 | Multi-country comparison overlay | done | Economy screen — index-stable `SeriesPalette` colors for any number of countries + "Absolute / Indexed 100" toggle (`core-charts/model/SeriesPalette`); plus a dedicated `feature-compare` screen (8 headline indicators, 2-5 countries, same palette + Indexed-100 toggle) reachable from a compare pill on the Overview header |
-| Overview dashboard screen | done | `feature-overview` — landing screen aggregating one live teaser metric per module (`OverviewScreen` hero + tile grid); on-device visual check pending |
-| Search & Settings screens | done | `feature-search` (27-indicator compiled-in index, tiered ranking, browse-by-module) + `feature-settings` (theme/language/default-country persisted via SQLDelight, functional clear-cache) |
-| Real flag rendering | done | Unicode-emoji `flagFor()` in `core-common` |
-| KMP-level PL/UK localization, all modules | done | Compose Resources `strings.xml` (EN/PL/UK) in every module; the Settings language picker switches the UI language at runtime (`LocalAppLocale`) |
+| Overview dashboard screen | done | `feature-overview` — landing screen aggregating one live teaser metric per module (`OverviewScreen` hero + tile grid); checked on an Android emulator ([`RUN_REPORT.md`](RUN_REPORT.md)), physical-device check pending |
+| Search & Settings screens | done | `feature-search` (27-indicator compiled-in index, tiered ranking, browse-by-module; opened from the Overview header pill and from the header search icon of Population, Economy, Environment, Social, Science and Compare — Trade, Transport and Tourism show no search icon) + `feature-settings` (theme/language/default-country persisted via SQLDelight, functional clear-cache) |
+| Chart-point detail sheet | done | Tap near a point on the Economy, Environment or Compare line chart → `ChartPointDetailSheet` in `core-ui/component/` (country, year, value, unit, dataset code); other chart types are not wired |
+| Real flag rendering | done | 33 bundled circle-flags vector drawables + `CountryFlag` in `core-ui/component/` (Unicode-emoji `flagFor()` in `core-common` stays as the fallback for aggregates without a flag, e.g. `EA20`) |
+| KMP-level PL/UK localization, all modules | done | Compose Resources `strings.xml` (EN/PL/UK) in every module, including country names (`countryDisplayName`, 34 `country_*` strings in `core-ui`); the Settings language picker switches the UI language at runtime (`LocalAppLocale`) |
 | iOS app — builds & runs with live data | done | `iosApp/` — real XcodeGen-generated Xcode project (see [`iosApp/README.md`](iosApp/README.md)); builds and launches on the iPhone 17 simulator rendering live Eurostat data; physical-device / TestFlight verification still pending |
-| Android verified on physical device | planned | `NEXT_STEPS.md` P0 smoke-test |
+| Android verified on physical device | planned | emulator walk-through done ([`RUN_REPORT.md`](RUN_REPORT.md)); physical device still open in `NEXT_STEPS.md` P0 smoke-test |
 
 ---
 
 ## Screenshots
 
-Captured from the running Android build. Full gallery in [`docs/screenshots/`](docs/screenshots/) (34 frames in chronological capture order — Population pyramid → Economy GDP switcher → Environment sector chips → Trade diverging bars → Transport small-multiples → Tourism stacked bars → Social KPI tiles → Science radar → states).
+Current screens, captured from the Android build after the fixes in [`RUN_REPORT.md`](RUN_REPORT.md): one still per module in [`docs/assets/screens/`](docs/assets/screens/) (also used by the landing page) and the store set in `fastlane/metadata/android/{en-US,pl,uk}/images/phoneScreenshots/`; the demo GIFs above are in [`docs/gifs/`](docs/gifs/). [`docs/screenshots/`](docs/screenshots/) keeps the original v0.4-era capture (34 frames in chronological capture order, plus per-module frames in `v2/` used by the [`docs/presentation/`](docs/presentation/) deck) — these were committed on 2026-05-24, before the fixes listed in [`CHANGELOG.md`](CHANGELOG.md).
+
+### iOS
+
+The same eight modules on an iPhone 17 simulator (iOS 26.5, Xcode 26.6), live Eurostat data; stills in [`docs/assets/screens/ios/`](docs/assets/screens/ios/). See [`RUN_REPORT.md`](RUN_REPORT.md) for the walk-through and what it found.
+
+| | | | |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/assets/screens/ios/overview.png" width="180" alt="Overview"> | <img src="docs/assets/screens/ios/population.png" width="180" alt="Population"> | <img src="docs/assets/screens/ios/economy.png" width="180" alt="Economy"> | <img src="docs/assets/screens/ios/environment.png" width="180" alt="Environment"> |
+| <img src="docs/assets/screens/ios/trade.png" width="180" alt="Trade"> | <img src="docs/assets/screens/ios/transport.png" width="180" alt="Transport"> | <img src="docs/assets/screens/ios/tourism.png" width="180" alt="Tourism"> | <img src="docs/assets/screens/ios/social.png" width="180" alt="Social"> |
+| <img src="docs/assets/screens/ios/science.png" width="180" alt="Science"> | | | |
 
 For the visual design language (typography, spacing, color tokens, switcher patterns), open [`design/index.html`](design/index.html) in any browser — the wireframes that drove the implementation.
 
@@ -117,7 +128,7 @@ For the visual design language (typography, spacing, color tokens, switcher patt
 |---|---|
 | **Android — F-Droid** | Pending submission to [fdroiddata](https://gitlab.com/fdroid/fdroiddata). The build recipe is already in [`metadata/eu.eurostat.app.yml`](metadata/eu.eurostat.app.yml). See [docs/FDROID.md](docs/FDROID.md) for status. |
 | **Android — GitHub release** | Download `composeApp-release.apk` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), enable "Install from unknown sources" for your browser, open the file. |
-| **Desktop (macOS / Linux / Windows)** | Download `composeApp-{os}-{arch}-0.4.0.jar` from [Releases](https://github.com/RomanTsisyk/MyEuroStatApp/releases/latest), run `java -jar composeApp-*.jar` (Java 17+). Native `.dmg` / `.msi` / `.deb` installers are configured (`./gradlew :composeApp:packageDmg` / `packageMsi` / `packageDeb`) and `.dmg` is verified locally — they are **unsigned** (macOS Gatekeeper / Windows SmartScreen will warn) and not yet published as release artifacts; see [`docs/RELEASING.md`](docs/RELEASING.md). |
+| **Desktop (macOS / Linux / Windows)** | Build the self-contained JAR with `./gradlew :composeApp:packageUberJarForCurrentOS` (→ `composeApp-{os}-{arch}-1.0.0.jar`, the number is the desktop `packageVersion`) and run `java -jar composeApp-*.jar` (Java 17+); see [Quick start](#quick-start-build-from-source). Native `.dmg` / `.msi` / `.deb` installers are configured (`./gradlew :composeApp:packageDmg` / `packageMsi` / `packageDeb`) and `.dmg` is verified locally — they are **unsigned** (macOS Gatekeeper / Windows SmartScreen will warn). The tag-triggered `release.yml` workflow attaches the installers (and the APK) to a GitHub release, but it has not yet run for a real release; it does not attach the JAR. See [`docs/RELEASING.md`](docs/RELEASING.md). |
 | **iOS** | No TestFlight/App Store distribution yet. Build from source and run on the simulator — see [Quick start](#quick-start-build-from-source) below and [`iosApp/README.md`](iosApp/README.md); physical-device verification is still pending. |
 
 The app needs no account, no permissions beyond `INTERNET`, and ships
@@ -151,7 +162,8 @@ See [`iosApp/README.md`](iosApp/README.md) for toolchain gotchas (JAVA_HOME pinn
 ```bash
 # Desktop (macOS / Linux / Windows)
 ./gradlew :composeApp:packageUberJarForCurrentOS
-# → composeApp/build/compose/jars/composeApp-{os}-{arch}-0.4.0.jar (self-contained, ~99 MB)
+# → composeApp/build/compose/jars/composeApp-{os}-{arch}-1.0.0.jar (self-contained, ~99 MB;
+#   the version comes from the desktop packageVersion in composeApp/build.gradle.kts)
 java -jar composeApp/build/compose/jars/composeApp-*.jar
 
 # OR a native installer for your OS (unsigned; packageDmg verified locally)
@@ -175,7 +187,7 @@ Tests:
 
 ## Architecture
 
-Multi-module Clean Architecture. 18 Gradle modules (1 app + 7 core + 10 feature); each feature follows the same `data/ → domain/ → ui/` layering.
+Multi-module Clean Architecture. 20 Gradle modules (1 app + 7 core + 12 feature, see `settings.gradle.kts`); each of the 8 thematic features follows the same `data/ → domain/ → ui/` layering.
 
 ```
 core-common      Result<T>, AppError, DispatcherProvider
@@ -194,9 +206,13 @@ feature-settings Settings screen: theme/language/default-country persisted
                  via SQLDelight AppPreferences; functional clear-cache
 feature-overview Overview dashboard landing screen; aggregates one live teaser
                  metric per feature into a hero + tile grid (bound to ChildConfig.Home)
+feature-search   Search screen: compiled-in 27-indicator index, tiered ranking,
+                 browse-by-module (bound to ChildConfig.Search)
+feature-compare  Cross-module comparison: 8 headline indicators, 2-5 countries,
+                 overlaid on one line chart (bound to ChildConfig.Compare)
 
-composeApp       App shell: AdaptiveScaffold + Decompose stack; HomeScreen module
-                 grid is the landing screen (BottomTabBar exists but is not rendered)
+composeApp       App shell: AdaptiveScaffold + Decompose stack; the Overview dashboard
+                 is the landing screen (BottomTabBar exists but is not rendered)
 iosApp           Real XcodeGen-generated Xcode project (not a Gradle module);
                  builds + launches on the iOS simulator with live Eurostat
                  data — see iosApp/README.md
@@ -222,7 +238,7 @@ fun MyScreen() {
             )
             MetricHeadline(
                 value = "3 451", unit = "B €",
-                sub = "GDP · current prices · ▲ +6.2%",
+                subtitle = "GDP · current prices · ▲ +6.2%",
                 year = "2024",
                 accent = Euro.moduleAccents.economy,
             )
@@ -265,7 +281,7 @@ See [`CLAUDE.md`](CLAUDE.md) for the full contract reference and the Eurostat da
 5. Pick the switcher pattern that fits your data shape (segmented / chip row / underline tabs / pill toggle / metric dropdown / KPI tile selector / none).
 6. Build the Screen using `Euro.*` tokens + a chart from `core-charts/`.
 7. Write tests in `commonTest/` (kotlin.test + Turbine). Fake the repository directly — Mockk doesn't work on iOS.
-8. Register the module in `composeApp/.../EurostatApp.kt` tabs and `core-navigation/.../ChildConfig.kt`.
+8. Register the module: add a `ChildConfig` entry in `core-navigation/.../ChildConfig.kt`, its Koin module in `composeApp/.../di/AppModule.kt`, its component factory in `composeApp/.../RootComponentFactory.kt`, and its screen in the `when` dispatcher of `composeApp/.../EurostatApp.kt` (pass `onSearch` if the screen should show the header search icon).
 
 ---
 
@@ -326,4 +342,6 @@ future PR adding a telemetry endpoint will be rejected.
 | `SECURITY.md` | Vulnerability reporting policy. |
 | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1. |
 | `NEXT_STEPS.md` | Prioritized roadmap to 1.0. |
+| `CHANGELOG.md` | Release history and the `[Unreleased]` list. |
+| `RUN_REPORT.md` | Android emulator smoke-test: defects found and fixed, leftovers, what is not covered. |
 | `design/` | HTML/JSX wireframes that drove the UI design. Reference only — not production. |

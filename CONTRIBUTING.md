@@ -8,14 +8,14 @@ You need:
 
 - **JDK 17 or 21** (Temurin recommended)
 - **Android Studio Iguana (2023.2.1) or newer** — for the Android side
-- **Xcode 15 or newer** — for iOS (optional; commonMain compiles without it)
+- **Xcode 15 or newer** — for iOS (optional; commonMain compiles without it). See [`iosApp/README.md`](iosApp/README.md) for the simulator build and the `DEVELOPER_DIR` gotcha when `xcode-select` points at the Command Line Tools
 - **macOS, Linux, or Windows** — all three should work for Android development
 
 Clone and build:
 
 ```bash
-git clone https://github.com/RomanTsisyk/eu-stats-multiplatform.git
-cd eu-stats-multiplatform
+git clone https://github.com/RomanTsisyk/MyEuroStatApp.git
+cd MyEuroStatApp
 ./gradlew :composeApp:assembleDebug
 ```
 
@@ -29,7 +29,7 @@ The first build takes 5–10 minutes (Compose Multiplatform downloads its compil
 ./gradlew :core-jsonstat:allTests               # the JSON-stat parser
 ```
 
-Tests live in `commonTest` source sets. Use `kotlin.test` + Turbine — Mockk doesn't work on iOS targets so we use hand-written fakes.
+Tests live in `commonTest` source sets (a few platform-specific ones sit in `androidUnitTest` / `desktopTest`). Use `kotlin.test` + Turbine — Mockk doesn't work on iOS targets so we use hand-written fakes. JVM-green is not Native-green: for code that could behave differently on Kotlin/Native (regexes, string handling), also run `./gradlew :your-module:iosSimulatorArm64Test` (needs Xcode) — CI runs it for every module; see [CLAUDE.md](CLAUDE.md).
 
 ## Code style
 
@@ -51,7 +51,7 @@ Before submitting a PR, please run a clean build to confirm nothing's broken:
 ## Pull request process
 
 1. **Open an issue first** for non-trivial changes (new features, behavior changes, refactors). One-line fixes can skip this.
-2. Branch from `main`. Use descriptive branch names: `fix/cohort-overflow`, `feat/comparison-screen`.
+2. Branch from `master`. Use descriptive branch names: `fix/cohort-overflow`, `feat/comparison-screen`.
 3. Keep PRs focused — one concern per PR. If you find yourself touching 20 files for unrelated reasons, split.
 4. Reference the issue number in the PR description.
 5. Include a "How to verify" section: what command did you run, what output did you see, what manual check confirmed the change works.

@@ -341,6 +341,44 @@ class TransportComponentTest {
     }
 
     @Test
+    fun default_year_is_latest_road_year_when_air_data_runs_further() = runTest {
+        val repo = FakeTransportRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(gapTransportSeries("DE")), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value as TransportUiState.Content
+        // Air reaches 2024 but the headline is road passengers, which end at 2022:
+        // opening on 2024 would show "—" in the headline.
+        assertEquals(2022, state.selectedYear)
+        assertEquals(2024, state.availableYears.last())
+    }
+
+    @Test
+    fun default_year_falls_back_to_last_available_year_without_road_data() = runTest {
+        val repo = FakeTransportRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        val airOnly = TransportTimeSeries(
+            countryCode = "DE",
+            countryName = "DE",
+            mode = TransportMode.AIR,
+            points = listOf(
+                TransportDataPoint("DE", 2022, TransportMode.AIR, roadPassengers = null, airPassengers = 100_000L, seaPassengers = null),
+                TransportDataPoint("DE", 2023, TransportMode.AIR, roadPassengers = null, airPassengers = 110_000L, seaPassengers = null),
+            ),
+        )
+        repo.emissions.value = Result.Success(listOf(airOnly), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value as TransportUiState.Content
+        assertEquals(2023, state.selectedYear)
+    }
+
+    @Test
     fun select_year_with_road_only_shows_dash_for_air() = runTest {
         val repo = FakeTransportRepository()
         val dispatcher = StandardTestDispatcher(testScheduler)

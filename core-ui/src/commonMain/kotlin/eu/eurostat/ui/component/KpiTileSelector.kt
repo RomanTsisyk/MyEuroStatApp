@@ -6,7 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -14,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.eurostat.ui.theme.Euro
 
@@ -24,7 +28,8 @@ import eu.eurostat.ui.theme.Euro
  * @property key stable identifier (e.g. `"gdp"`).
  * @property label small caption shown at the top (e.g. `"GDP"`).
  * @property value tabular metric value (e.g. `"24.6T"`).
- * @property unit short unit string (e.g. `"€"`, `"%"`).
+ * @property unit short unit / source caption (e.g. `"€"`, `"% · ilc_li02"`),
+ *   rendered on its own line below the value so it never squeezes the number.
  */
 data class KpiTile(
     val key: String,
@@ -36,7 +41,9 @@ data class KpiTile(
 /**
  * Three-up grid of selectable KPI tiles. The active tile gains a 1.5dp
  * border in the module accent and a small accent dot in the top-right
- * corner.
+ * corner. Each tile stacks label, value (single line) and unit caption
+ * (wraps only at spaces, at most two lines); all tiles in the row are
+ * stretched to the height of the tallest one.
  *
  * @param tiles tiles to render, normally three per row.
  * @param selectedKey [KpiTile.key] of the currently selected tile.
@@ -51,7 +58,7 @@ fun KpiTileSelector(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.s),
     ) {
         tiles.forEach { tile ->
@@ -60,26 +67,34 @@ fun KpiTileSelector(
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .border(if (selected) 1.5.dp else 1.dp, borderColor, Euro.shapes.large)
                     .background(Euro.colors.paperAlt, Euro.shapes.large)
                     .clickable { onSelect(tile.key) }
                     .padding(Euro.spacing.m),
             ) {
                 Column {
-                    Text(tile.label.uppercase(), style = Euro.typography.labelSmall, color = Euro.colors.muted)
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            tile.value,
-                            style = Euro.typography.tabularNumLarge,
-                            color = Euro.colors.ink,
-                        )
-                        Text(
-                            text = " " + tile.unit,
-                            style = Euro.typography.bodySmall,
-                            color = Euro.colors.muted,
-                            modifier = Modifier.padding(bottom = 4.dp),
-                        )
-                    }
+                    Text(
+                        text = tile.label.uppercase(),
+                        style = Euro.typography.labelSmall,
+                        color = Euro.colors.muted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = tile.value,
+                        style = Euro.typography.tabularNumLarge,
+                        color = Euro.colors.ink,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                    Text(
+                        text = tile.unit,
+                        style = Euro.typography.bodySmall,
+                        color = Euro.colors.muted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 if (selected) {
                     Box(

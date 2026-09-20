@@ -9,7 +9,6 @@ kotlin {
             implementation(projects.coreUi)
             implementation(projects.coreNavigation)
             // Header pill icons beyond the material-icons core set (SsidChart).
-            implementation(compose.materialIconsExtended)
 
             // The Overview aggregates one teaser metric per feature, so it depends
             // on every feature's public domain layer (repository interface + models).

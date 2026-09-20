@@ -7,35 +7,43 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SsidChart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.eurostat.core.navigation.ChildConfig
 import eu.eurostat.ui.component.MetricHeadline
 import eu.eurostat.ui.component.SourceFooter
+import eu.eurostat.ui.icons.EuroIcons
+import eu.eurostat.ui.system.StatusBarIcons
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroWindowWidth
 import eu.eurostat.ui.theme.LocalEuroWindowWidth
@@ -65,6 +73,24 @@ fun OverviewScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by component.state.collectAsState()
+    val gridState = rememberLazyGridState()
+
+    // Edge-to-edge: the header's ink band is drawn behind the status bar, so the
+    // system icons must contrast with it (and with the paper once it scrolls away).
+    val statusBarPx = WindowInsets.statusBars.getTop(LocalDensity.current)
+    val headerBehindStatusBar by remember(gridState, statusBarPx) {
+        derivedStateOf {
+            val visible = gridState.layoutInfo.visibleItemsInfo
+            val header = visible.firstOrNull { it.index == 0 }
+            when {
+                visible.isEmpty() -> true // not measured yet: the list starts at the header
+                header == null -> false // header scrolled out, tiles/paper sit behind the bar
+                else -> header.offset.y + header.size.height > statusBarPx
+            }
+        }
+    }
+    val behindStatusBar = if (headerBehindStatusBar) Euro.colors.ink else Euro.colors.paper
+    StatusBarIcons(light = behindStatusBar.luminance() < 0.5f)
 
     val columns = when (LocalEuroWindowWidth.current) {
         EuroWindowWidth.Compact -> 2
@@ -74,6 +100,7 @@ fun OverviewScreen(
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
+        state = gridState,
         modifier = modifier
             .fillMaxSize()
             .background(Euro.colors.paper),
@@ -149,7 +176,7 @@ private fun HeaderBar(onSearch: () -> Unit, onCompare: () -> Unit, onSettings: (
             onClick = onSearch,
         )
         HeaderIconPill(
-            icon = Icons.Default.SsidChart,
+            icon = EuroIcons.SsidChart,
             description = stringResource(Res.string.overview_header_compare_description),
             onClick = onCompare,
         )
@@ -206,7 +233,8 @@ private fun HeroBlock(hero: ModuleTeaser?, headlineCountryCode: String) {
             .padding(horizontal = Euro.spacing.base),
     ) {
         MetricHeadline(
-            value = hero?.value ?: "—",
+            // Formatted here, during composition, so it follows the current locale.
+            value = hero?.displayValue() ?: NO_VALUE,
             unit = stringResource(Res.string.overview_hero_unit),
             subtitle = stringResource(Res.string.overview_hero_subtitle, headlineCountryCode.uppercase()),
             year = hero?.year?.toString() ?: "—",
@@ -242,7 +270,9 @@ private fun TeaserTile(teaser: ModuleTeaser, onClick: () -> Unit) {
             )
         }
         Text(
-            text = teaser.value,
+            // Formatted here, during composition, so it follows the current locale
+            // (the state only carries the raw number).
+            text = teaser.displayValue(),
             color = Euro.colors.ink,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,

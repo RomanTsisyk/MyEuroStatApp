@@ -203,6 +203,83 @@ class TransportApiServiceImplTest {
         assertTrue(!airUrl.contains("partner="), "avia_paoc in ALL mode must NOT send partner dim: $airUrl")
     }
 
+    // ---------------------------------------------------------------------------
+    // Regression: AIR tile/line was blank for every country. avia_paoc's
+    // `schedule` code for "all services" is `TOTAL`; the app sent `TOT`, which
+    // the live API accepts with HTTP 200 and an empty `value` map.
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun fetch_air_url_pins_schedule_to_TOTAL_not_TOT() = runTest {
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
+        service.fetch(TransportQuery(listOf("DE"), 2023..2023, mode = TransportMode.AIR))
+        val url = recorder.all().first { it.contains("avia_paoc") }
+        assertTrue(url.contains("schedule=TOTAL"), "avia_paoc must send schedule=TOTAL: $url")
+        assertTrue(!url.contains("schedule=TOT&") && !url.endsWith("schedule=TOT"), "avia_paoc must not send schedule=TOT: $url")
+    }
+
+    @Test
+    fun fetch_all_mode_air_url_pins_schedule_to_TOTAL_not_TOT() = runTest {
+        val recorder = RequestRecorder()
+        val service = buildService(recorder)
+        service.fetch(TransportQuery(listOf("DE"), 2023..2023, mode = TransportMode.ALL))
+        val url = recorder.all().first { it.contains("avia_paoc") }
+        assertTrue(url.contains("schedule=TOTAL"), "avia_paoc (ALL mode) must send schedule=TOTAL: $url")
+        assertTrue(!url.contains("schedule=TOT&") && !url.endsWith("schedule=TOT"), "avia_paoc (ALL mode) must not send schedule=TOT: $url")
+    }
+
+    @Test
+    fun fetch_all_mode_keeps_air_value_from_real_shaped_avia_paoc_response() = runTest {
+        // Shape of the live avia_paoc response for geo=DE, time=2023 with the
+        // app's filters (an extra `freq` dimension of size 1 after filtering).
+        val airJson = """
+            {
+              "id":["freq","unit","tra_meas","tra_cov","schedule","geo","time"],
+              "size":[1,1,1,1,1,1,1],
+              "dimension":{
+                "freq":{"category":{"index":{"A":0},"label":{"A":"Annual"}}},
+                "unit":{"category":{"index":{"PAS":0},"label":{"PAS":"Passenger"}}},
+                "tra_meas":{"category":{"index":{"PAS_CRD":0},"label":{"PAS_CRD":"Passengers carried"}}},
+                "tra_cov":{"category":{"index":{"TOTAL":0},"label":{"TOTAL":"Total transport"}}},
+                "schedule":{"category":{"index":{"TOTAL":0},"label":{"TOTAL":"Total"}}},
+                "geo":{"category":{"index":{"DE":0},"label":{"DE":"Germany"}}},
+                "time":{"category":{"index":{"2023":0},"label":{"2023":"2023"}}}
+              },
+              "value":{"0":185279468}
+            }
+        """.trimIndent()
+        val roadJson = """
+            {
+              "id":["geo","time"],
+              "size":[1,1],
+              "dimension":{
+                "geo":{"category":{"index":{"DE":0},"label":{"DE":"Germany"}}},
+                "time":{"category":{"index":{"2023":0},"label":{"2023":"2023"}}}
+              },
+              "value":{"0":5200000}
+            }
+        """.trimIndent()
+        val engine = MockEngine { request ->
+            val body = if (request.url.toString().contains("avia_paoc")) airJson else roadJson
+            respond(
+                content = ByteReadChannel(body),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+        val httpClient = HttpClient(engine) {
+            install(ContentNegotiation) { json(EurostatJson) }
+        }
+        val service = TransportApiServiceImpl(EurostatApiClient(httpClient, JsonStatParser()))
+
+        val result = service.fetch(TransportQuery(listOf("DE"), 2023..2023, mode = TransportMode.ALL))
+
+        assertEquals(1, result.size)
+        assertEquals(5_200_000_000L, result[0].roadPassengers)
+        assertEquals(185_279_468L, result[0].airPassengers)
+    }
+
     @Test
     fun fetch_all_mode_merges_results_into_single_points_per_country_year() = runTest {
         val engine = MockEngine { _ ->

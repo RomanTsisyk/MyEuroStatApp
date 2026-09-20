@@ -170,10 +170,18 @@ class DefaultTransportComponent(
             .distinct()
             .sorted()
 
+        // The headline shows road passengers, so default to the latest year that
+        // has road data. Air data usually runs a year further (e.g. road ends at
+        // 2023, air reaches 2024); defaulting to the union's last year would open
+        // on a year where the headline is "—".
+        val latestRoadYear = activeSeries
+            .flatMap { it.points }
+            .filter { it.roadPassengers != null }
+            .maxOfOrNull { it.year }
         val resolvedYear = when {
             availableYears.isEmpty() -> query.yearRange.last
             selectedYear != null && selectedYear!! in availableYears -> selectedYear!!
-            else -> availableYears.last()
+            else -> latestRoadYear ?: availableYears.last()
         }
         selectedYear = resolvedYear
 

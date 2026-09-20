@@ -42,7 +42,11 @@ class TransportApiServiceImpl(
                         "unit" to listOf("PAS"),
                         "tra_meas" to listOf("PAS_CRD"),
                         "tra_cov" to listOf("TOTAL"),
-                        "schedule" to listOf("TOT"),
+                        // The code for "all services" is `TOTAL`, NOT `TOT`. An
+                        // unknown code is not rejected: the API answers HTTP 200
+                        // with an empty `value` map, which silently blanked the
+                        // AIR tile/line. Verified live: geo=DE returns 2015-2024.
+                        "schedule" to listOf("TOTAL"),
                         // NOTE: `partner` dim removed — earlier attempt to pin
                         // it caused INVALID_QUERY_DIMENSION on the live API.
                         // avia_paoc returns one cell per (geo, time) with the
@@ -76,7 +80,7 @@ class TransportApiServiceImpl(
                             "unit" to listOf("PAS"),
                             "tra_meas" to listOf("PAS_CRD"),
                             "tra_cov" to listOf("TOTAL"),
-                            "schedule" to listOf("TOT"),
+                            "schedule" to listOf("TOTAL"),
                         ),
                     )
                 }

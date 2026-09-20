@@ -47,6 +47,7 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
@@ -81,16 +82,23 @@ private const val TILE_HEALTH = "health"
  *
  * All values are sourced from the live [SocialComponent] state — no mock
  * data path remains.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
+fun SocialScreen(
+    component: SocialComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Social")
     val contentState = state as? SocialUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -105,7 +113,7 @@ fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(SocialIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {

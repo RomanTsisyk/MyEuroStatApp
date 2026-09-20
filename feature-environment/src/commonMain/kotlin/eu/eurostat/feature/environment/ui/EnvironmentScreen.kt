@@ -32,11 +32,13 @@ import eu.eurostat.core.charts.EurostatLineChart
 import eu.eurostat.core.charts.model.ChartAxis
 import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
+import eu.eurostat.core.charts.model.yearAxis
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.environment.domain.EnvMetric
 import eu.eurostat.feature.environment.domain.EnvSector
 import eu.eurostat.feature.environment.domain.EnvironmentDataPoint
 import eu.eurostat.feature.environment.domain.EnvironmentTimeSeries
+import eu.eurostat.ui.component.ChartPointDetailSheet
 import eu.eurostat.ui.component.ChipRow
 import eu.eurostat.ui.component.CountryChipsRow
 import eu.eurostat.ui.component.CountryPickerSheet
@@ -52,10 +54,13 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
+import eu.eurostat.ui.format.formatGrouped
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
+import kotlin.math.roundToLong
 import myeurostatapp.feature_environment.generated.resources.Res
 import myeurostatapp.feature_environment.generated.resources.environment_chart_empty_body
 import myeurostatapp.feature_environment.generated.resources.environment_chart_title_energy
@@ -97,16 +102,23 @@ import org.jetbrains.compose.resources.stringResource
  * metric paired with a sector [ChipRow] (hidden when the SDG metric is
  * selected), the hero [EurostatLineChart], two secondary [StatTile]s for the
  * other two metrics, and a [CountryChipsRow] derived from the loaded data.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EnvironmentScreen(component: EnvironmentComponent, onBack: () -> Unit = {}) {
+fun EnvironmentScreen(
+    component: EnvironmentComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Environment")
     val contentState = state as? EnvironmentUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -121,7 +133,7 @@ fun EnvironmentScreen(component: EnvironmentComponent, onBack: () -> Unit = {}) 
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(EnvironmentIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -202,6 +214,9 @@ private fun EnvironmentContent(
     val sector = content.activeSector
     val metric = content.activeMetric
     var showCountryPicker by remember { mutableStateOf(false) }
+    // Tapped chart point → detail sheet. Holds the (series label, point) pair;
+    // cleared on dismiss. Intentionally not rememberSaveable — a transient sheet.
+    var tappedPoint by remember { mutableStateOf<Pair<String, ChartPoint>?>(null) }
 
     // Resolved once per composition — stringResource() is @Composable and
     // cannot be called from the onSelect/onToggle callbacks below, from
@@ -358,11 +373,12 @@ private fun EnvironmentContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = "year"),
+                        xAxis = yearAxis(label = "year"),
                         yAxis = ChartAxis(label = yAxisLabel(metric)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(chartHeight),
+                        onPointTap = { s, p -> tappedPoint = s.label to p },
                     )
                     Spacer(Modifier.height(Euro.spacing.s))
                     Row(
@@ -454,6 +470,27 @@ private fun EnvironmentContent(
             onDismiss = { showCountryPicker = false },
         )
     }
+
+    // Detail sheet for a tapped chart point. The hero chart plots the raw metric
+    // value (no rebased mode), so the tapped point's y is shown directly, formatted
+    // with the same formatter as the headline/tiles. Title carries the sector for
+    // GHG/energy (mirrors the chart title's " · sector" suffix); unit is the
+    // headline's localized unit for the active metric.
+    tappedPoint?.let { (label, point) ->
+        val detail = tappedEnvironmentPoint(label, point)
+        val countryName = countryDisplayName(
+            detail.countryCode,
+            fallback = EurostatCountries.byCode(detail.countryCode)?.name ?: detail.countryCode,
+        )
+        ChartPointDetailSheet(
+            seriesLabel = countryName + (headlineSector?.let { " · ${sectorLabels.getValue(it)}" } ?: ""),
+            year = detail.year.toString(),
+            value = detail.value?.let { formatValue(it, metric) } ?: "—",
+            unit = headlineUnit,
+            datasetCode = metric.datasetCode(),
+            onDismiss = { tappedPoint = null },
+        )
+    }
 }
 
 @Composable
@@ -498,8 +535,8 @@ private fun yAxisLabel(metric: EnvMetric): String = when (metric) {
 
 /** Format a metric value for compact display in the headline / tiles. */
 private fun formatValue(value: Double, metric: EnvMetric): String = when (metric) {
-    EnvMetric.Ghg -> formatDecimal(value, decimals = 0)
-    EnvMetric.Energy -> formatDecimal(value, decimals = 0)
+    EnvMetric.Ghg -> formatGrouped(value.roundToLong())
+    EnvMetric.Energy -> formatGrouped(value.roundToLong())
     EnvMetric.Sdg -> formatDecimal(value, decimals = 1)
 }
 

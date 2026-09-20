@@ -1,0 +1,7 @@
+• Porównuj kraje obok siebie: wybierz wskaźnik i 2–5 krajów
+• Wyszukiwarka po wszystkich 27 wskaźnikach
+• Pełne tłumaczenie na polski i ukraiński; język zmienia się od razu w Ustawieniach
+• Prawdziwe flagi krajów; dotknij punktu na wykresie, by zobaczyć dokładną wartość
+• Dane o pasażerach lotniczych wreszcie się ładują (wcześniej były puste)
+• Na osiach wykresów widać prawdziwe lata; czytelniejsze komunikaty offline
+• Czytelny pasek stanu w ciemnym motywie

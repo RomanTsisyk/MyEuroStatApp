@@ -33,6 +33,7 @@ import eu.eurostat.core.charts.model.ChartPoint
 import eu.eurostat.core.charts.model.ChartSeries
 import eu.eurostat.core.charts.model.SeriesPalette
 import eu.eurostat.core.charts.model.rebaseToIndex
+import eu.eurostat.core.charts.model.yearAxis
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.feature.economy.domain.EconomyDataPoint
 import eu.eurostat.feature.economy.domain.EconomyMetric
@@ -53,12 +54,14 @@ import eu.eurostat.ui.component.states.EmptyState
 import eu.eurostat.ui.component.states.ErrorState
 import eu.eurostat.ui.component.states.LoadingShimmer
 import eu.eurostat.ui.component.states.localizedMessage
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.format.formatDecimal
 import eu.eurostat.ui.format.formatGrouped
 import eu.eurostat.ui.layout.AdaptiveTwoPane
 import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.abs
+import kotlin.math.roundToLong
 import myeurostatapp.feature_economy.generated.resources.Res
 import myeurostatapp.feature_economy.generated.resources.economy_axis_deficit
 import myeurostatapp.feature_economy.generated.resources.economy_axis_gdp
@@ -103,16 +106,23 @@ private const val PERCENT: Double = 100.0
  * switcher, a multi-country line chart hero with an Absolute / Indexed-100
  * scale toggle (comparison mode), secondary KPI tiles for the inactive
  * metrics, the year scrubber and country chips.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
+fun EconomyScreen(
+    component: EconomyComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Economy")
     val contentState = state as? EconomyUiState.Content
     val appBarYear = contentState?.selectedYear
     val appBarCountry = contentState?.activeCountry?.let { code ->
-        val name = EurostatCountries.byCode(code)?.name ?: code
+        val name = countryDisplayName(code, fallback = EurostatCountries.byCode(code)?.name ?: code)
         "$name · $code"
     }
     Column(
@@ -127,7 +137,7 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(EconomyIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -296,7 +306,7 @@ private fun EconomyContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = ChartAxis(label = stringResource(Res.string.economy_chart_axis_year)),
+                        xAxis = yearAxis(label = stringResource(Res.string.economy_chart_axis_year)),
                         yAxis = ChartAxis(
                             label = if (state.normalized) {
                                 stringResource(Res.string.economy_chart_axis_index)
@@ -648,11 +658,12 @@ private fun yoyDeltaText(
 
 /**
  * Million-EUR → billion-EUR, with locale-aware thousands grouping (e.g.
- * `"3,451"` in en, `"3.451"` in de). Uses truncating integer billions (not
- * rounded), matching this tile's original compactness convention.
+ * `"3,451"` in en, `"3.451"` in de). Rounds to the nearest billion so the
+ * figure agrees with the Overview dashboard (a truncating conversion showed
+ * 4,386 here against 4,387 there for the same 4,386.6 B € value).
  */
 private fun formatBillions(millionEur: Long): String =
-    formatGrouped(millionEur / M_TO_B)
+    formatGrouped((millionEur / M_TO_B.toDouble()).roundToLong())
 
 /**
  * Signed percent-point delta, e.g. `"+6.2%"`, `"−0.4%"`. Exact zero renders

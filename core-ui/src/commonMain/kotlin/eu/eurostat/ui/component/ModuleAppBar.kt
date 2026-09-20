@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -34,8 +33,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.eurostat.ui.icons.EuroIcons
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroPlatform
+import myeurostatapp.core_ui.generated.resources.Res
+import myeurostatapp.core_ui.generated.resources.ui_action_back
+import myeurostatapp.core_ui.generated.resources.ui_action_more
+import myeurostatapp.core_ui.generated.resources.ui_action_refresh
+import myeurostatapp.core_ui.generated.resources.ui_action_search
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Hi-fi M3 Expressive top app bar for module screens.
@@ -48,6 +54,9 @@ import eu.eurostat.ui.theme.EuroPlatform
  *
  * When [tagline] is null the bar collapses to a single-row "compact" variant
  * (back · title · accent dot · actions) for non-module screens.
+ *
+ * Icon-button content descriptions (back / search / refresh / more) are
+ * localized through the core-ui `ui_action_*` string resources.
  *
  * @param title screen title rendered in [Euro.typography.displayLarge].
  * @param accent the per-module accent color used for the eyebrow / year chip.
@@ -98,6 +107,11 @@ private fun AndroidModuleAppBar(
     onRefresh: (() -> Unit)?,
     modifier: Modifier,
 ) {
+    val backDescription = stringResource(Res.string.ui_action_back)
+    val searchDescription = stringResource(Res.string.ui_action_search)
+    val refreshDescription = stringResource(Res.string.ui_action_refresh)
+    val moreDescription = stringResource(Res.string.ui_action_more)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -110,15 +124,15 @@ private fun AndroidModuleAppBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            IconPill(icon = Icons.AutoMirrored.Filled.ArrowBack, description = "Back", onClick = onBack)
+            IconPill(icon = Icons.AutoMirrored.Filled.ArrowBack, description = backDescription, onClick = onBack)
             Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.xs)) {
                 if (onSearch != null) {
-                    IconPill(icon = Icons.Default.Search, description = "Search", onClick = onSearch)
+                    IconPill(icon = Icons.Default.Search, description = searchDescription, onClick = onSearch)
                 }
                 if (onRefresh != null) {
-                    IconPill(icon = Icons.Default.Refresh, description = "Refresh", onClick = onRefresh)
+                    IconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
                 } else {
-                    IconPill(icon = Icons.Default.MoreHoriz, description = "More", onClick = {})
+                    IconPill(icon = EuroIcons.MoreHoriz, description = moreDescription, onClick = {})
                 }
             }
         }
@@ -176,6 +190,11 @@ private fun IosModuleAppBar(
     onRefresh: (() -> Unit)?,
     modifier: Modifier,
 ) {
+    val backDescription = stringResource(Res.string.ui_action_back)
+    val searchDescription = stringResource(Res.string.ui_action_search)
+    val refreshDescription = stringResource(Res.string.ui_action_refresh)
+    val moreDescription = stringResource(Res.string.ui_action_more)
+
     // Eyebrow style: 12sp w600 uppercase, ls 0.4 — slightly different from the
     // Android eyebrow (11sp SemiBold ls 1.2).
     val iosEyebrow = TextStyle(
@@ -189,6 +208,11 @@ private fun IosModuleAppBar(
         modifier = modifier
             .fillMaxWidth()
             .background(Euro.colors.glass)
+            // The glass surface extends under the status bar, but the content must
+            // start below it: iOS swallows touches in the status-bar strip (tap to
+            // scroll), so pills drawn there were untappable and the back button
+            // unreachable.
+            .statusBarsPadding()
             .border(
                 width = 0.5.dp,
                 color = Euro.colors.glassBorder,
@@ -205,15 +229,15 @@ private fun IosModuleAppBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            GlassIconPill(icon = Icons.AutoMirrored.Filled.ArrowBack, description = "Back", onClick = onBack)
+            GlassIconPill(icon = Icons.AutoMirrored.Filled.ArrowBack, description = backDescription, onClick = onBack)
             Row(horizontalArrangement = Arrangement.spacedBy(Euro.spacing.xs)) {
                 if (onSearch != null) {
-                    GlassIconPill(icon = Icons.Default.Search, description = "Search", onClick = onSearch)
+                    GlassIconPill(icon = Icons.Default.Search, description = searchDescription, onClick = onSearch)
                 }
                 if (onRefresh != null) {
-                    GlassIconPill(icon = Icons.Default.Refresh, description = "Refresh", onClick = onRefresh)
+                    GlassIconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
                 } else {
-                    GlassIconPill(icon = Icons.Default.MoreHoriz, description = "More", onClick = {})
+                    GlassIconPill(icon = EuroIcons.MoreHoriz, description = moreDescription, onClick = {})
                 }
             }
         }
@@ -346,6 +370,10 @@ private fun CompactBar(
     onRefresh: (() -> Unit)?,
     modifier: Modifier,
 ) {
+    val backDescription = stringResource(Res.string.ui_action_back)
+    val searchDescription = stringResource(Res.string.ui_action_search)
+    val refreshDescription = stringResource(Res.string.ui_action_refresh)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -356,7 +384,7 @@ private fun CompactBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
     ) {
-        IconPill(icon = Icons.AutoMirrored.Filled.ArrowBack, description = "Back", onClick = onBack)
+        IconPill(icon = Icons.AutoMirrored.Filled.ArrowBack, description = backDescription, onClick = onBack)
         Spacer(Modifier.width(Euro.spacing.m))
         Text(
             text = title,
@@ -371,11 +399,11 @@ private fun CompactBar(
         )
         Spacer(Modifier.weight(1f))
         if (onSearch != null) {
-            IconPill(icon = Icons.Default.Search, description = "Search", onClick = onSearch)
+            IconPill(icon = Icons.Default.Search, description = searchDescription, onClick = onSearch)
             Spacer(Modifier.width(Euro.spacing.xs))
         }
         if (onRefresh != null) {
-            IconPill(icon = Icons.Default.Refresh, description = "Refresh", onClick = onRefresh)
+            IconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
         }
     }
 }

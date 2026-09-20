@@ -20,6 +20,8 @@ Legend: **P0** ship-blocker · **P1** breaks UX · **P2** quality/consistency ·
 5. Rotate device → verify Compose state (selected country, year range, switcher selection) survives.
 6. Record findings as `RUN_REPORT.md` with screenshots.
 
+**Update (2026-09-20, ✅ emulator walk-through done, two passes):** all 8 modules were walked on an API 36 emulator in EN, PL and UK — live data, no crashes — and offline (with/without cache, retry), rotation, forced refresh, Search, Compare, Settings persistence and a wide-screen layout were exercised. 16 defects were found and fixed (notably `avia_paoc` was queried with `schedule=TOT` instead of `TOTAL`, so Transport air data never loaded); see [`RUN_REPORT.md`](RUN_REPORT.md). **Still open:** a run on a physical device, an iOS run of the offline-error mapping (`core-network/.../UrlErrorClassification.kt` is JVM-tested; the iOS `actual` that calls it is compiled only by the CI iOS job, not yet built locally), process-death restore, and the smaller leftovers listed under "Found, not fixed" in the report.
+
 **Files involved:** none to edit. Pure verification.
 
 **Acceptance:** all 8 tabs render real data without crash on at least one Android device. Any crashes become P0 bug tickets.
@@ -162,7 +164,7 @@ This is a maintenance landmine. Pick one convergent approach.
 
 ## ✅ DONE · Country picker screen + real flag rendering
 
-**Status:** ✅ Done. `CountryPickerSheet` (searchable multi-select) ships in core-ui and every feature screen wires the "+ add" chip to it; selection re-issues the query via `SelectCountries` intents. Flags render as Unicode emoji via `flagFor()` in core-common. Tap-the-map variant deferred (choropleth was removed with zero call sites). Original notes below.
+**Status:** ✅ Done. `CountryPickerSheet` (searchable multi-select) ships in core-ui and every feature screen wires the "+ add" chip to it; selection re-issues the query via `SelectCountries` intents. Flags now render from 33 bundled circle-flags (HatScripts, MIT) vector drawables via `CountryFlag` in core-ui (used by `CountryChip`, `CountryPickerSheet` and the Settings default-country row); the Unicode-emoji `flagFor()` in core-common remains only as the fallback for flagless aggregates such as `EA20`. Tap-the-map variant deferred (choropleth was removed with zero call sites). Original notes below.
 
 **Why:** `CountryChipsRow` has an "+ add" CTA that does nothing. There's no picker. Flag swatches are 14×10 dp placeholder rects.
 
@@ -273,6 +275,8 @@ Original notes below.
 
 **Status:** Both done. Settings: `PreferenceEntity` (SQLDelight, `2.sqm` migration) + `AppPreferences` Flows; theme (system/light/dark) applied app-wide through `EurostatTheme`; functional Clear-cache wiping all 8 cache tables in one transaction; settings gear on the Overview header; **default-country now seeds all 9 components' first query** (read once before the first fetch; mid-session changes apply on next start). Search: `feature-search` module — compiled-in index of 27 indicators across the 8 modules with tiered ranking (label prefix > word prefix > substring > keyword > description) and browse-by-module on blank query; search pill on the Overview header; opening a result brings the target module to front. 17 ranking/component tests.
 
+**Header search icon:** now wired on Population, Economy, Environment, Social, Science and Compare (optional `onSearch` parameter, hooked up in `EurostatApp.kt` to push Search on top of the current module; Search's Back returns to it — `RootComponentTest` covers it). Trade, Transport and Tourism show no search icon; Search is still reachable from the Overview header pill. Known leftover: the `ModuleAppBar` "More" pill still has an empty `onClick` (it is drawn only when a screen passes no `onRefresh`, which no current screen does).
+
 **Remaining follow-up:** none — the *language* preference is now applied at runtime (see the Translations section below).
 
 **Why:** wireframes (`design/screens-system.jsx`) define both. Settings exposes theme/language/default-country preferences; Search lets users find indicators across all 8 modules. Both are referenced in `ModuleAppBar` (search icon dispatches nowhere).
@@ -318,13 +322,15 @@ Original notes below.
 
 **Acceptance met:** language switcher in Settings changes UI language across all screens immediately.
 
+**Country names** are localized too (`countryDisplayName`, 34 `country_*` strings; the picker search also matches the localized name), as are the `ModuleAppBar` icon descriptions (`ui_action_*`). Not localized yet: the country picker's list order (English), the Settings default-country label and the Compare legend (English name / code).
+
 **Still open:** localizing the shared `SourceFooter` "fresh/stale" word is a nice-to-have, not blocking; native-speaker PL review of the author's own-knowledge translations is still worth doing before v1.0.
 
 ---
 
 ## ✅ DONE · Detail modal on chart tap
 
-**Status:** ✅ Done (line charts), scoped to Economy + Compare. `EurostatLineChart` gained an opt-in `onPointTap: ((ChartSeries, ChartPoint) -> Unit)? = null` — null attaches no pointer input, so existing call sites are unchanged. A `Modifier.pointerInput` reuses the *exact* draw-pass value→pixel projection (hoisted into shared `mapXpx`/`mapYpx`) and calls a pure, unit-tested `nearestChartPoint(...)` in `core-charts/model` that picks the closest point within a 24.dp radius, skipping `null` gaps with a deterministic tie-break (10 test cases: nearest wins, threshold excludes far taps, null gaps skipped, empty input, non-identity projection, ties). Tapping opens `core-ui`'s new `ChartPointDetailSheet` (Material3 `ModalBottomSheet`) showing series label, year, formatted value, unit and dataset code — labels localized EN/PL/UK (`ui_chart_detail_*`), values pre-formatted by the feature module. Wired on the Economy hero chart and the Compare chart, both resolving the true **absolute** value for the tapped country+year even in Indexed-100 mode. Left unwired by design: Social (uses `EurostatMultiLineHighlighted`, a separate composable that does not share the line chart's internals) and Science (only a decorative 28dp `hideAxis` sparkline; its primary chart is the radar); bar/pyramid/heatmap/radar are out of scope. **Not yet wired, despite also being plain `EurostatLineChart` instances:** Environment's hero chart and Transport's small-multiples panel charts (`hideAxis = true`) — both are structurally tap-capable but were left out of this pass, which targeted Economy/Compare only. Follow-up to extend parity across all `EurostatLineChart` call sites, or explicitly re-scope this item to "Economy + Compare" if that's the intended final state.
+**Status:** ✅ Done (line charts), scoped to Economy, Environment and Compare. `EurostatLineChart` gained an opt-in `onPointTap: ((ChartSeries, ChartPoint) -> Unit)? = null` — null attaches no pointer input, so existing call sites are unchanged. A `Modifier.pointerInput` reuses the *exact* draw-pass value→pixel projection (hoisted into shared `mapXpx`/`mapYpx`) and calls a pure, unit-tested `nearestChartPoint(...)` in `core-charts/model` that picks the closest point within a 24.dp radius, skipping `null` gaps with a deterministic tie-break (10 test cases: nearest wins, threshold excludes far taps, null gaps skipped, empty input, non-identity projection, ties). Tapping opens `core-ui`'s new `ChartPointDetailSheet` (Material3 `ModalBottomSheet`) showing series label, year, formatted value, unit and dataset code — labels localized EN/PL/UK (`ui_chart_detail_*`), values pre-formatted by the feature module. Wired on the Economy hero chart and the Compare chart, both resolving the true **absolute** value for the tapped country+year even in Indexed-100 mode. Left unwired by design: Social (uses `EurostatMultiLineHighlighted`, a separate composable that does not share the line chart's internals) and Science (only a decorative 28dp `hideAxis` sparkline; its primary chart is the radar); bar/pyramid/heatmap/radar are out of scope. **Environment is now wired too** (hero chart; the sheet shows the country, sector, year, value formatted like the headline, unit and dataset code `env_air_gge` / `nrg_bal_c` / `sdg_13_10`). **Still not wired:** Transport's small-multiples panels (`hideAxis = true`), Social (`EurostatMultiLineHighlighted`, a separate composable) and Science (decorative sparklines; primary chart is the radar) — left out deliberately.
 
 ---
 
@@ -350,8 +356,11 @@ Original notes below.
 
 **Status:** `.github/workflows/build.yml` now also triggers on push to `develop-v*` (previously only `main`/`master`) with three jobs: `android` (`assembleDebug` + `allTests` + `assembleRelease`, exercising the real R8/proguard pass, falling back to the debug keystore without secrets), `desktop` (`packageUberJarForCurrentOS` smoke test on Ubuntu), and `ios-test` (the real `iosSimulatorArm64Test` suite, not a compile-only gate — gated behind `android` since macOS runners bill ~10x). Remaining: a tag-triggered release workflow that builds and uploads the native installers (APK, Dmg, Msi, Deb) as GitHub Release artifacts.
 
+**Update:** the tag-triggered release workflow exists (`.github/workflows/release.yml`: on a `v*` tag it builds the release APK — signed when the `KEYSTORE_*`/`KEY_*` secrets are set, debug-signed otherwise — plus the Dmg/Msi/Deb installers on a macOS/Windows/Ubuntu matrix and attaches them to the GitHub Release).
+
 **Steps still open:**
-1. Release workflow on tag push (`v*`): build signed APK + all desktop installers, attach to the GitHub Release.
+1. Run it once for real: no `v*` tag has ever been pushed, so the Msi and Deb jobs have never executed (only `packageDmg` was verified, locally).
+2. Configure the four signing secrets for a real release key.
 
 ---
 
@@ -362,6 +371,7 @@ Original notes below.
 **Steps still open:**
 1. Real Android release signing keystore (currently the documented debug-keystore fallback in `docs/RELEASING.md`).
 2. iOS deployment target review.
+3. F-Droid recipe: `metadata/eu.eurostat.app.yml` still pins `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`, and no `v*` tag exists in the local repo — update it (and the `CurrentVersion*` lines) to the tag cut for the next release before filing the fdroiddata merge request.
 
 ---
 
@@ -375,8 +385,8 @@ Original notes below.
 **Definition of "100% working" for this app:**
 
 1. ✅ Android APK installs and launches on a fresh device.
-2. ✅ iOS app builds AND launches in the simulator (real XcodeGen project; Overview renders live Eurostat data); full 8-tab walk-through pending alongside the Android one.
-3. ⏳ All 8 feature tabs render real Eurostat data on first open (needs the on-device smoke run).
+2. ✅ iOS app builds AND launches in the simulator (real XcodeGen project); all 8 modules walked on an iPhone 17 simulator (iOS 26.5, Xcode 26.6) on 2026-09-20 and the Kotlin/Native suite passes locally (673 tests) — see `RUN_REPORT.md`. Physical iPhone / TestFlight still pending.
+3. ✅ All 8 feature tabs render real Eurostat data on first open (Android emulator, EN/PL/UK — see `RUN_REPORT.md`; physical device and iOS walk-through still pending).
 4. ✅ Refresh button + pull-to-refresh both work (pull-to-refresh on all 8 screens).
 5. ✅ Offline state shows cached data with stale indicator (incl. cohort pyramid + tourism heatmap via the blob cache).
 6. ✅ Error states recover via retry button, with per-subtype localized messages (`AppError.localizedMessage()`, EN/PL/UK).
@@ -387,4 +397,4 @@ Original notes below.
 11. ✅ No `mock*()` calls remain in any feature Screen.
 12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 11/12. Remaining: the interactive 8-tab walk-throughs on an Android device and in the iOS simulator (item 3).
+Currently 12/12 on the Android emulator and the iPhone 17 simulator. Still open: a physical-device run (Android and iPhone/TestFlight), the offline / rotation checks on iOS, and keeping the CI `ios-test` job green: it used to OOM the Kotlin/Native compiler while caching `material-icons-extended`; this branch replaced that dependency with nine bundled vectors (`EuroIcons`), after which `ios-test` passed on CI (~24 min) and the Native link plus all tests take 45 s locally at the default heap.

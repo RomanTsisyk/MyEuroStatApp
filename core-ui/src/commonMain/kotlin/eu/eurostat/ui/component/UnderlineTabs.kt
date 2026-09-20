@@ -4,11 +4,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,7 +48,10 @@ fun UnderlineTabs(
                 modifier = Modifier
                     .clickable { onSelect(idx) }
                     .defaultMinSize(minHeight = 48.dp)
-                    .padding(horizontal = Euro.spacing.m, vertical = Euro.spacing.s),
+                    .padding(horizontal = Euro.spacing.m, vertical = Euro.spacing.s)
+                    // The underline below uses fillMaxWidth(); without an intrinsic
+                    // width it claims the whole Row and squeezes later tabs to zero.
+                    .width(IntrinsicSize.Max),
             ) {
                 Text(
                     text = label,

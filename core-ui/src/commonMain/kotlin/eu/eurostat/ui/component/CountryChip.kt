@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import eu.eurostat.ui.country.countryDisplayName
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.core_ui.generated.resources.Res
 import myeurostatapp.core_ui.generated.resources.ui_chip_remove_country
@@ -30,7 +31,8 @@ import org.jetbrains.compose.resources.stringResource
  *
  * Renders the country's flag (via [CountryFlag]) followed by the country code
  * label. When selected the chip is filled with ink; when not, it uses an
- * outlined treatment. An optional close button appears at the trailing edge.
+ * outlined treatment. An optional close button appears at the trailing edge; its
+ * accessibility label uses the localized country name.
  *
  * @param code Eurostat country code (e.g. `"DE"`, `"EL"`, `"EU27_2020"`).
  * @param selected whether the chip is in the selected state.
@@ -78,7 +80,10 @@ fun CountryChip(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(Res.string.ui_chip_remove_country, code),
+                    contentDescription = stringResource(
+                        Res.string.ui_chip_remove_country,
+                        countryDisplayName(code, fallback = code),
+                    ),
                     tint = fg,
                     modifier = Modifier.size(14.dp),
                 )
