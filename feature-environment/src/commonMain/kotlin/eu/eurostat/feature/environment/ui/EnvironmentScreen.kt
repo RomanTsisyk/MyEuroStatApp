@@ -38,6 +38,7 @@ import eu.eurostat.feature.environment.domain.EnvMetric
 import eu.eurostat.feature.environment.domain.EnvSector
 import eu.eurostat.feature.environment.domain.EnvironmentDataPoint
 import eu.eurostat.feature.environment.domain.EnvironmentTimeSeries
+import eu.eurostat.ui.component.ChartPointDetailSheet
 import eu.eurostat.ui.component.ChipRow
 import eu.eurostat.ui.component.CountryChipsRow
 import eu.eurostat.ui.component.CountryPickerSheet
@@ -206,6 +207,9 @@ private fun EnvironmentContent(
     val sector = content.activeSector
     val metric = content.activeMetric
     var showCountryPicker by remember { mutableStateOf(false) }
+    // Tapped chart point → detail sheet. Holds the (series label, point) pair;
+    // cleared on dismiss. Intentionally not rememberSaveable — a transient sheet.
+    var tappedPoint by remember { mutableStateOf<Pair<String, ChartPoint>?>(null) }
 
     // Resolved once per composition — stringResource() is @Composable and
     // cannot be called from the onSelect/onToggle callbacks below, from
@@ -367,6 +371,7 @@ private fun EnvironmentContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(chartHeight),
+                        onPointTap = { s, p -> tappedPoint = s.label to p },
                     )
                     Spacer(Modifier.height(Euro.spacing.s))
                     Row(
@@ -456,6 +461,27 @@ private fun EnvironmentContent(
                 onConfirmCountries(selected)
             },
             onDismiss = { showCountryPicker = false },
+        )
+    }
+
+    // Detail sheet for a tapped chart point. The hero chart plots the raw metric
+    // value (no rebased mode), so the tapped point's y is shown directly, formatted
+    // with the same formatter as the headline/tiles. Title carries the sector for
+    // GHG/energy (mirrors the chart title's " · sector" suffix); unit is the
+    // headline's localized unit for the active metric.
+    tappedPoint?.let { (label, point) ->
+        val detail = tappedEnvironmentPoint(label, point)
+        val countryName = countryDisplayName(
+            detail.countryCode,
+            fallback = EurostatCountries.byCode(detail.countryCode)?.name ?: detail.countryCode,
+        )
+        ChartPointDetailSheet(
+            seriesLabel = countryName + (headlineSector?.let { " · ${sectorLabels.getValue(it)}" } ?: ""),
+            year = detail.year.toString(),
+            value = detail.value?.let { formatValue(it, metric) } ?: "—",
+            unit = headlineUnit,
+            datasetCode = metric.datasetCode(),
+            onDismiss = { tappedPoint = null },
         )
     }
 }
