@@ -50,7 +50,7 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 | 6 | Overview vs Economy / Trade | 4,387 vs 4,386; 840 vs 839 | Overview rounded, Economy/Trade truncated | all three round; Trade uses `−` |
 | 7 | Social, Science, Transport | units broke mid-word (`G/DP`, `ilc_li/02`, `200/M`), uneven tile heights | narrow side-by-side caption; normal space in value | stacked caption, equal-height tiles, no-break space |
 | 8 | Science | radar without axis labels; legend showed `EU27_2020` | labels were passed but never drawn | `showAxisLabels`, legend uses country names |
-| 9 | every screen, offline | error said "Something went wrong" instead of "No connection" | a really offline device throws `UnknownHostException` / `SocketException`, but only Ktor timeouts were mapped to `NoNetwork` | JVM connectivity exceptions map to `NoNetwork` (Android + desktop) |
+| 9 | every screen, offline | error said "Something went wrong" instead of "No connection" | a really offline device throws `UnknownHostException` / `SocketException`, but only Ktor timeouts were mapped to `NoNetwork` | JVM connectivity exceptions map to `NoNetwork` (Android + desktop); iOS `NSURLErrorDomain` codes too, unverified on iOS |
 | 10 | every screen, dark theme | status-bar clock and icons invisible (dark on dark) | icons followed the *system* theme, not the theme picked in Settings | `StatusBarIcons(light)` applied from `EurostatTheme` |
 | 11 | Overview | dark header with dark status-bar icons | same | light icons over the Overview header |
 | 12 | Overview | `4,387` / `83.5M` in Polish after switching language, until restart | teaser strings formatted once in the component and kept in a singleton | raw values in state, formatted while composing |
@@ -58,9 +58,10 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 
 ## Found, not fixed
 
-- **iOS offline mapping**: the iOS `toAppError()` still only knows Ktor
-  timeouts; Darwin reports `NSError` codes (e.g. `NSURLErrorNotConnectedToInternet`)
-  that need mapping and can only be compiled on a Mac with Xcode.
+- **iOS offline mapping is written but unproven on a device**: Darwin
+  reports `NSURLErrorDomain` codes (e.g. -1009); they are classified from the
+  error text by a JVM-tested function, but the iOS glue was never compiled or
+  run locally (no Xcode) — the CI iOS job is its first build.
 - **Manual refresh while offline with a cache**: the data stays and the
   footer still says "fresh" (the cache is inside its 12 h TTL and a failed
   refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.

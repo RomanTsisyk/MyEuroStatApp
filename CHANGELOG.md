@@ -74,7 +74,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   exceptions (`UnknownHostException`, `SocketException`, …) which were not
   recognised as no-connectivity, so the error state said "Something went
   wrong" instead of "No connection — check your network". Fixed for
-  Android and desktop; the iOS mapping still needs doing on a Mac
+  Android and desktop (`java.net` exceptions) and iOS (`NSURLErrorDomain`
+  codes, classified from the Darwin error text; the classifier is unit-tested
+  on the JVM, the iOS glue is compiled only by the CI iOS job)
 - Status bar: icons now follow the theme chosen in Settings (dark icons on
   a dark background made the clock invisible on every screen), and the
   Overview's dark header gets light icons
@@ -115,8 +117,7 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Verified launch on a physical iPhone (TestFlight) and the iOS simulator
   walk-through; a run on a physical Android device (the emulator
-  walk-through is done — see `RUN_REPORT.md`); iOS mapping of offline
-  errors to `NoNetwork` (Darwin `NSError` codes)
+  walk-through is done — see `RUN_REPORT.md`)
 - Real Android release signing key (currently debug-keystore fallback);
   Msi/Deb installers verified via CI (only Dmg verified locally so far)
 - F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata MR)
