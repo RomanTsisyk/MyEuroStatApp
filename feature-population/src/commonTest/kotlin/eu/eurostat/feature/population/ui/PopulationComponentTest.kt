@@ -18,6 +18,7 @@ import eu.eurostat.feature.population.domain.PopulationRepository
 import eu.eurostat.feature.population.domain.PopulationSnapshot
 import eu.eurostat.feature.population.domain.PopulationTimeSeries
 import kotlin.test.assertNotNull
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -40,11 +41,13 @@ import kotlin.test.assertTrue
 private class FakePopulationRepository : PopulationRepository {
     var lastQuery: PopulationQuery? = null
     var refreshCallCount = 0
+    var observeCallCount = 0
     var refreshThrows: Throwable? = null
 
     val emissions = MutableStateFlow<Result<eu.eurostat.feature.population.domain.PopulationData>>(Result.Loading)
 
     override fun observe(query: PopulationQuery): Flow<Result<eu.eurostat.feature.population.domain.PopulationData>> {
+        observeCallCount++
         lastQuery = query
         return emissions.asStateFlow()
     }
@@ -118,6 +121,22 @@ private fun samplePopulationSeries(country: String = "PL"): PopulationTimeSeries
                 femalePopulation = 20_000_000L,
             )
         )
+    )
+
+/** A series with several observation years, so the year selection can move. */
+private fun multiYearPopulationSeries(country: String = "PL"): PopulationTimeSeries =
+    PopulationTimeSeries(
+        countryCode = country,
+        countryName = country,
+        points = listOf(2019, 2020, 2021).map { year ->
+            PopulationDataPoint(
+                countryCode = country,
+                year = year,
+                totalPopulation = 38_000_000L,
+                malePopulation = 18_000_000L,
+                femalePopulation = 20_000_000L,
+            )
+        },
     )
 
 // ---------------------------------------------------------------------------
@@ -377,5 +396,199 @@ class PopulationComponentTest {
             stateAfterFresh.snapshot,
             "Snapshot must be non-null after fresh emission — pyramid must not stay in 'loading' state",
         )
+    }
+
+    // ---------------------------------------------------------------------------
+    // Refresh-failed footer hint
+    // ---------------------------------------------------------------------------
+
+    @Test
+    fun refresh_failed_is_false_initially() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun failed_refresh_with_cache_sets_refresh_failed() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertTrue(state.refreshFailed)
+        assertFalse(state.isStale)
+    }
+
+    @Test
+    fun successful_refresh_leaves_refresh_failed_false() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun successful_refresh_after_failed_one_clears_refresh_failed() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<PopulationUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.refreshThrows = null
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun cancelled_refresh_is_not_reported_as_failure() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        val observeCallsBefore = repo.observeCallCount
+
+        repo.refreshThrows = CancellationException("cancelled")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // Cancellation is rethrown: no reload is started and no hint is raised.
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_select_countries() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<PopulationUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(PopulationIntent.SelectCountries(listOf("FR", "ES")))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_year_range_change() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<PopulationUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(PopulationIntent.ChangeYearRange(2018..2022))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_survives_ui_only_rerender() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(multiYearPopulationSeries("DE")), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(PopulationIntent.SelectYear(2020))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<PopulationUiState.Content>(state)
+        assertEquals(2020, state.selectedYear)
+        assertTrue(state.refreshFailed)
+    }
+
+    @Test
+    fun stale_emission_clears_refresh_failed_and_it_stays_cleared() = runTest {
+        val repo = FakePopulationRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(PopulationIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<PopulationUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val staleState = component.state.value
+        assertIs<PopulationUiState.Content>(staleState)
+        assertTrue(staleState.isStale)
+        assertFalse(staleState.refreshFailed)
+
+        // A later successful revalidation must not bring the hint back.
+        repo.emitSeries(listOf(samplePopulationSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val freshState = component.state.value
+        assertIs<PopulationUiState.Content>(freshState)
+        assertFalse(freshState.isStale)
+        assertFalse(freshState.refreshFailed)
     }
 }
