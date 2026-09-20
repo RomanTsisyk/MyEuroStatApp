@@ -9,9 +9,12 @@ live.
 
 EU Stats is **not yet listed in the official F-Droid catalog**. A merge
 request against [`fdroiddata`](https://gitlab.com/fdroid/fdroiddata) is
-prepared and will be filed alongside the first signed upstream tag
-(`v0.4.0`). The build recipe lives at [`metadata/eu.eurostat.app.yml`](../metadata/eu.eurostat.app.yml)
-in this repository so reviewers can inspect it ahead of submission.
+prepared and will be filed alongside the next signed upstream tag. The build
+recipe lives at [`metadata/eu.eurostat.app.yml`](../metadata/eu.eurostat.app.yml)
+in this repository so reviewers can inspect it ahead of submission. It still
+pins `v0.4.0` (`versionCode` 40) while the app itself is now `0.6.0`
+(`versionCode` 60), so it has to be updated to the tag that is actually cut —
+see step 9 of [`RELEASING.md`](RELEASING.md).
 
 The F-Droid inclusion review typically takes 2–6 weeks. Until then, the
 APK is available as a [GitHub release](https://github.com/RomanTsisyk/MyEuroStatApp/releases)
@@ -45,11 +48,11 @@ APK against the F-Droid build:
 ```bash
 # Download both APKs (upstream signed + F-Droid signed)
 # Then diff their unsigned contents with apkdiff or apksigner verify
-apksigner verify --print-certs eu.eurostat.app_40.apk
+apksigner verify --print-certs eu.eurostat.app_<versionCode>.apk
 ```
 
-The expected SHA-256 of each release APK is published as part of the
-GitHub release notes from `v0.4.0` onward.
+The expected SHA-256 of each release APK is meant to be published in the
+GitHub release notes (step 8 of [`RELEASING.md`](RELEASING.md)).
 
 ## Why two signing identities are OK for this project
 
