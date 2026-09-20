@@ -80,10 +80,17 @@ private const val SLIDER_STEP_PADDING = 2
  * Editorial Population feature screen — wires real Eurostat `demo_pjan` data
  * into a demographic pyramid plus headline total, country chips, year scrubber,
  * and a Total/Men/Women segmented control.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
+fun PopulationScreen(
+    component: PopulationComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Population")
     val appBarYear = (state as? PopulationUiState.Content)?.selectedYear
@@ -103,7 +110,7 @@ fun PopulationScreen(component: PopulationComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(PopulationIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {

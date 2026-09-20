@@ -102,10 +102,17 @@ import org.jetbrains.compose.resources.stringResource
  * metric paired with a sector [ChipRow] (hidden when the SDG metric is
  * selected), the hero [EurostatLineChart], two secondary [StatTile]s for the
  * other two metrics, and a [CountryChipsRow] derived from the loaded data.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EnvironmentScreen(component: EnvironmentComponent, onBack: () -> Unit = {}) {
+fun EnvironmentScreen(
+    component: EnvironmentComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Environment")
     val contentState = state as? EnvironmentUiState.Content
@@ -126,7 +133,7 @@ fun EnvironmentScreen(component: EnvironmentComponent, onBack: () -> Unit = {}) 
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(EnvironmentIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {

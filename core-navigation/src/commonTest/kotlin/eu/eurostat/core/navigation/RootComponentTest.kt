@@ -29,6 +29,7 @@ class RootComponentTest {
         requireNotNull(ChildConfig.Economy::class.qualifiedName) to factoryReturning("Economy"),
         requireNotNull(ChildConfig.Population::class.qualifiedName) to factoryReturning("Population"),
         requireNotNull(ChildConfig.Settings::class.qualifiedName) to factoryReturning("Settings"),
+        requireNotNull(ChildConfig.Search::class.qualifiedName) to factoryReturning("Search"),
     )
 
     @BeforeTest
@@ -74,6 +75,19 @@ class RootComponentTest {
         root.onTabSelected(ChildConfig.Population)
         root.onTabSelected(ChildConfig.Economy)
         // Stack is now [Home, Population, Economy]; popping returns to Population.
+        root.onBack()
+        assertEquals(ChildConfig.Population, root.stack.value.active.configuration)
+    }
+
+    @Test
+    fun search_opened_from_a_module_header_returns_to_that_module_on_back() {
+        val root = build()
+        root.onTabSelected(ChildConfig.Population)
+        // Module header search icon: pushes Search on top of the current module.
+        root.onTabSelected(ChildConfig.Search)
+        assertEquals(ChildConfig.Search, root.stack.value.active.configuration)
+        assertEquals("Search", root.stack.value.active.instance)
+
         root.onBack()
         assertEquals(ChildConfig.Population, root.stack.value.active.configuration)
     }

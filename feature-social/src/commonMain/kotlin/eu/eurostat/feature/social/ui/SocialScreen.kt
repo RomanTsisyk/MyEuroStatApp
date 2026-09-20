@@ -82,10 +82,17 @@ private const val TILE_HEALTH = "health"
  *
  * All values are sourced from the live [SocialComponent] state — no mock
  * data path remains.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
+fun SocialScreen(
+    component: SocialComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Social")
     val contentState = state as? SocialUiState.Content
@@ -106,7 +113,7 @@ fun SocialScreen(component: SocialComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(SocialIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {

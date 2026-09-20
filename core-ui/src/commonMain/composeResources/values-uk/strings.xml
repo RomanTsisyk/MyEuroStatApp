@@ -4,6 +4,12 @@
     <string name="ui_country_picker_search_label">Пошук за назвою або кодом</string>
     <string name="ui_country_picker_apply">Застосувати (%1$d)</string>
 
+    <!-- ModuleAppBar icon-button content descriptions -->
+    <string name="ui_action_back">Назад</string>
+    <string name="ui_action_search">Пошук</string>
+    <string name="ui_action_refresh">Оновити</string>
+    <string name="ui_action_more">Більше</string>
+
     <!-- ErrorState -->
     <string name="ui_error_retry">повторити</string>
 

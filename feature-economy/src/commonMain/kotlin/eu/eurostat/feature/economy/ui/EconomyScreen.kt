@@ -106,10 +106,17 @@ private const val PERCENT: Double = 100.0
  * switcher, a multi-country line chart hero with an Absolute / Indexed-100
  * scale toggle (comparison mode), secondary KPI tiles for the inactive
  * metrics, the year scrubber and country chips.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
+fun EconomyScreen(
+    component: EconomyComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Economy")
     val contentState = state as? EconomyUiState.Content
@@ -130,7 +137,7 @@ fun EconomyScreen(component: EconomyComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(EconomyIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {

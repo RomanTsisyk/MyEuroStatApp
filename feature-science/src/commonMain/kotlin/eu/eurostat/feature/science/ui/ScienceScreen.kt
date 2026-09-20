@@ -81,10 +81,17 @@ import org.jetbrains.compose.resources.stringResource
  *
  * No metric switcher — the radar already presents all three normalized %
  * metrics at once.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
+fun ScienceScreen(
+    component: ScienceComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Science")
     val contentState = state as? ScienceUiState.Content
@@ -105,7 +112,7 @@ fun ScienceScreen(component: ScienceComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
-            onSearch = {},
+            onSearch = onSearch,
             onRefresh = { component.onIntent(ScienceIntent.Refresh) },
         )
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
