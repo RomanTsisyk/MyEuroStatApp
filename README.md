@@ -108,6 +108,16 @@ Three innovation indicators — R&D expenditure as % of GDP (`rd_e_gerdtot`), in
 
 Current screens, captured from the Android build after the fixes in [`RUN_REPORT.md`](RUN_REPORT.md): one still per module in [`docs/assets/screens/`](docs/assets/screens/) (also used by the landing page) and the store set in `fastlane/metadata/android/{en-US,pl,uk}/images/phoneScreenshots/`; the demo GIFs above are in [`docs/gifs/`](docs/gifs/). [`docs/screenshots/`](docs/screenshots/) keeps the original v0.4-era capture (34 frames in chronological capture order, plus per-module frames in `v2/` used by the [`docs/presentation/`](docs/presentation/) deck) — these were committed on 2026-05-24, before the fixes listed in [`CHANGELOG.md`](CHANGELOG.md).
 
+### iOS
+
+The same eight modules on an iPhone 17 simulator (iOS 26.5, Xcode 26.6), live Eurostat data; stills in [`docs/assets/screens/ios/`](docs/assets/screens/ios/). See [`RUN_REPORT.md`](RUN_REPORT.md) for the walk-through and what it found.
+
+| | | | |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/assets/screens/ios/overview.png" width="180" alt="Overview"> | <img src="docs/assets/screens/ios/population.png" width="180" alt="Population"> | <img src="docs/assets/screens/ios/economy.png" width="180" alt="Economy"> | <img src="docs/assets/screens/ios/environment.png" width="180" alt="Environment"> |
+| <img src="docs/assets/screens/ios/trade.png" width="180" alt="Trade"> | <img src="docs/assets/screens/ios/transport.png" width="180" alt="Transport"> | <img src="docs/assets/screens/ios/tourism.png" width="180" alt="Tourism"> | <img src="docs/assets/screens/ios/social.png" width="180" alt="Social"> |
+| <img src="docs/assets/screens/ios/science.png" width="180" alt="Science"> | | | |
+
 For the visual design language (typography, spacing, color tokens, switcher patterns), open [`design/index.html`](design/index.html) in any browser — the wireframes that drove the implementation.
 
 ---

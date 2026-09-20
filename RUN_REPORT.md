@@ -136,6 +136,8 @@ Population → Search → Back case in `RootComponentTest`.
   the only app-bar variant without `statusBarsPadding()`. iOS consumes touches in
   that strip, so **Back could not be tapped and the edge swipe did nothing: a user
   could not leave a module screen.** Fixed; Back, Refresh and Search verified.
+- **Screens:** [`docs/assets/screens/ios/`](docs/assets/screens/ios/) — Overview and the eight
+  modules on the iPhone 17 simulator, captured after the header fix.
 - **Verified on iOS:** live data on all 8 modules; year axis `2010 … 2024`; Trade tabs
   and the headline following the tab (`Exports` → `840 B €`); Transport shows AIR
   (`185 M`); KPI tiles without mid-word breaks; radar axis labels and country names;
@@ -150,6 +152,6 @@ Population → Search → Back case in `RootComponentTest`.
 - **Fixed on this branch:** the app used nine icons from that 11 000-icon library;
   they are now bundled as vectors (`EuroIcons`) and `material-icons-extended` is no
   longer a dependency. With the repository's default heap, the Native link and the
-  full iOS test run now finish in 45 s locally (the machine has far more RAM and
-  cores than the runner, so the CI run of this branch is the real confirmation).
+  full iOS test run now finish in 45 s locally, and the CI `ios-test` job then
+  passed on this branch (~24 min on the runner), for the first time since July.
 
