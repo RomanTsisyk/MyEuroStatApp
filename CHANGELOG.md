@@ -83,6 +83,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- iOS: the header of every module screen (Back, Search, Refresh) was drawn under
+  the system status bar, so Back could not be tapped and a user could not leave a
+  module; `IosModuleAppBar` now applies the status-bar inset like the Android bar
 - Offline errors: a device that is really offline throws plain `java.net`
   exceptions (`UnknownHostException`, `SocketException`, …) which were not
   recognised as no-connectivity, so the error state said "Something went

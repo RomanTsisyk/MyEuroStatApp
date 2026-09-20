@@ -385,7 +385,7 @@ Original notes below.
 **Definition of "100% working" for this app:**
 
 1. ✅ Android APK installs and launches on a fresh device.
-2. ✅ iOS app builds AND launches in the simulator (real XcodeGen project; Overview renders live Eurostat data); full 8-tab walk-through pending alongside the Android one.
+2. ✅ iOS app builds AND launches in the simulator (real XcodeGen project); all 8 modules walked on an iPhone 17 simulator (iOS 26.5, Xcode 26.6) on 2026-09-20 and the Kotlin/Native suite passes locally (673 tests) — see `RUN_REPORT.md`. Physical iPhone / TestFlight still pending.
 3. ✅ All 8 feature tabs render real Eurostat data on first open (Android emulator, EN/PL/UK — see `RUN_REPORT.md`; physical device and iOS walk-through still pending).
 4. ✅ Refresh button + pull-to-refresh both work (pull-to-refresh on all 8 screens).
 5. ✅ Offline state shows cached data with stale indicator (incl. cohort pyramid + tourism heatmap via the blob cache).
@@ -397,4 +397,4 @@ Original notes below.
 11. ✅ No `mock*()` calls remain in any feature Screen.
 12. ✅ No dead code (`WireframeApp`, legacy `core.ui` package, `Sketch*` primitives all removed).
 
-Currently 12/12 on the Android emulator. Still open: the iOS simulator walk-through (on this Mac `xcode-select` still points at Command Line Tools although `/Applications/Xcode.app` is installed — prefix builds with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` or run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer` once), a physical-device run, and the offline / rotation checks listed in `RUN_REPORT.md`.
+Currently 12/12 on the Android emulator and the iPhone 17 simulator. Still open: a physical-device run (Android and iPhone/TestFlight), the offline / rotation checks on iOS, and making the CI `ios-test` job pass — it OOMs the Kotlin/Native compiler while caching `material-icons-extended` (used for ~10 icons by `core-ui` and `feature-overview`); options are a bigger heap, fewer parallel links, or replacing that dependency with a few bundled vectors.

@@ -61,11 +61,10 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 
 ## Found, not fixed
 
-- **iOS offline mapping is written but unproven on a device**: Darwin
-  reports `NSURLErrorDomain` codes (e.g. -1009); they are classified from the
-  error text by a JVM-tested function (`UrlErrorClassification.kt`), but the iOS
-  glue (`ErrorMapping.ios.kt`) was never compiled or run locally — the CI iOS
-  job is its first build.
+- **iOS offline mapping is compiled and unit-tested on Native, but was not
+  exercised offline in the simulator**: Darwin reports `NSURLErrorDomain`
+  codes (e.g. -1009); they are classified from the error text by
+  `UrlErrorClassification.kt`, whose 8 tests pass on the iOS Simulator too.
 - **Manual refresh while offline with a cache**: the data stays and the
   footer still says "fresh" (the cache is inside its 12 h TTL and a failed
   refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.
@@ -103,10 +102,8 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 
 ## Not covered
 
-- **iOS**: `xcode-select` on this Mac points at the Command Line Tools
-  (`/Applications/Xcode.app` is present but not selected — see the
-  `DEVELOPER_DIR` note in `iosApp/README.md`), so the simulator run and
-  `iosSimulatorArm64Test` were not executed in this session
+- **iOS beyond the simulator pass below**: a physical iPhone / TestFlight,
+  iPad, offline and rotation on iOS, and a runtime language switch on iOS
 - A physical Android device, and the `Pixel_Tablet` AVD (the wide-screen check
   used `wm size` on the phone emulator instead)
 - Process death / state restore, the pull-to-refresh gesture, clearing the cache
@@ -123,5 +120,31 @@ year), `TeaserFormattingTest` and `OverviewComponentTest` (raw teaser values),
 `CountryNameResTest` and `CountryStringsParityTest` (every country has a
 localized name), `AndroidNetworkErrorMappingTest` / `DesktopNetworkErrorMappingTest` /
 `UrlErrorClassificationTest`, `SparkSeriesTest` (Science) and a
-Population → Search → Back case in `RootComponentTest`. The iOS Native test
-suite has not been run locally.
+Population → Search → Back case in `RootComponentTest`.
+
+## iOS simulator pass
+
+**Environment:** Xcode 26.6, iPhone 17 simulator (iOS 26.5), `xcodebuild … build` of
+`iosApp` (BUILD SUCCEEDED), then all 8 modules walked by hand.
+
+- **Native tests:** `./gradlew iosSimulatorArm64Test` — **673 tests in 66 classes,
+  0 failures, across 18 modules**, including every test added in this branch
+  (`UrlErrorClassificationTest`, `RadarLayoutTest`, `YearAxisTest`, `SparkSeriesTest`,
+  `TeaserFormattingTest`, `CountryNameResTest`, `TradeFormattingTest`, …).
+- **Defect found and fixed (blocker):** on the module screens the header (Back /
+  Search / Refresh) was drawn *under* the system status bar — `IosModuleAppBar` was
+  the only app-bar variant without `statusBarsPadding()`. iOS consumes touches in
+  that strip, so **Back could not be tapped and the edge swipe did nothing: a user
+  could not leave a module screen.** Fixed; Back, Refresh and Search verified.
+- **Verified on iOS:** live data on all 8 modules; year axis `2010 … 2024`; Trade tabs
+  and the headline following the tab (`Exports` → `840 B €`); Transport shows AIR
+  (`185 M`); KPI tiles without mid-word breaks; radar axis labels and country names;
+  header search icon opens Search; numbers follow the platform locale (`4.387`, `83,5M`).
+- **Why CI's `ios-test` fails, and why it is not the code:** the Kotlin/Native
+  compiler runs out of heap (`OutOfMemoryError: Java heap space` / `GC overhead limit
+  exceeded`) while building the cache for `material-icons-extended` during
+  `linkDebugTestIosSimulatorArm64` of `feature-environment` and `feature-compare`
+  (on the 3-CPU runner; that job has been red or cancelled since July apart from
+  one green run). Locally, with a bigger heap, all 18 test binaries link in 2 min 41 s
+  and the tests pass. See `iosApp/README.md` for the flags.
+
