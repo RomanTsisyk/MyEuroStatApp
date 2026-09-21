@@ -8,7 +8,6 @@
     <string name="ui_action_back">Wstecz</string>
     <string name="ui_action_search">Szukaj</string>
     <string name="ui_action_refresh">Odśwież</string>
-    <string name="ui_action_more">Więcej</string>
 
     <!-- ErrorState -->
     <string name="ui_error_retry">spróbuj ponownie</string>
@@ -23,6 +22,9 @@
 
     <!-- StaleBanner -->
     <string name="ui_stale_banner_message">dane z pamięci podręcznej · odświeżanie…</string>
+
+    <!-- SourceFooter refresh failure -->
+    <string name="ui_footer_refresh_failed">odświeżanie nie powiodło się · dane zapisane</string>
 
     <!-- CountryChip / CountryChipsRow -->
     <string name="ui_chip_remove_country">Usuń %1$s</string>

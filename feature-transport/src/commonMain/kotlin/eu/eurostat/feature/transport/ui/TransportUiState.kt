@@ -25,6 +25,11 @@ sealed interface TransportUiState {
         val selectedYear: Int,
         /** Union of years for the active country across both road and air datasets. */
         val availableYears: List<Int>,
+        /**
+         * True when the last manual refresh failed and the content shown comes from
+         * cache; the footer then says so instead of reporting the data as fresh.
+         */
+        val refreshFailed: Boolean = false,
     ) : TransportUiState
     data class Empty(val query: TransportQuery) : TransportUiState
     /**

@@ -14,6 +14,7 @@ import eu.eurostat.feature.science.domain.ScienceDataPoint
 import eu.eurostat.feature.science.domain.ScienceQuery
 import eu.eurostat.feature.science.domain.ScienceRepository
 import eu.eurostat.feature.science.domain.ScienceTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,7 @@ import kotlin.test.assertTrue
 
 private class FakeScienceRepository : ScienceRepository {
     var lastQuery: ScienceQuery? = null
+    var observeCallCount = 0
     var refreshCallCount = 0
     var refreshThrows: Throwable? = null
 
@@ -42,6 +44,7 @@ private class FakeScienceRepository : ScienceRepository {
 
     override fun observe(query: ScienceQuery): Flow<Result<List<ScienceTimeSeries>>> {
         lastQuery = query
+        observeCallCount++
         return emissions.asStateFlow()
     }
 
@@ -331,5 +334,196 @@ class ScienceComponentTest {
         assertEquals("DE", state.activeCountry)
         assertEquals(2020, state.selectedYear)
         assertEquals(listOf(2018, 2020), state.availableYears)
+    }
+
+    @Test
+    fun refresh_failed_is_false_initially() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun failed_refresh_with_cache_sets_refresh_failed() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertTrue(state.refreshFailed)
+        assertFalse(state.isStale)
+    }
+
+    @Test
+    fun successful_refresh_leaves_refresh_failed_false() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun successful_refresh_after_failed_one_clears_refresh_failed() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<ScienceUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.refreshThrows = null
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun cancelled_refresh_is_not_reported_as_failure() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        val observeCallsBefore = repo.observeCallCount
+
+        repo.refreshThrows = CancellationException("cancelled")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // Cancellation is rethrown: no reload is started and no hint is raised.
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_select_countries() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<ScienceUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(ScienceIntent.SelectCountries(listOf("FR", "ES")))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_year_range_change() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<ScienceUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(ScienceIntent.ChangeYearRange(2018..2022))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_survives_ui_only_rerender() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // sampleScienceSeries has 2019 and 2020; the default is the latest (2020).
+        component.onIntent(ScienceIntent.SelectYear(2019))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<ScienceUiState.Content>(state)
+        assertEquals(2019, state.selectedYear)
+        assertTrue(state.refreshFailed)
+    }
+
+    @Test
+    fun stale_emission_clears_refresh_failed_and_it_stays_cleared() = runTest {
+        val repo = FakeScienceRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(ScienceIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<ScienceUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val staleState = component.state.value
+        assertIs<ScienceUiState.Content>(staleState)
+        assertTrue(staleState.isStale)
+        assertFalse(staleState.refreshFailed)
+
+        // A later successful revalidation must not bring the hint back.
+        repo.emissions.value = Result.Success(listOf(sampleScienceSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val freshState = component.state.value
+        assertIs<ScienceUiState.Content>(freshState)
+        assertFalse(freshState.isStale)
+        assertFalse(freshState.refreshFailed)
     }
 }

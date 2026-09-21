@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import eu.eurostat.core.common.EurostatCountries
 import eu.eurostat.ui.country.countryDisplayName
+import eu.eurostat.ui.country.sortedByDisplayName
 import eu.eurostat.ui.theme.Euro
 import myeurostatapp.core_ui.generated.resources.Res
 import myeurostatapp.core_ui.generated.resources.ui_country_picker_apply
@@ -46,8 +47,10 @@ import org.jetbrains.compose.resources.stringResource
  * English name or localized display name (see [countryDisplayName]), a
  * [LazyColumn] of rows with a flag/code badge, localized name, and [Checkbox], and
  * a primary "Apply" button that calls [onConfirm] with the locally accumulated
- * selection. Enforces [maxSelection]: additional checkboxes are disabled when the
- * limit is reached.
+ * selection. Rows are ordered by localized display name (aggregates first, then
+ * countries alphabetically in the active language; see [sortedByDisplayName]).
+ * Enforces [maxSelection]: additional checkboxes are disabled when the limit is
+ * reached.
  *
  * @param selected      Initially selected country codes.
  * @param onConfirm     Called with the final set of codes when the user taps "Apply".
@@ -76,12 +79,16 @@ fun CountryPickerSheet(
         country.code to countryDisplayName(country.code, fallback = country.name)
     }
 
-    val filtered = remember(query, displayNames) {
+    // Aggregates first, then countries alphabetically by localized name. Recomputed only
+    // when the names change (i.e. on a language switch).
+    val ordered = remember(displayNames) { EurostatCountries.ALL.sortedByDisplayName(displayNames) }
+
+    val filtered = remember(query, displayNames, ordered) {
         val q = query.trim().lowercase()
         if (q.isEmpty()) {
-            EurostatCountries.ALL
+            ordered
         } else {
-            EurostatCountries.ALL.filter { country ->
+            ordered.filter { country ->
                 country.code.lowercase().contains(q) ||
                     country.name.lowercase().contains(q) ||
                     displayNames[country.code].orEmpty().lowercase().contains(q)

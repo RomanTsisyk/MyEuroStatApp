@@ -137,6 +137,7 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
                         accent = accent,
                         series = s.series,
                         isStale = s.isStale,
+                        refreshFailed = s.refreshFailed,
                         activeCountry = s.activeCountry,
                         availableCountries = s.availableCountries,
                         selectedTabIndex = s.selectedTabIndex,
@@ -189,6 +190,7 @@ private fun ContentBody(
     accent: Color,
     series: List<TradeTimeSeries>,
     isStale: Boolean,
+    refreshFailed: Boolean,
     activeCountry: String,
     availableCountries: List<String>,
     selectedTabIndex: Int,
@@ -384,6 +386,7 @@ private fun ContentBody(
                 stringResource(Res.string.trade_footer_staleness_fresh)
             },
             stale = isStale,
+            refreshFailed = refreshFailed,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

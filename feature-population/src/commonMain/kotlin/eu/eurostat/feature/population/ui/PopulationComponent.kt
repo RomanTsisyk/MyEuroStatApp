@@ -9,6 +9,7 @@ import eu.eurostat.feature.population.domain.GetPopulationTimeSeriesUseCase
 import eu.eurostat.feature.population.domain.PopulationData
 import eu.eurostat.feature.population.domain.PopulationQuery
 import eu.eurostat.feature.population.domain.PopulationSnapshot
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +43,9 @@ class DefaultPopulationComponent(
     private var selectedCountry: String = "DE"
     private var selectedYear: Int? = null
     private var selectedMetric: Int = 0
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -98,8 +102,15 @@ class DefaultPopulationComponent(
                 rerenderFromLastData()
             }
             PopulationIntent.Refresh -> scope.launch {
-                runCatching { useCase.refresh(currentQuery) }
-                load()
+                val failed = try {
+                    useCase.refresh(currentQuery)
+                    false
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    true
+                }
+                load(refreshFailed = failed)
             }
             PopulationIntent.Retry -> load()
         }
@@ -108,7 +119,16 @@ class DefaultPopulationComponent(
     private var lastData: PopulationData? = null
     private var lastStale: Boolean = false
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
@@ -125,12 +145,17 @@ class DefaultPopulationComponent(
     private fun Result<PopulationData>.toUiState(query: PopulationQuery): PopulationUiState =
         when (this) {
             is Result.Loading -> PopulationUiState.Loading
-            is Result.Success -> if (data.timeSeries.isEmpty()) {
-                PopulationUiState.Empty(query)
-            } else {
-                lastData = data
-                lastStale = isStale
-                buildContent(data, isStale, query)
+            is Result.Success -> {
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up.
+                if (isStale) refreshFailed = false
+                if (data.timeSeries.isEmpty()) {
+                    PopulationUiState.Empty(query)
+                } else {
+                    lastData = data
+                    lastStale = isStale
+                    buildContent(data, isStale, query)
+                }
             }
             is Result.Error -> PopulationUiState.Error(
                 error = cause,
@@ -173,6 +198,7 @@ class DefaultPopulationComponent(
             selectedMetric = selectedMetric,
             isStale = isStale,
             query = query,
+            refreshFailed = refreshFailed,
         )
     }
 }

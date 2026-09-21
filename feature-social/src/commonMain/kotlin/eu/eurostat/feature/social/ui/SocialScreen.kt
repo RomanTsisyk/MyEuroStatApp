@@ -156,6 +156,7 @@ fun SocialScreen(
                 stringResource(Res.string.social_footer_staleness_fresh)
             },
             stale = footerStale,
+            refreshFailed = (state as? SocialUiState.Content)?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

@@ -68,7 +68,9 @@ import myeurostatapp.feature_overview.generated.resources.overview_module_unit_t
  *
  * Each teaser degrades independently: a broken or empty dataset yields an
  * [TeaserStatus.Error] / [TeaserStatus.Empty] tile rather than failing the whole
- * dashboard, so the landing screen always renders.
+ * dashboard, so the landing screen always renders. When *every* teaser settles
+ * without a value and at least one failed (offline, empty cache),
+ * [OverviewUiState.unavailableError] carries the cause so the screen can say so.
  */
 interface OverviewComponent {
     val state: StateFlow<OverviewUiState>
@@ -171,7 +173,7 @@ class DefaultOverviewComponent(
             is Result.Success -> extract(data)?.let {
                 base.copy(status = TeaserStatus.Loaded, value = it.value, year = it.year)
             } ?: base.copy(status = TeaserStatus.Empty, value = null)
-            is Result.Error -> base.copy(status = TeaserStatus.Error, value = null)
+            is Result.Error -> base.copy(status = TeaserStatus.Error, value = null, error = cause)
         }
 
     private fun Result<PopulationData>.toPopulationTeaser() = teaser(BASE_POPULATION) { d ->

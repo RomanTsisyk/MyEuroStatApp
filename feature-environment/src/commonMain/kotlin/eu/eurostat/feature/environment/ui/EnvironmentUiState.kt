@@ -29,6 +29,11 @@ sealed interface EnvironmentUiState {
         val selectedYear: Int = 0,
         /** All years available for the active country's series, ascending. */
         val availableYears: List<Int> = emptyList(),
+        /**
+         * True when the last manual refresh failed and the content shown comes
+         * from cache; the footer then says so instead of reporting the data as fresh.
+         */
+        val refreshFailed: Boolean = false,
     ) : EnvironmentUiState
 
     data class Empty(val query: EnvironmentQuery) : EnvironmentUiState

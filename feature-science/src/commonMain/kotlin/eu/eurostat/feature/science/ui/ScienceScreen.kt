@@ -163,6 +163,7 @@ fun ScienceScreen(
             dataset = "rd_e_gerdtot · +2",
             staleness = "fresh",
             stale = (state as? ScienceUiState.Content)?.isStale == true,
+            refreshFailed = (state as? ScienceUiState.Content)?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

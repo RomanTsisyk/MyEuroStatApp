@@ -9,6 +9,7 @@ import eu.eurostat.feature.economy.domain.EconomyMetric
 import eu.eurostat.feature.economy.domain.EconomyQuery
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
 import eu.eurostat.feature.economy.domain.GetEconomyTimeSeriesUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,9 @@ class DefaultEconomyComponent(
     private var displayYearRange: IntRange? = null
     private var selectedYear: Int? = null
     private var normalized: Boolean = false
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -96,8 +100,15 @@ class DefaultEconomyComponent(
                 load()
             }
             EconomyIntent.Refresh -> scope.launch {
-                runCatching { useCase.refresh(currentQuery) }
-                load()
+                val failed = try {
+                    useCase.refresh(currentQuery)
+                    false
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    true
+                }
+                load(refreshFailed = failed)
             }
             EconomyIntent.Retry -> load()
             is EconomyIntent.SelectMetric -> {
@@ -122,7 +133,16 @@ class DefaultEconomyComponent(
     private var lastData: List<EconomyTimeSeries>? = null
     private var lastStale: Boolean = false
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
@@ -139,12 +159,17 @@ class DefaultEconomyComponent(
     private fun Result<List<EconomyTimeSeries>>.toUiState(query: EconomyQuery): EconomyUiState =
         when (this) {
             is Result.Loading -> EconomyUiState.Loading
-            is Result.Success -> if (data.isEmpty()) {
-                EconomyUiState.Empty(query)
-            } else {
-                lastData = data
-                lastStale = isStale
-                buildContent(data, isStale, query)
+            is Result.Success -> {
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up.
+                if (isStale) refreshFailed = false
+                if (data.isEmpty()) {
+                    EconomyUiState.Empty(query)
+                } else {
+                    lastData = data
+                    lastStale = isStale
+                    buildContent(data, isStale, query)
+                }
             }
             is Result.Error -> EconomyUiState.Error(
                 error = cause,
@@ -186,6 +211,7 @@ class DefaultEconomyComponent(
             selectedYear = activeYear,
             availableYears = availableYears,
             normalized = normalized,
+            refreshFailed = refreshFailed,
         )
     }
 }

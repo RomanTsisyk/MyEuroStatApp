@@ -8,7 +8,6 @@
     <string name="ui_action_back">Назад</string>
     <string name="ui_action_search">Пошук</string>
     <string name="ui_action_refresh">Оновити</string>
-    <string name="ui_action_more">Більше</string>
 
     <!-- ErrorState -->
     <string name="ui_error_retry">повторити</string>
@@ -23,6 +22,9 @@
 
     <!-- StaleBanner -->
     <string name="ui_stale_banner_message">кешовані дані · оновлення…</string>
+
+    <!-- SourceFooter refresh failure -->
+    <string name="ui_footer_refresh_failed">не вдалося оновити · показано збережені дані</string>
 
     <!-- CountryChip / CountryChipsRow -->
     <string name="ui_chip_remove_country">Прибрати %1$s</string>

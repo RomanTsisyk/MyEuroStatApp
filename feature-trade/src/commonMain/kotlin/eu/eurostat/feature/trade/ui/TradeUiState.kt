@@ -20,6 +20,11 @@ sealed interface TradeUiState {
         val selectedYear: Int,
         /** All years with data for [activeCountry], sorted ascending. Drives the [YearDropdown] options. */
         val availableYears: List<Int>,
+        /**
+         * True when the last manual refresh failed and the content shown comes from cache;
+         * the footer then says so instead of reporting the data as fresh.
+         */
+        val refreshFailed: Boolean = false,
     ) : TradeUiState
     data class Empty(val query: TradeQuery) : TradeUiState
 

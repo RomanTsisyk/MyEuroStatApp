@@ -9,6 +9,7 @@ import eu.eurostat.feature.transport.domain.GetTransportTimeSeriesUseCase
 import eu.eurostat.feature.transport.domain.TransportMode
 import eu.eurostat.feature.transport.domain.TransportQuery
 import eu.eurostat.feature.transport.domain.TransportTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,9 @@ class DefaultTransportComponent(
 
     private var lastSeries: List<TransportTimeSeries>? = null
     private var lastStale: Boolean = false
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -112,13 +116,32 @@ class DefaultTransportComponent(
                 rerenderFromLast()
             }
             TransportIntent.Refresh -> {
-                scope.launch { runCatching { useCase.refresh(currentQuery) }; load() }
+                scope.launch {
+                    val failed = try {
+                        useCase.refresh(currentQuery)
+                        false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        true
+                    }
+                    load(refreshFailed = failed)
+                }
             }
             TransportIntent.Retry -> load()
         }
     }
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
@@ -135,12 +158,17 @@ class DefaultTransportComponent(
     private fun Result<List<TransportTimeSeries>>.toUiState(query: TransportQuery): TransportUiState =
         when (this) {
             is Result.Loading -> TransportUiState.Loading
-            is Result.Success -> if (data.isEmpty()) {
-                TransportUiState.Empty(query)
-            } else {
-                lastSeries = data
-                lastStale = isStale
-                buildContent(data, isStale, query)
+            is Result.Success -> {
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up.
+                if (isStale) refreshFailed = false
+                if (data.isEmpty()) {
+                    TransportUiState.Empty(query)
+                } else {
+                    lastSeries = data
+                    lastStale = isStale
+                    buildContent(data, isStale, query)
+                }
             }
             is Result.Error -> TransportUiState.Error(
                 error = cause,
@@ -195,6 +223,7 @@ class DefaultTransportComponent(
             logScale = logScale,
             selectedYear = resolvedYear,
             availableYears = availableYears,
+            refreshFailed = refreshFailed,
         )
     }
 }

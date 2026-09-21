@@ -148,6 +148,7 @@ fun PopulationScreen(
             dataset = "demo_pjangroup",
             staleness = stringResource(Res.string.population_footer_staleness_fresh),
             stale = (state as? PopulationUiState.Content)?.isStale == true,
+            refreshFailed = (state as? PopulationUiState.Content)?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

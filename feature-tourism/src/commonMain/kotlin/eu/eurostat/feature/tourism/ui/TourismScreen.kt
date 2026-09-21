@@ -167,6 +167,7 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
                 stringResource(Res.string.tourism_footer_staleness_fresh)
             },
             stale = isStale,
+            refreshFailed = contentState?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

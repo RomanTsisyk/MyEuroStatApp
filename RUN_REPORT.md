@@ -68,23 +68,50 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 - **Manual refresh while offline with a cache**: the data stays and the
   footer still says "fresh" (the cache is inside its 12 h TTL and a failed
   refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.
-- **Overview offline with an empty cache** shows `—` everywhere with no
-  offline hint (the module screens do show the error state).
 - **Wide screens**: a phone in landscape and a ~1070 dp-wide tablet both switch
   to the two-pane layout and scroll correctly, but on the tablet the lower
   half of the screen is empty, and in landscape the right pane's viewport is
   short (the chart needs a scroll to be seen whole).
-- Country picker list keeps English alphabetical order in PL/UK; the
-  Settings default-country label and the Compare legend still show the
-  English name / code.
 - Science tile label "Wykształcenie wyższe" is ellipsised in Polish.
 - Trade, Transport and Tourism show no header search icon (Search is still
   reachable from the Overview header).
-- The app bar's "More" pill still has an empty `onClick`. It is drawn only when
-  a screen passes no `onRefresh`, which no current screen does, so it is not
-  visible today.
 - No axis labels on Transport small multiples, Social lines, Tourism bars or
   the seasonality heatmap (months/years) — not investigated whether by design.
+
+## Fixed after the second pass
+
+Five of the items above were fixed afterwards on `fix/run-report-leftovers`. Each has
+tests that pass on Android, desktop and the iOS simulator (Kotlin/Native), and each was then
+checked on the API 36 emulator (not on iOS and not on a physical device).
+
+- **"More" pill**: removed (it was unreachable dead code).
+  `ModuleAppBarSourceGuardTest` (desktop) keeps an empty `onClick` from coming back.
+- **Overview offline, empty cache**: a localized hint banner (tap to retry) replaces the
+  wall of `—` when every teaser failed (`OverviewComponentTest`, `OverviewUiStateTest`).
+  Emulator: airplane mode + cleared data shows "No connection — check your network" above
+  the tiles; back online, tapping the banner loads the data and the banner disappears.
+- **Country picker order in PL/UK**: rows sort by the localized name with a hand-rolled,
+  Native-safe comparator (`CountryNameOrder`, `CountryNameOrderTest`, 31 cases). Emulator,
+  Polish: aggregates first, then Austria, Belgia, Bułgaria, Chorwacja, Cypr, Czechy…, and
+  Litwa, Luksemburg, Łotwa (Ł after L), Malta, Niderlandy, Niemcy… Ukrainian order was not
+  looked at.
+- **Settings default-country label and Compare legend**: use `countryDisplayName`
+  (`SettingsCountryLabelTest`). Emulator, Ukrainian: the Compare legend reads "Німеччина
+  4 387 · Франція 2 935 · Польща 852" on one line with three countries; five countries with
+  the longest names were not tried.
+- **Search back stack**: after picking a result Search no longer stays under it, so Back
+  returns to the screen Search was opened from (`RootComponentTest`).
+
+The **"refresh failed" hint** now covers nine screens (Population, Economy, Environment, Trade,
+Transport, Tourism, Social, Science, Compare): a failed manual refresh with a warm cache turns the
+footer dot orange and says "refresh failed · showing saved data". Verified on the emulator for Economy,
+Trade and Compare (Compare in Ukrainian; airplane mode, warm cache, refresh icon; cleared by the next
+successful refresh); the other six are unit-tested on Android and Native but not looked at. Overview
+is not covered; see `NEXT_STEPS.md`.
+
+**Found while checking, not fixed:** the Economy chart legend and the country chips still show raw
+codes (`DE`, `EU27_2020`, `FR`, `PL`) in Polish and Ukrainian, while the Compare legend now shows
+localized names; the same pattern is likely on the other module screens.
 
 ## Also covered in the second pass
 
@@ -120,7 +147,9 @@ year), `TeaserFormattingTest` and `OverviewComponentTest` (raw teaser values),
 `CountryNameResTest` and `CountryStringsParityTest` (every country has a
 localized name), `AndroidNetworkErrorMappingTest` / `DesktopNetworkErrorMappingTest` /
 `UrlErrorClassificationTest`, `SparkSeriesTest` (Science) and a
-Population → Search → Back case in `RootComponentTest`.
+Population → Search → Back case in `RootComponentTest`. The follow-up fixes add
+`CountryNameOrderTest`, `ModuleAppBarSourceGuardTest`, `OverviewUiStateTest`,
+`SettingsCountryLabelTest` and more `OverviewComponentTest` / `RootComponentTest` cases.
 
 ## iOS simulator pass
 

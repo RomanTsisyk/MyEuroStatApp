@@ -26,7 +26,7 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The header search icon now opens Search from Population, Economy,
   Environment, Social, Science and Compare (it was a dead button); Back
   returns to the module it was opened from. Trade, Transport and Tourism
-  show no search icon. The app bar's Back / Search / Refresh / More
+  show no search icon. The app bar's Back / Search / Refresh
   accessibility descriptions are localized (EN/PL/UK)
 - Store changelogs for `versionCode` 60 (`fastlane/metadata/android/{en-US,pl,uk}/changelogs/60.txt`)
 - Tag-triggered release workflow (`.github/workflows/release.yml`):
@@ -140,6 +140,28 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Intermittent test failures: the 8 API-service test suites captured
   parallel MockEngine requests into an unsynchronized list; now guarded
   by a `Mutex`-backed recorder
+- The app bar no longer draws a dead "More" pill (empty click handler) when a
+  screen passes no refresh action; the unused `ui_action_more` string is gone
+  from EN/PL/UK
+- Overview, offline with an empty cache: instead of eight silent em-dash tiles it
+  now shows a localized hint banner (tap to retry). Partial failures still degrade
+  per tile
+- Country picker orders its rows by the localized display name (aggregates first)
+  with Polish and Ukrainian letter order (Ł after L, Ґ/Є/Ї in place) instead of
+  English order in every language; pure, Native-safe comparator (`CountryNameOrder`)
+- Settings default-country row and the Compare legend and point-detail sheet show
+  localized country names in Polish and Ukrainian instead of the English name or
+  the raw code
+- Search is a transient overlay in the root back stack: after Population → Search →
+  pick a result, Back returns to Population's origin instead of landing on Search
+  again
+- Population, Economy, Environment, Trade, Transport, Tourism, Social, Science and
+  Compare: when a manual refresh (pull-to-refresh or the refresh icon) fails and the
+  screen keeps showing saved data, the footer now turns the status dot orange and says
+  "refresh failed · showing saved data" (EN/PL/UK) instead of claiming the data is
+  fresh. On Compare any one failing indicator repository counts as a failure. The hint
+  clears on the next query change or a stale reload. `SourceFooter` gained a
+  `refreshFailed` parameter (default false). Overview is not covered
 
 ### Planned for v0.8 / v1.0
 

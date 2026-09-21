@@ -8,6 +8,7 @@ import eu.eurostat.core.common.prefs.AppPreferences
 import eu.eurostat.feature.compare.data.CompareDataSource
 import eu.eurostat.feature.compare.domain.CompareIndicator
 import eu.eurostat.feature.compare.domain.CompareSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,6 +65,9 @@ class DefaultCompareComponent(
     private var countries: List<String> = DEFAULT_COUNTRIES
     private var normalized: Boolean = false
     private val years: IntRange = 2010..2024
+
+    /** True when the last manual refresh failed; reset by every other [observeCurrent]. */
+    private var refreshFailed: Boolean = false
 
     private var collectJob: Job? = null
 
@@ -129,20 +133,41 @@ class DefaultCompareComponent(
     /**
      * Forces a network refetch, then re-observes. A bare re-subscription is not
      * enough: the repositories are stale-while-revalidate, so a within-TTL cache
-     * is re-served without touching the network. A failed refresh is swallowed —
-     * re-observing surfaces either the cache or the repository's own error.
+     * is re-served without touching the network.
+     *
+     * A failed refresh does not abort: re-observing still surfaces either the
+     * cache or the repository's own error. The failure is remembered, though, and
+     * handed to [observeCurrent] so the footer can say the data is not fresh.
+     * [CompareDataSource.refresh] delegates to exactly one repository and lets its
+     * exception propagate, so any underlying failure counts. Cancellation is
+     * rethrown, never reported as a failure.
      */
     private fun refresh() {
         collectJob?.cancel()
         _state.value = CompareUiState.Loading(indicator)
         collectJob = scope.launch {
-            runCatching { dataSource.refresh(indicator, countries, years) }
-            observeCurrent()
+            val failed = try {
+                dataSource.refresh(indicator, countries, years)
+                false
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                true
+            }
+            observeCurrent(refreshFailed = failed)
         }
     }
 
-    /** Collects the current selection's stream into [state] until cancelled. */
-    private suspend fun observeCurrent() {
+    /**
+     * Collects the current selection's stream into [state] until cancelled.
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collection starts so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private suspend fun observeCurrent(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         dataSource.observe(indicator, countries, years).collect { result ->
             _state.value = result.toUiState()
         }
@@ -152,17 +177,23 @@ class DefaultCompareComponent(
     private fun Result<List<CompareSeries>>.toUiState(): CompareUiState = when (this) {
         is Result.Loading -> CompareUiState.Loading(indicator)
         is Result.Error -> CompareUiState.Error(cause, canRetry = true)
-        is Result.Success -> if (data.isEffectivelyEmpty()) {
-            CompareUiState.Empty(indicator, countries)
-        } else {
-            CompareUiState.Content(
-                indicator = indicator,
-                countries = countries,
-                yearRange = data.yearRange(),
-                normalized = normalized,
-                series = data,
-                isStale = isStale,
-            )
+        is Result.Success -> {
+            // A stale emission is already covered by the stale UI, and a later
+            // successful revalidation must not leave the failure hint up.
+            if (isStale) refreshFailed = false
+            if (data.isEffectivelyEmpty()) {
+                CompareUiState.Empty(indicator, countries)
+            } else {
+                CompareUiState.Content(
+                    indicator = indicator,
+                    countries = countries,
+                    yearRange = data.yearRange(),
+                    normalized = normalized,
+                    series = data,
+                    isStale = isStale,
+                    refreshFailed = refreshFailed,
+                )
+            }
         }
     }
 

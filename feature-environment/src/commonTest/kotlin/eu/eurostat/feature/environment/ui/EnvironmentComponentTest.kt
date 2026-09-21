@@ -16,6 +16,7 @@ import eu.eurostat.feature.environment.domain.EnvironmentTimeSeries
 import eu.eurostat.feature.environment.domain.EnvMetric
 import eu.eurostat.feature.environment.domain.EnvSector
 import eu.eurostat.feature.environment.domain.GetEnvironmentTimeSeriesUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +38,7 @@ import kotlin.test.assertTrue
 
 private class FakeEnvironmentRepository : EnvironmentRepository {
     var lastQuery: EnvironmentQuery? = null
+    var observeCallCount = 0
     var refreshCallCount = 0
     var refreshThrows: Throwable? = null
 
@@ -44,6 +46,7 @@ private class FakeEnvironmentRepository : EnvironmentRepository {
 
     override fun observe(query: EnvironmentQuery): Flow<Result<List<EnvironmentTimeSeries>>> {
         lastQuery = query
+        observeCallCount++
         return emissions.asStateFlow()
     }
 
@@ -424,5 +427,221 @@ class EnvironmentComponentTest {
         assertEquals(2019, updatedState.selectedYear)
         // No refresh calls — SelectYear is a pure UI intent
         assertEquals(0, repo.refreshCallCount)
+    }
+
+    // ------------------------------------------------------------------------------------
+    // 15. Refresh-failed footer hint
+    // ------------------------------------------------------------------------------------
+
+    @Test
+    fun refresh_failed_is_false_initially() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun failed_refresh_with_cache_sets_refresh_failed() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertTrue(state.refreshFailed)
+        assertFalse(state.isStale)
+    }
+
+    @Test
+    fun successful_refresh_leaves_refresh_failed_false() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun successful_refresh_after_failed_one_clears_refresh_failed() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EnvironmentUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.refreshThrows = null
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun cancelled_refresh_is_not_reported_as_failure() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        val observeCallsBefore = repo.observeCallCount
+
+        repo.refreshThrows = CancellationException("cancelled")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // Cancellation is rethrown: no reload is started and no hint is raised.
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_select_countries() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EnvironmentUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(EnvironmentIntent.SelectCountries(listOf("FR", "ES")))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_year_range_change() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EnvironmentUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(EnvironmentIntent.ChangeYearRange(2018..2022))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_retry() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EnvironmentUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(EnvironmentIntent.Retry)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_survives_ui_only_rerender() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(EnvironmentIntent.SelectYear(2019))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EnvironmentUiState.Content>(state)
+        assertEquals(2019, state.selectedYear)
+        assertTrue(state.refreshFailed)
+    }
+
+    @Test
+    fun stale_emission_clears_refresh_failed_and_it_stays_cleared() = runTest {
+        val repo = FakeEnvironmentRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EnvironmentIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EnvironmentUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val staleState = component.state.value
+        assertIs<EnvironmentUiState.Content>(staleState)
+        assertTrue(staleState.isStale)
+        assertFalse(staleState.refreshFailed)
+
+        // A later successful revalidation must not bring the hint back.
+        repo.emissions.value = Result.Success(listOf(sampleEnvironmentSeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val freshState = component.state.value
+        assertIs<EnvironmentUiState.Content>(freshState)
+        assertFalse(freshState.isStale)
+        assertFalse(freshState.refreshFailed)
     }
 }

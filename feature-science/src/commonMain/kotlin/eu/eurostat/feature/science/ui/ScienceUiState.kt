@@ -18,6 +18,8 @@ sealed interface ScienceUiState {
         val selectedYear: Int?,
         /** All years with observations for the active country, sorted ascending. */
         val availableYears: List<Int>,
+        /** True when the last manual refresh failed and the content shown comes from cache. */
+        val refreshFailed: Boolean = false,
     ) : ScienceUiState
     data class Empty(val query: ScienceQuery) : ScienceUiState
     /**

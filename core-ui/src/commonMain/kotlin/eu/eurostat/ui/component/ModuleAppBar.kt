@@ -33,12 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import eu.eurostat.ui.icons.EuroIcons
 import eu.eurostat.ui.theme.Euro
 import eu.eurostat.ui.theme.EuroPlatform
 import myeurostatapp.core_ui.generated.resources.Res
 import myeurostatapp.core_ui.generated.resources.ui_action_back
-import myeurostatapp.core_ui.generated.resources.ui_action_more
 import myeurostatapp.core_ui.generated.resources.ui_action_refresh
 import myeurostatapp.core_ui.generated.resources.ui_action_search
 import org.jetbrains.compose.resources.stringResource
@@ -47,7 +45,7 @@ import org.jetbrains.compose.resources.stringResource
  * Hi-fi M3 Expressive top app bar for module screens.
  *
  * Layout (top to bottom):
- *  - Row of circular icon buttons: back · search · overflow
+ *  - Row of circular icon buttons: back · search · refresh
  *  - Eyebrow tagline (uppercase, accent-colored)
  *  - Large 40sp Inter Tight title
  *  - Optional year chip + country line
@@ -55,7 +53,7 @@ import org.jetbrains.compose.resources.stringResource
  * When [tagline] is null the bar collapses to a single-row "compact" variant
  * (back · title · accent dot · actions) for non-module screens.
  *
- * Icon-button content descriptions (back / search / refresh / more) are
+ * Icon-button content descriptions (back / search / refresh) are
  * localized through the core-ui `ui_action_*` string resources.
  *
  * @param title screen title rendered in [Euro.typography.displayLarge].
@@ -65,7 +63,8 @@ import org.jetbrains.compose.resources.stringResource
  * @param year optional year shown in a small pill below the title.
  * @param country optional country line shown next to the year pill.
  * @param onSearch optional handler for the search icon; hidden when null.
- * @param onRefresh optional handler for the refresh icon; hidden when null.
+ * @param onRefresh optional handler for the refresh icon; hidden when null (the right-hand
+ *   action cluster simply omits it, like [onSearch] and the compact variant).
  */
 @Composable
 fun ModuleAppBar(
@@ -110,7 +109,6 @@ private fun AndroidModuleAppBar(
     val backDescription = stringResource(Res.string.ui_action_back)
     val searchDescription = stringResource(Res.string.ui_action_search)
     val refreshDescription = stringResource(Res.string.ui_action_refresh)
-    val moreDescription = stringResource(Res.string.ui_action_more)
 
     Column(
         modifier = modifier
@@ -131,8 +129,6 @@ private fun AndroidModuleAppBar(
                 }
                 if (onRefresh != null) {
                     IconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
-                } else {
-                    IconPill(icon = EuroIcons.MoreHoriz, description = moreDescription, onClick = {})
                 }
             }
         }
@@ -193,7 +189,6 @@ private fun IosModuleAppBar(
     val backDescription = stringResource(Res.string.ui_action_back)
     val searchDescription = stringResource(Res.string.ui_action_search)
     val refreshDescription = stringResource(Res.string.ui_action_refresh)
-    val moreDescription = stringResource(Res.string.ui_action_more)
 
     // Eyebrow style: 12sp w600 uppercase, ls 0.4 — slightly different from the
     // Android eyebrow (11sp SemiBold ls 1.2).
@@ -236,8 +231,6 @@ private fun IosModuleAppBar(
                 }
                 if (onRefresh != null) {
                     GlassIconPill(icon = Icons.Default.Refresh, description = refreshDescription, onClick = onRefresh)
-                } else {
-                    GlassIconPill(icon = EuroIcons.MoreHoriz, description = moreDescription, onClick = {})
                 }
             }
         }

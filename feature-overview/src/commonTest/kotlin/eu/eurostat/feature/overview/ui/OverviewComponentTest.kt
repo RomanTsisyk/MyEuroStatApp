@@ -77,9 +77,11 @@ private class FakePopulationRepository : PopulationRepository {
 
 private class FakeEconomyRepository : EconomyRepository {
     var lastQuery: EconomyQuery? = null
+    var observeCount = 0
     val emissions = MutableStateFlow<Result<List<EconomyTimeSeries>>>(Result.Loading)
     override fun observe(query: EconomyQuery): Flow<Result<List<EconomyTimeSeries>>> {
         lastQuery = query
+        observeCount++
         return emissions
     }
     override suspend fun refresh(query: EconomyQuery) {}
@@ -432,5 +434,105 @@ class OverviewComponentTest {
         assertEquals("15,5%", socTeaser.displayValue("pl"))
         assertEquals("4,387", state.teaser(ChildConfig.Economy).displayValue("en"))
         assertNotEquals(popTeaser.displayValue("en"), popTeaser.displayValue("pl"))
+    }
+
+    /** Makes every one of the eight repositories fail with [error] (offline, nothing cached). */
+    private fun failEveryRepository(error: AppError = AppError.NoNetwork) {
+        population.emissions.value = Result.Error(error)
+        economy.emissions.value = Result.Error(error)
+        environment.emissions.value = Result.Error(error)
+        trade.emissions.value = Result.Error(error)
+        transport.emissions.value = Result.Error(error)
+        tourism.emissions.value = Result.Error(error)
+        social.emissions.value = Result.Error(error)
+        science.emissions.value = Result.Error(error)
+    }
+
+    @Test
+    fun all_repositories_offline_exposes_the_error() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failEveryRepository(AppError.NoNetwork)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertEquals(AppError.NoNetwork, state.unavailableError)
+        assertEquals(8, state.teasers.size)
+        assertTrue(state.teasers.all { it.status == TeaserStatus.Error })
+        assertTrue(state.teasers.all { it.error == AppError.NoNetwork })
+        // The tiles themselves keep degrading to the dash; the hint is dashboard-level.
+        assertTrue(state.teasers.all { it.value == null })
+    }
+
+    @Test
+    fun partial_failure_shows_no_unavailable_hint() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failEveryRepository(AppError.NoNetwork)
+        economy.emissions.value = Result.Success(economyDe())
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertNull(state.unavailableError)
+        assertEquals(TeaserStatus.Loaded, state.teaser(ChildConfig.Economy).status)
+        // The failed tiles still remember their cause; only the aggregate hint is suppressed.
+        assertEquals(AppError.NoNetwork, state.teaser(ChildConfig.Trade).error)
+    }
+
+    @Test
+    fun still_loading_teasers_suppress_the_hint() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        trade.emissions.value = Result.Error(AppError.NoNetwork)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertEquals(TeaserStatus.Error, state.teaser(ChildConfig.Trade).status)
+        assertEquals(TeaserStatus.Loading, state.teaser(ChildConfig.Economy).status)
+        // No flicker before every teaser has settled.
+        assertNull(state.unavailableError)
+    }
+
+    @Test
+    fun error_is_null_on_loaded_and_loading_teasers() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        economy.emissions.value = Result.Success(economyDe())
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertEquals(TeaserStatus.Loaded, state.teaser(ChildConfig.Economy).status)
+        assertNull(state.teaser(ChildConfig.Economy).error)
+        assertEquals(TeaserStatus.Loading, state.teaser(ChildConfig.Social).status)
+        assertNull(state.teaser(ChildConfig.Social).error)
+    }
+
+    @Test
+    fun error_cause_is_cleared_when_a_teaser_recovers() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failEveryRepository(AppError.NoNetwork)
+        testScheduler.advanceUntilIdle()
+        assertEquals(AppError.NoNetwork, component.state.value.teaser(ChildConfig.Economy).error)
+        assertEquals(AppError.NoNetwork, component.state.value.unavailableError)
+
+        // Same fake flips from Error to Success (e.g. the network came back).
+        economy.emissions.value = Result.Success(economyDe())
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertEquals(TeaserStatus.Loaded, state.teaser(ChildConfig.Economy).status)
+        assertNull(state.teaser(ChildConfig.Economy).error)
+        assertNull(state.unavailableError)
+    }
+
+    @Test
+    fun refresh_reobserves_after_failure() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failEveryRepository(AppError.NoNetwork)
+        testScheduler.advanceUntilIdle()
+        assertEquals(1, economy.observeCount)
+
+        component.onRefresh()
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(2, economy.observeCount)
+        // Still offline: the hint is still there after the retry settles.
+        assertEquals(AppError.NoNetwork, component.state.value.unavailableError)
     }
 }

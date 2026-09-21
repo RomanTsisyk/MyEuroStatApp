@@ -21,6 +21,8 @@ sealed interface PopulationUiState {
      * @property availableYears Sorted list of years for the selected country.
      * @property availableCountries Country codes present in [timeSeries].
      * @property selectedMetric 0 = Total, 1 = Men, 2 = Women.
+     * @property refreshFailed true when the last manual refresh failed and the content shown
+     *   comes from cache; the footer then says so instead of reporting the data as fresh.
      */
     data class Content(
         val timeSeries: List<PopulationTimeSeries>,
@@ -32,6 +34,7 @@ sealed interface PopulationUiState {
         val selectedMetric: Int,
         val isStale: Boolean,
         val query: PopulationQuery,
+        val refreshFailed: Boolean = false,
     ) : PopulationUiState
 
     data class Empty(val query: PopulationQuery) : PopulationUiState

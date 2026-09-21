@@ -189,6 +189,7 @@ fun EnvironmentScreen(
                 stringResource(Res.string.environment_footer_staleness_fresh)
             },
             stale = (state as? EnvironmentUiState.Content)?.isStale == true,
+            refreshFailed = (state as? EnvironmentUiState.Content)?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

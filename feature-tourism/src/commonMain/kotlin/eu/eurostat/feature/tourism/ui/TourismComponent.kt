@@ -9,6 +9,7 @@ import eu.eurostat.feature.tourism.domain.GetTourismTimeSeriesUseCase
 import eu.eurostat.feature.tourism.domain.TourismData
 import eu.eurostat.feature.tourism.domain.TourismQuery
 import eu.eurostat.feature.tourism.domain.TourismResidence
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,9 @@ class DefaultTourismComponent(
 
     /** null means "auto-resolve to latest"; set explicitly when the user picks a year. */
     private var selectedYear: Int? = null
+
+    /** True when the last manual refresh failed; reset by every other [load]. */
+    private var refreshFailed: Boolean = false
 
     init {
         scope.launch {
@@ -110,8 +114,15 @@ class DefaultTourismComponent(
             }
             TourismIntent.Refresh -> {
                 scope.launch {
-                    runCatching { useCase.refresh(currentQuery) }
-                    load()
+                    val failed = try {
+                        useCase.refresh(currentQuery)
+                        false
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        true
+                    }
+                    load(refreshFailed = failed)
                 }
             }
             TourismIntent.Retry -> load()
@@ -121,10 +132,26 @@ class DefaultTourismComponent(
     private var currentResult: Result<TourismData> = Result.Loading
     private var collectJob: Job? = null
 
-    private fun load() {
+    /**
+     * (Re)starts observing [currentQuery].
+     *
+     * @param refreshFailed true only when called right after a failed manual
+     *   refresh; stored before the collector launches so the first emission
+     *   already carries it. Every other caller keeps the default and thereby
+     *   clears the hint.
+     */
+    private fun load(refreshFailed: Boolean = false) {
+        this.refreshFailed = refreshFailed
         collectJob?.cancel()
         collectJob = scope.launch {
             useCase.observe(currentQuery).collect { result ->
+                // A stale emission is already covered by the stale UI, and a later
+                // successful revalidation must not leave the failure hint up. Done
+                // here (not in projectState) so UI-only re-renders never clear it.
+                // Qualified because the load() parameter shadows the property here.
+                if (result is Result.Success && result.isStale) {
+                    this@DefaultTourismComponent.refreshFailed = false
+                }
                 currentResult = result
                 _state.value = projectState(result)
             }
@@ -176,6 +203,7 @@ class DefaultTourismComponent(
                     heatmapCells = result.data.heatmapCells,
                     selectedYear = resolvedYear,
                     availableYears = availableYears,
+                    refreshFailed = refreshFailed,
                 )
             }
             is Result.Error -> TourismUiState.Error(

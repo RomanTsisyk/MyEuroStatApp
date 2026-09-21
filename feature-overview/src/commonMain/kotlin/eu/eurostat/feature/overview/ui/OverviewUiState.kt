@@ -1,5 +1,6 @@
 package eu.eurostat.feature.overview.ui
 
+import eu.eurostat.core.common.AppError
 import eu.eurostat.core.navigation.ChildConfig
 import org.jetbrains.compose.resources.StringResource
 
@@ -66,6 +67,7 @@ enum class TeaserFormat {
  * @property unitRes localized short qualifier for [value] (e.g. `"people"`, `"B € · GDP"`).
  * @property year the year [value] belongs to, or null when unknown.
  * @property status current load state.
+ * @property error the cause when [status] is [TeaserStatus.Error], else null.
  */
 data class ModuleTeaser(
     val destination: ChildConfig,
@@ -77,13 +79,16 @@ data class ModuleTeaser(
     val unitRes: StringResource,
     val year: Int?,
     val status: TeaserStatus,
+    val error: AppError? = null,
 )
 
 /**
  * Immutable snapshot of the Overview dashboard: one [ModuleTeaser] per feature,
  * in display order. The dashboard never fails as a whole — individual teasers
  * carry their own [TeaserStatus], so a single broken dataset degrades one tile
- * instead of the entire landing screen.
+ * instead of the entire landing screen. The one exception worth telling the user
+ * about is total failure (every tile settled without a value, at least one with an
+ * error, e.g. offline with an empty cache), which is surfaced via [unavailableError].
  *
  * @property headlineCountryCode the Eurostat country code the hero block headlines
  *   (the persisted default-country preference, or [DefaultOverviewComponent.DEFAULT_COUNTRY]).
@@ -96,4 +101,26 @@ data class OverviewUiState(
     /** The headline module shown in the hero block (Economy · GDP). */
     val hero: ModuleTeaser?
         get() = teasers.firstOrNull { it.destination == ChildConfig.Economy }
+
+    /**
+     * The cause to show as a dashboard-level hint when nothing could be loaded, else null.
+     *
+     * Non-null only when every teaser has settled without a value (none
+     * [TeaserStatus.Loading], none [TeaserStatus.Loaded]: each is [TeaserStatus.Error]
+     * or [TeaserStatus.Empty]) and at least one of them failed. A partial failure
+     * returns null, so per-tile independent degradation is unchanged; so does an
+     * all-[TeaserStatus.Empty] dashboard without any error, and a blank teaser list.
+     *
+     * When the causes differ, the first error in teaser order is returned; that is
+     * enough because being offline yields [AppError.NoNetwork] for every teaser.
+     */
+    val unavailableError: AppError?
+        get() = if (
+            teasers.isNotEmpty() &&
+            teasers.all { it.status == TeaserStatus.Error || it.status == TeaserStatus.Empty }
+        ) {
+            teasers.firstNotNullOfOrNull { it.error }
+        } else {
+            null
+        }
 }

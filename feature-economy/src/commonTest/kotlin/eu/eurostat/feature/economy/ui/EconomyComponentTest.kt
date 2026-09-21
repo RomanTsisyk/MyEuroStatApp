@@ -15,6 +15,7 @@ import eu.eurostat.feature.economy.domain.EconomyRepository
 import eu.eurostat.feature.economy.domain.EconomyTimeSeries
 import eu.eurostat.feature.economy.domain.EconomyUnit
 import eu.eurostat.feature.economy.domain.GetEconomyTimeSeriesUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -346,5 +347,195 @@ class EconomyComponentTest {
         val disabledState = component.state.value
         assertIs<EconomyUiState.Content>(disabledState)
         assertFalse(disabledState.normalized)
+    }
+
+    @Test
+    fun refresh_failed_is_false_initially() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun failed_refresh_with_cache_sets_refresh_failed() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertTrue(state.refreshFailed)
+        assertFalse(state.isStale)
+    }
+
+    @Test
+    fun successful_refresh_leaves_refresh_failed_false() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, repo.refreshCallCount)
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun successful_refresh_after_failed_one_clears_refresh_failed() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EconomyUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.refreshThrows = null
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun cancelled_refresh_is_not_reported_as_failure() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        val observeCallsBefore = repo.observeCallCount
+
+        repo.refreshThrows = CancellationException("cancelled")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // Cancellation is rethrown: no reload is started and no hint is raised.
+        assertEquals(observeCallsBefore, repo.observeCallCount)
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_select_countries() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EconomyUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(EconomyIntent.SelectCountries(listOf("FR", "ES")))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_year_range_change() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EconomyUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        component.onIntent(EconomyIntent.ChangeYearRange(2018..2022))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertFalse(state.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_survives_ui_only_rerender() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(multiYearEconomySeries("DE")), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(EconomyIntent.SelectYear(2021))
+        testScheduler.advanceUntilIdle()
+
+        val state = component.state.value
+        assertIs<EconomyUiState.Content>(state)
+        assertEquals(2021, state.selectedYear)
+        assertTrue(state.refreshFailed)
+    }
+
+    @Test
+    fun stale_emission_clears_refresh_failed_and_it_stays_cleared() = runTest {
+        val repo = FakeEconomyRepository()
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val component = buildComponent(repo, dispatcher)
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+        repo.refreshThrows = IllegalStateException("network down")
+        component.onIntent(EconomyIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failedState = component.state.value
+        assertIs<EconomyUiState.Content>(failedState)
+        assertTrue(failedState.refreshFailed)
+
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val staleState = component.state.value
+        assertIs<EconomyUiState.Content>(staleState)
+        assertTrue(staleState.isStale)
+        assertFalse(staleState.refreshFailed)
+
+        // A later successful revalidation must not bring the hint back.
+        repo.emissions.value = Result.Success(listOf(sampleEconomySeries()), isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val freshState = component.state.value
+        assertIs<EconomyUiState.Content>(freshState)
+        assertFalse(freshState.isStale)
+        assertFalse(freshState.refreshFailed)
     }
 }
