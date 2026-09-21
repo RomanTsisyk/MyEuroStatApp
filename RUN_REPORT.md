@@ -78,30 +78,40 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
 - No axis labels on Transport small multiples, Social lines, Tourism bars or
   the seasonality heatmap (months/years) — not investigated whether by design.
 
-## Fixed after the second pass (unit-tested; not yet checked on a device)
+## Fixed after the second pass
 
 Five of the items above were fixed afterwards on `fix/run-report-leftovers`. Each has
-tests that pass on Android, desktop and the iOS simulator (Kotlin/Native), but none has
-been looked at on a device or emulator yet.
+tests that pass on Android, desktop and the iOS simulator (Kotlin/Native), and each was then
+checked on the API 36 emulator (not on iOS and not on a physical device).
 
 - **"More" pill**: removed (it was unreachable dead code).
   `ModuleAppBarSourceGuardTest` (desktop) keeps an empty `onClick` from coming back.
 - **Overview offline, empty cache**: a localized hint banner (tap to retry) replaces the
   wall of `—` when every teaser failed (`OverviewComponentTest`, `OverviewUiStateTest`).
+  Emulator: airplane mode + cleared data shows "No connection — check your network" above
+  the tiles; back online, tapping the banner loads the data and the banner disappears.
 - **Country picker order in PL/UK**: rows sort by the localized name with a hand-rolled,
-  Native-safe comparator (`CountryNameOrder`, `CountryNameOrderTest`, 31 cases).
+  Native-safe comparator (`CountryNameOrder`, `CountryNameOrderTest`, 31 cases). Emulator,
+  Polish: aggregates first, then Austria, Belgia, Bułgaria, Chorwacja, Cypr, Czechy…, and
+  Litwa, Luksemburg, Łotwa (Ł after L), Malta, Niderlandy, Niemcy… Ukrainian order was not
+  looked at.
 - **Settings default-country label and Compare legend**: use `countryDisplayName`
-  (`SettingsCountryLabelTest`). Long Ukrainian names in the Compare legend may wrap or
-  overflow at phone width: check it visually.
+  (`SettingsCountryLabelTest`). Emulator, Ukrainian: the Compare legend reads "Німеччина
+  4 387 · Франція 2 935 · Польща 852" on one line with three countries; five countries with
+  the longest names were not tried.
 - **Search back stack**: after picking a result Search no longer stays under it, so Back
   returns to the screen Search was opened from (`RootComponentTest`).
 
-The **"refresh failed" hint** now covers eight screens (Population, Economy, Environment, Trade,
-Transport, Tourism, Social, Science): a failed manual refresh with a warm cache turns the footer dot
-orange and says "refresh failed · showing saved data". Verified on the emulator for Economy only
-(airplane mode, warm cache, refresh icon; cleared by the next successful refresh); the other seven are
-unit-tested on Android and Native but not looked at. Compare and Overview are not covered; see
-`NEXT_STEPS.md`.
+The **"refresh failed" hint** now covers nine screens (Population, Economy, Environment, Trade,
+Transport, Tourism, Social, Science, Compare): a failed manual refresh with a warm cache turns the
+footer dot orange and says "refresh failed · showing saved data". Verified on the emulator for Economy,
+Trade and Compare (Compare in Ukrainian; airplane mode, warm cache, refresh icon; cleared by the next
+successful refresh); the other six are unit-tested on Android and Native but not looked at. Overview
+is not covered; see `NEXT_STEPS.md`.
+
+**Found while checking, not fixed:** the Economy chart legend and the country chips still show raw
+codes (`DE`, `EU27_2020`, `FR`, `PL`) in Polish and Ukrainian, while the Compare legend now shows
+localized names; the same pattern is likely on the other module screens.
 
 ## Also covered in the second pass
 
