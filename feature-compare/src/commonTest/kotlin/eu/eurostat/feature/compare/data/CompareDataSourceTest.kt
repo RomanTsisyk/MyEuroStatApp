@@ -26,6 +26,8 @@ import eu.eurostat.feature.transport.domain.TransportTimeSeries
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 
 /**
  * Verifies [CompareDataSource]'s per-module mapping: correct field selection,
@@ -195,6 +197,28 @@ class CompareDataSourceTest {
         dataSource.refresh(CompareIndicator.AIR_PASSENGERS, listOf("DE"), years)
         assertEquals(1, transport.refreshCount)
         assertEquals(1, economy.refreshCount)
+    }
+
+    @Test
+    fun refresh_failure_of_any_indicators_repository_propagates_untouched() = runTest {
+        val failure = IllegalStateException("network down")
+        population.refreshThrows = failure
+        economy.refreshThrows = failure
+        environment.refreshThrows = failure
+        trade.refreshThrows = failure
+        transport.refreshThrows = failure
+        tourism.refreshThrows = failure
+        social.refreshThrows = failure
+        science.refreshThrows = failure
+
+        // The component reports a failed manual refresh only if the data source
+        // lets the exception out: none of the eight indicators may swallow it.
+        CompareIndicator.entries.forEach { indicator ->
+            val thrown = assertFailsWith<IllegalStateException> {
+                dataSource.refresh(indicator, listOf("DE", "FR"), years)
+            }
+            assertSame(failure, thrown)
+        }
     }
 
     @Test

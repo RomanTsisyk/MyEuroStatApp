@@ -120,8 +120,10 @@ class CompareDataSource(
      * a within-TTL cache is emitted and the flow completes without touching the
      * network, so a bare re-subscription would silently re-serve cached data —
      * this mirrors the per-feature screens' explicit `refresh(query)` step.
-     * Network failures propagate to the caller (which surfaces them by
-     * re-observing: the cache still satisfies the read path).
+     * Network failures propagate to the caller: the call delegates to exactly one
+     * repository, so its exception is rethrown untouched (never swallowed or
+     * aggregated). The component re-observes anyway (the cache still satisfies the
+     * read path) and reports the failure to the user through the footer.
      */
     suspend fun refresh(
         indicator: CompareIndicator,

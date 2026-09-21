@@ -50,7 +50,12 @@ internal class FakePopulationRepository : PopulationRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: PopulationQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: PopulationQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeEconomyRepository : EconomyRepository {
@@ -63,7 +68,12 @@ internal class FakeEconomyRepository : EconomyRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: EconomyQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: EconomyQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeEnvironmentRepository : EnvironmentRepository {
@@ -76,7 +86,12 @@ internal class FakeEnvironmentRepository : EnvironmentRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: EnvironmentQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: EnvironmentQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeTradeRepository : TradeRepository {
@@ -89,7 +104,12 @@ internal class FakeTradeRepository : TradeRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: TradeQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: TradeQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeTransportRepository : TransportRepository {
@@ -102,7 +122,12 @@ internal class FakeTransportRepository : TransportRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: TransportQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: TransportQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeTourismRepository : TourismRepository {
@@ -115,7 +140,12 @@ internal class FakeTourismRepository : TourismRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: TourismQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: TourismQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeSocialRepository : SocialRepository {
@@ -128,7 +158,12 @@ internal class FakeSocialRepository : SocialRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: SocialQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: SocialQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 internal class FakeScienceRepository : ScienceRepository {
@@ -141,7 +176,12 @@ internal class FakeScienceRepository : ScienceRepository {
         return emissions
     }
     var refreshCount = 0
-    override suspend fun refresh(query: ScienceQuery) { refreshCount++ }
+    /** When set, [refresh] throws it (after counting the call) to simulate a failed network refetch. */
+    var refreshThrows: Throwable? = null
+    override suspend fun refresh(query: ScienceQuery) {
+        refreshCount++
+        refreshThrows?.let { throw it }
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

@@ -24,14 +24,17 @@ import eu.eurostat.feature.economy.domain.EconomyTimeSeries
 import eu.eurostat.feature.population.domain.PopulationData
 import eu.eurostat.feature.population.domain.PopulationDataPoint
 import eu.eurostat.feature.population.domain.PopulationTimeSeries
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -236,5 +239,182 @@ class DefaultCompareComponentTest {
 
         // Preference country leads; fixed defaults follow, clamped to the max.
         assertEquals(listOf("IT", "DE", "FR", "PL"), economy.lastQuery?.countryCodes)
+    }
+
+    /** Loads GDP content, makes the economy refresh fail, refreshes, and returns the resulting Content. */
+    private fun TestScope.failedRefreshContent(
+        component: DefaultCompareComponent,
+    ): CompareUiState.Content {
+        economy.emissions.value = economyDeFrPl()
+        testScheduler.advanceUntilIdle()
+        economy.refreshThrows = IllegalStateException("network down")
+        component.onIntent(CompareIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+        val failed = assertIs<CompareUiState.Content>(component.state.value)
+        assertTrue(failed.refreshFailed)
+        return failed
+    }
+
+    @Test
+    fun refresh_failed_is_false_initially() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        economy.emissions.value = economyDeFrPl()
+        testScheduler.advanceUntilIdle()
+
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertFalse(content.refreshFailed)
+    }
+
+    @Test
+    fun failed_refresh_with_cache_sets_refresh_failed() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+
+        val content = failedRefreshContent(component)
+
+        assertEquals(1, economy.refreshCount)
+        // The failure is swallowed for data purposes: the cached series still render, not stale.
+        assertFalse(content.isStale)
+        assertEquals(listOf("DE", "FR", "PL"), content.series.map { it.countryCode })
+    }
+
+    @Test
+    fun successful_refresh_leaves_refresh_failed_false() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        economy.emissions.value = economyDeFrPl()
+        testScheduler.advanceUntilIdle()
+
+        component.onIntent(CompareIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, economy.refreshCount)
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertFalse(content.refreshFailed)
+    }
+
+    @Test
+    fun successful_refresh_after_failed_one_clears_refresh_failed() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failedRefreshContent(component)
+
+        economy.refreshThrows = null
+        component.onIntent(CompareIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(2, economy.refreshCount)
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertFalse(content.refreshFailed)
+    }
+
+    @Test
+    fun cancelled_refresh_is_not_reported_as_failure() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        economy.emissions.value = economyDeFrPl()
+        testScheduler.advanceUntilIdle()
+        val subscriptionsBefore = economy.observeCount
+
+        economy.refreshThrows = CancellationException("cancelled")
+        component.onIntent(CompareIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        // Cancellation is rethrown: observation is not restarted and no hint is raised.
+        assertEquals(1, economy.refreshCount)
+        assertEquals(subscriptionsBefore, economy.observeCount)
+        val state = component.state.value
+        assertFalse(state is CompareUiState.Content && state.refreshFailed)
+    }
+
+    @Test
+    fun any_repository_failure_during_refresh_counts_as_failure() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        testScheduler.advanceUntilIdle()
+        population.emissions.value = Result.Success(
+            PopulationData(
+                timeSeries = listOf(
+                    PopulationTimeSeries("DE", "Germany", listOf(PopulationDataPoint("DE", 2023, 83_000_000L, null, null))),
+                ),
+                snapshots = emptyMap(),
+            ),
+        )
+        component.onIntent(CompareIntent.SelectIndicator(CompareIndicator.POPULATION))
+        testScheduler.advanceUntilIdle()
+
+        population.refreshThrows = IllegalStateException("network down")
+        component.onIntent(CompareIntent.Refresh)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, population.refreshCount)
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertEquals(CompareIndicator.POPULATION, content.indicator)
+        assertTrue(content.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_next_select_countries() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failedRefreshContent(component)
+
+        component.onIntent(CompareIntent.SelectCountries(listOf("FR", "ES")))
+        testScheduler.advanceUntilIdle()
+
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertEquals(listOf("FR", "ES"), content.countries)
+        assertFalse(content.refreshFailed)
+    }
+
+    @Test
+    fun refresh_failed_clears_on_indicator_change() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failedRefreshContent(component)
+        population.emissions.value = Result.Success(
+            PopulationData(
+                timeSeries = listOf(
+                    PopulationTimeSeries("DE", "Germany", listOf(PopulationDataPoint("DE", 2023, 83_000_000L, null, null))),
+                ),
+                snapshots = emptyMap(),
+            ),
+        )
+
+        component.onIntent(CompareIntent.SelectIndicator(CompareIndicator.POPULATION))
+        testScheduler.advanceUntilIdle()
+
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertEquals(CompareIndicator.POPULATION, content.indicator)
+        assertFalse(content.refreshFailed)
+    }
+
+    @Test
+    fun stale_emission_clears_refresh_failed_and_it_stays_cleared() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failedRefreshContent(component)
+
+        economy.emissions.value = Result.Success(economyDeFrPl().data, isStale = true)
+        testScheduler.advanceUntilIdle()
+
+        val stale = assertIs<CompareUiState.Content>(component.state.value)
+        assertTrue(stale.isStale)
+        assertFalse(stale.refreshFailed)
+
+        // A later successful revalidation must not bring the hint back.
+        economy.emissions.value = Result.Success(economyDeFrPl().data, isStale = false)
+        testScheduler.advanceUntilIdle()
+
+        val fresh = assertIs<CompareUiState.Content>(component.state.value)
+        assertFalse(fresh.isStale)
+        assertFalse(fresh.refreshFailed)
+    }
+
+    @Test
+    fun toggle_normalization_keeps_refresh_failed() = runTest {
+        val component = build(StandardTestDispatcher(testScheduler))
+        failedRefreshContent(component)
+        val subscriptionsBefore = economy.observeCount
+
+        component.onIntent(CompareIntent.ToggleNormalization)
+        testScheduler.advanceUntilIdle()
+
+        val content = assertIs<CompareUiState.Content>(component.state.value)
+        assertTrue(content.normalized)
+        assertTrue(content.refreshFailed)
+        assertEquals(subscriptionsBefore, economy.observeCount)
     }
 }

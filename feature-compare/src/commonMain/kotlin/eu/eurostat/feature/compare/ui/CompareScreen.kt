@@ -157,6 +157,7 @@ fun CompareScreen(
                 stringResource(Res.string.compare_footer_staleness_fresh)
             },
             stale = isStale,
+            refreshFailed = (state as? CompareUiState.Content)?.refreshFailed == true,
             modifier = Modifier
                 .padding(horizontal = Euro.spacing.base)
                 .navigationBarsPadding(),

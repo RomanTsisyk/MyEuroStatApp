@@ -33,6 +33,9 @@ sealed interface CompareUiState {
      *   never triggers a re-fetch.
      * @property series one [CompareSeries] per country that returned data.
      * @property isStale true when the data was served from cache past its TTL.
+     * @property refreshFailed true when the last manual refresh failed (for at least one
+     *   underlying repository) and the content shown comes from cache; the footer then
+     *   says so instead of reporting the data as fresh.
      */
     data class Content(
         val indicator: CompareIndicator,
@@ -41,6 +44,7 @@ sealed interface CompareUiState {
         val normalized: Boolean,
         val series: List<CompareSeries>,
         val isStale: Boolean,
+        val refreshFailed: Boolean = false,
     ) : CompareUiState
 
     /**
