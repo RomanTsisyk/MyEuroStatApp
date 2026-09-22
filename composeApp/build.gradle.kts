@@ -9,8 +9,8 @@ android {
     namespace = "eu.eurostat.app"
     defaultConfig {
         applicationId = "eu.eurostat.app"
-        versionCode = 60
-        versionName = "0.6.0"
+        versionCode = 70
+        versionName = "0.7.0"
         resourceConfigurations += listOf("en", "pl", "uk")
     }
 
@@ -111,7 +111,10 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "EU Stats"
-            // Tracks the app version at release time.
+            // macOS jpackage refuses a 0.x major version for DMG, so the shared
+            // default stays 1.0.0 (it names the .dmg and the uber JAR). Windows and
+            // Linux installers carry the real app version instead — see the per-OS
+            // blocks below. Keep those two in step with versionName above.
             packageVersion = "1.0.0"
             description = "Independent open-source client for the public Eurostat API"
             vendor = "Roman Tsisyk"
@@ -119,6 +122,7 @@ compose.desktop {
 
             linux {
                 iconFile.set(project.file("icons/app.png"))
+                debPackageVersion = "0.7.0"
             }
             macOS {
                 iconFile.set(project.file("icons/app.icns"))
@@ -127,6 +131,7 @@ compose.desktop {
             windows {
                 iconFile.set(project.file("icons/app.ico"))
                 menuGroup = "EU Stats"
+                msiPackageVersion = "0.7.0"
             }
         }
     }
