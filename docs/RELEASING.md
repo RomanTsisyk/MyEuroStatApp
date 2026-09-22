@@ -96,17 +96,34 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
    `## [Unreleased]` above it.
 3. Bump `versionName` and `versionCode` in
    [`composeApp/build.gradle.kts`](../composeApp/build.gradle.kts) (currently
-   `0.6.0` / `60`), and keep the same version in the two other places that
+   `0.7.0` / `70`), and keep the same version in the two other places that
    repeat it: `APP_VERSION` in
    [`SettingsComponent.kt`](../feature-settings/src/commonMain/kotlin/eu/eurostat/feature/settings/ui/SettingsComponent.kt)
    (shown on the Settings About row) and `CFBundleShortVersionString` /
    `CFBundleVersion` in [`iosApp/iosApp/Info.plist`](../iosApp/iosApp/Info.plist).
-   The desktop `packageVersion` (currently `1.0.0`, which is what names the
-   `.dmg` and the uber JAR) is a separate setting in the same Gradle file.
+   The desktop installers are versioned separately in the same Gradle file:
+   `packageVersion` stays `1.0.0` because macOS `jpackage` rejects a `0.x`
+   major version (it names the `.dmg` and the uber JAR), while
+   `msiPackageVersion` (Windows) and `debPackageVersion` (Linux) carry the real
+   app version — bump those two together with `versionName`. If a `0.x`
+   version is ever rejected for Msi/Deb, set it back to `1.0.0`; the dry run
+   below is what tells you.
 4. Add a new file `fastlane/metadata/android/{en-US,pl,uk}/changelogs/<versionCode>.txt`
    summarising the release in 1–3 sentences per locale (F-Droid reads
-   these in its catalogue listing). `60.txt` already exists for `0.6.0`.
+   these in its catalogue listing, 500 characters at most). `70.txt` already
+   exists for `0.7.0`.
 5. Commit and push the release-prep changes.
+5a. **Dry run** (the Msi and Deb jobs have never run for real, so do this before
+   the first tag): run the Release workflow by hand on the release branch,
+   ```bash
+   gh workflow run release.yml --ref <release-branch>
+   gh run watch
+   ```
+   All four build jobs (APK, `.dmg`, `.msi`, `.deb`) must pass and upload their
+   artifacts; the `publish` job is skipped, so nothing is released. A
+   throw-away pre-release tag such as `v0.7.0-rc1` exercises the publish step
+   too (it creates a *draft* pre-release; delete the draft and the tag
+   afterwards).
 6. Build the upstream APK locally:
    ```bash
    ./gradlew :composeApp:assembleRelease
@@ -118,22 +135,22 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
    git push origin vX.Y.Z
    ```
 8. Pushing the tag triggers
-   [`.github/workflows/release.yml`](../.github/workflows/release.yml),
-   which creates the GitHub release and attaches the release APK plus the
-   three native desktop installers (`.dmg`/`.msi`/`.deb`) automatically.
-   Paste the `versionCode` changelog plus the SHA-256 hash from step 6 into
-   the release notes. The APK is signed with the real key only when the
+   [`.github/workflows/release.yml`](../.github/workflows/release.yml): it builds
+   the release APK and the three native desktop installers, then a final
+   `publish` job creates **one draft** GitHub release with everything attached.
+   The notes are the `## [X.Y.Z]` section of `CHANGELOG.md` (so step 2 must
+   have happened) plus the SHA-256 of every attached file. Review the draft and
+   publish it yourself. The APK is signed with the real key only when the
    `KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`
    repository secrets are configured; otherwise it is debug-signed (same
    fallback as local builds).
 9. If this is a new public release: open a merge request against
    [fdroiddata](https://gitlab.com/fdroid/fdroiddata) updating
    `metadata/eu.eurostat.app.yml` to point at the new tag. See
-   [`docs/FDROID.md`](FDROID.md). **TODO before the first submission:** the
-   recipe still lists `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`
-   (and `CurrentVersion` / `CurrentVersionCode`), while the app is at 0.6.0 /
-   60 — and no `v*` tag exists in the local repository. Update the recipe to
-   the tag that is actually cut.
+   [`docs/FDROID.md`](FDROID.md). The recipe now points at
+   `versionName` 0.7.0 / `versionCode` 70 / `commit: v0.7.0`; that tag does not
+   exist until step 7, so file the merge request only after it is pushed, and
+   change the recipe to whatever tag is actually cut.
 
 ## CI
 
