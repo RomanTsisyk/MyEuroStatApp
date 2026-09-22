@@ -1,7 +1,18 @@
 name: Release
 
-# Pushing a tag like v0.6.0 builds the release APK and the three native
-# desktop installers and attaches them to a GitHub Release for that tag.
+# Two ways to run this workflow:
+#
+#  * Push a tag like v0.7.0  -> builds the release APK and the three native
+#    desktop installers, then a final `publish` job creates ONE draft GitHub
+#    Release for the tag with everything attached. It stays a draft until the
+#    maintainer reviews and publishes it (a tag containing "-", e.g.
+#    v0.7.0-rc1, is marked as a pre-release).
+#
+#  * Run it by hand (Actions -> Release -> Run workflow, or
+#    `gh workflow run release.yml --ref <branch>`)  -> the same builds, but the
+#    artifacts are only uploaded to the workflow run; nothing is published.
+#    Use this to check that the Msi and Deb installers still build before
+#    cutting a real tag.
 #
 # Android signing: when the four KEYSTORE_*/KEY_* secrets are configured the
 # APK is signed with the real release key; otherwise the build falls back to
@@ -10,6 +21,7 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -54,11 +66,12 @@ jobs:
       - name: Assemble Release APK
         run: ./gradlew :composeApp:assembleRelease
 
-      - name: Attach APK to the release
-        uses: softprops/action-gh-release@v2
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          generate_release_notes: true
-          files: composeApp/build/outputs/apk/release/*.apk
+          name: android-apk
+          path: composeApp/build/outputs/apk/release/*.apk
+          if-no-files-found: error
 
   desktop:
     # One native installer per OS; unsigned for now (Gatekeeper/SmartScreen
@@ -93,8 +106,55 @@ jobs:
       - name: Package installer
         run: ./gradlew :composeApp:${{ matrix.task }}
 
-      - name: Attach installer to the release
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+
+  publish:
+    # Runs only for a real tag. Creating the release in one place (instead of
+    # from every build job) avoids the race where four jobs try to create the
+    # same release at once, and lets the draft be reviewed before it goes out.
+    if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    needs: [android, desktop]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build outputs
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Release notes from CHANGELOG.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${VERSION%%-*}"
+          # The section between "## [X.Y.Z]" and the next "## [" heading.
+          awk -v ver="$VERSION" '
+            index($0, "## [" ver "]") == 1 { found = 1; next }
+            /^## \[/ { found = 0 }
+            found { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No [$VERSION] section in CHANGELOG.md — see the changelog for details." > RELEASE_NOTES.md
+          fi
+          {
+            echo
+            echo "---"
+            echo "SHA-256 of the attached files:"
+            echo '```'
+            (cd dist && sha256sum *)
+            echo '```'
+          } >> RELEASE_NOTES.md
+
+      - name: Create the draft release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
-          files: ${{ matrix.artifact }}
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body_path: RELEASE_NOTES.md
+          files: dist/*
