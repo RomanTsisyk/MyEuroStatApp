@@ -1,5 +1,9 @@
 name: Release
 
+# Actions are pinned to full commit SHAs (not tags) for supply-chain
+# integrity; Dependabot's github-actions ecosystem (.github/dependabot.yml)
+# keeps them current via weekly PRs.
+
 # Two ways to run this workflow:
 #
 #  * Push a tag like v0.7.0  -> builds the release APK and the three native
@@ -17,18 +21,29 @@ name: Release
 # Android signing: when the four KEYSTORE_*/KEY_* secrets are configured the
 # APK is signed with the real release key; otherwise the build falls back to
 # the debug keystore (same behavior as local builds without
-# keystore.properties) so the pipeline stays green on forks.
+# keystore.properties) so the pipeline stays green on forks. v0.7.0 is
+# deliberately released debug-signed (no KEYSTORE_* secrets configured yet)
+# — see docs/RELEASING.md.
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
 
+# Never cancel a release build (e.g. a second tag push mid-run) — let it
+# finish so a half-built draft release is never left behind.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# Default to read-only; only the `publish` job creates the release and needs
+# `contents: write`.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   android:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       # `secrets` is not a valid context in a step-level `if:` — GitHub
       # rejects the whole workflow file at parse time ("Unrecognized
@@ -36,16 +51,20 @@ jobs:
       # `env` IS allowed to read secrets, so bridge through it.
       HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          # MIT-licensed cache backed by actions/cache; avoids opting into the
+          # closed-source "Enhanced Caching" default and its Terms of Use.
+          cache-provider: basic
 
       - name: Restore release keystore
         if: ${{ env.HAS_KEYSTORE == 'true' }}
@@ -67,7 +86,7 @@ jobs:
         run: ./gradlew :composeApp:assembleRelease
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: android-apk
           path: composeApp/build/outputs/apk/release/*.apk
@@ -91,23 +110,28 @@ jobs:
             task: packageDeb
             artifact: composeApp/build/compose/binaries/main/deb/*.deb
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          # MIT-licensed cache backed by actions/cache; avoids opting into the
+          # closed-source "Enhanced Caching" default and its Terms of Use.
+          cache-provider: basic
 
       - name: Package installer
         run: ./gradlew :composeApp:${{ matrix.task }}
 
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: installer-${{ matrix.os }}
           path: ${{ matrix.artifact }}
@@ -120,11 +144,15 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/') }}
     needs: [android, desktop]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only this job creates the GitHub Release, so only it needs write access.
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download all build outputs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: dist
           merge-multiple: true
@@ -152,7 +180,7 @@ jobs:
           } >> RELEASE_NOTES.md
 
       - name: Create the draft release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           draft: true
           prerelease: ${{ contains(github.ref_name, '-') }}
