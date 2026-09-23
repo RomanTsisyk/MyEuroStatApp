@@ -300,6 +300,29 @@ class EnvironmentRepositoryImplTest {
         assertNotNull(caught, "refresh() must propagate API failure as an exception")
     }
 
+    // ------------------------------------------------------------------------------------
+    // 12. Cache read throws: treated as a cache miss, network revalidation still runs
+    // ------------------------------------------------------------------------------------
+
+    @Test
+    fun observe_cacheReadThrows_emitsLoadingThenFreshSuccess_noError() = runTest {
+        val api = FakeEnvironmentApiService().apply {
+            willReturn = listOf(sampleSeries("PL"), sampleSeries("DE"))
+        }
+        val dao = FakeEnvironmentCacheDao().apply {
+            queryThrowable = RuntimeException("cache corrupted")
+        }
+        val repo = makeRepo(api, StandardTestDispatcher(testScheduler), dao)
+
+        repo.observe(defaultQuery).test {
+            assertEquals(Result.Loading, awaitItem())
+            val success = awaitItem()
+            assertIs<Result.Success<*>>(success)
+            assertFalse(success.isStale, "Cache-read failure must not surface Error; fresh network Success follows")
+            awaitComplete()
+        }
+    }
+
     @Test
     fun cancellation_during_fetch_is_propagated_not_swallowed() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)

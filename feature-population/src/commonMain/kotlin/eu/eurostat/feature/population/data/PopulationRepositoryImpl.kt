@@ -70,7 +70,16 @@ class PopulationRepositoryImpl(
         }
 
         if (!hadCache) {
-            val cacheResult = dao.query(query)
+            // A failing cache read (storage error) degrades to a miss — the
+            // network fetch below is the recovery path. Cancellation is
+            // always rethrown to preserve structured concurrency.
+            val cacheResult = try {
+                dao.query(query)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
             if (cacheResult != null) {
                 hadCache = true
                 val isStale = (clock.now() - cacheResult.oldestFetchedAt) > ttl

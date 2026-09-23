@@ -26,7 +26,15 @@ class EconomyRepositoryImpl(
     override fun observe(query: EconomyQuery): Flow<Result<List<EconomyTimeSeries>>> = flow {
         emit(Result.Loading)
 
-        val cacheResult = dao.query(query)
+        // A throwing SQLDelight read must degrade to a cache miss rather than
+        // escape the flow (see Trade/Transport/Social/Science repositories).
+        val cacheResult = try {
+            dao.query(query)
+        } catch (t: CancellationException) {
+            throw t
+        } catch (t: Exception) {
+            null
+        }
         val hadCache = cacheResult != null
 
         if (cacheResult != null) {

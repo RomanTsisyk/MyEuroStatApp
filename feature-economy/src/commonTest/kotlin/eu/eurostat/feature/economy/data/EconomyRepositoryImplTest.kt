@@ -55,12 +55,16 @@ class FakeEconomyCacheDao : EconomyCacheDao {
     private var stored: List<EconomyTimeSeries> = emptyList()
     private var storedFetchedAt: Instant? = null
 
+    /** When true, [query] throws instead of returning — simulates a broken SQLDelight read. */
+    var throwOnQuery: Boolean = false
+
     fun seed(series: List<EconomyTimeSeries>, fetchedAt: Instant) {
         stored = series
         storedFetchedAt = fetchedAt
     }
 
     override suspend fun query(query: EconomyQuery): EconomyCacheResult? {
+        if (throwOnQuery) throw RuntimeException("cache read failed")
         val at = storedFetchedAt ?: return null
         if (stored.isEmpty()) return null
         return EconomyCacheResult(series = stored, oldestFetchedAt = at)
@@ -205,6 +209,26 @@ class EconomyRepositoryImplTest {
             val item = awaitItem()
             assertIs<Result.Success<*>>(item)
             assertTrue((item as Result.Success<*>).isStale)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun cache_read_throws_degrades_to_miss_then_emits_fresh_network_success() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val clock = FakeEconomyClock(BASE_TIME)
+        val api = FakeEconomyApiService()
+        val dao = FakeEconomyCacheDao()
+        dao.throwOnQuery = true
+        api.willReturn(fakeSeries())
+
+        val repo = EconomyRepositoryImpl(api, dao, EconomyTestDispatcherProvider(dispatcher), clock)
+
+        repo.observe(testQuery).test {
+            assertEquals(Result.Loading, awaitItem())
+            val item = awaitItem()
+            assertIs<Result.Success<*>>(item)
+            assertFalse((item as Result.Success<*>).isStale, "A throwing cache read should degrade to a miss, not crash the flow")
             awaitComplete()
         }
     }

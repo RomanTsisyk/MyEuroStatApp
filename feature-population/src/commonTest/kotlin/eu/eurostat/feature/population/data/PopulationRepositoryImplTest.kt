@@ -66,12 +66,16 @@ class FakePopulationCacheDao : PopulationCacheDao {
     private var stored: List<PopulationTimeSeries> = emptyList()
     private var storedFetchedAt: Instant? = null
 
+    /** When `true`, [query] throws to simulate a broken flat-table read. */
+    var failQuery: Boolean = false
+
     fun seed(series: List<PopulationTimeSeries>, fetchedAt: Instant) {
         stored = series
         storedFetchedAt = fetchedAt
     }
 
     override suspend fun query(query: PopulationQuery): CacheResult? {
+        check(!failQuery) { "simulated storage failure" }
         val at = storedFetchedAt ?: return null
         if (stored.isEmpty()) return null
         return CacheResult(series = stored, oldestFetchedAt = at)
@@ -410,6 +414,32 @@ class PopulationRepositoryImplTest {
             val fresh = awaitItem()
             assertIs<Result.Success<PopulationData>>(fresh)
             assertTrue(fresh.data.snapshots.isNotEmpty())
+            awaitComplete()
+        }
+        assertEquals(1, api.callCount)
+    }
+
+    @Test
+    fun failing_dao_cache_read_degrades_to_miss_instead_of_throwing() = runTest {
+        // A storage-layer exception (e.g. a locked/corrupt flat table) on the
+        // dao read must degrade to a cache miss and recover via the network —
+        // never escape the flow (the data layer's never-throw contract).
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val clock = FakeClock(BASE_TIME)
+        val api = FakePopulationApiService()
+        val dao = FakePopulationCacheDao().apply { failQuery = true }
+        api.willReturn(fakeSeries())
+
+        // includeCohorts=false so the blob tier is never consulted and the
+        // dao tier is the only cache read exercised.
+        val cohortlessQuery = testQuery.copy(includeCohorts = false)
+        val repo = makeRepo(api, dao, dispatcher, clock)
+
+        repo.observe(cohortlessQuery).test {
+            assertEquals(Result.Loading, awaitItem())
+            val fresh = awaitItem()
+            assertIs<Result.Success<*>>(fresh)
+            assertFalse((fresh as Result.Success<*>).isStale)
             awaitComplete()
         }
         assertEquals(1, api.callCount)

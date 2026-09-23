@@ -41,7 +41,15 @@ class EnvironmentRepositoryImpl(
     override fun observe(query: EnvironmentQuery): Flow<Result<List<EnvironmentTimeSeries>>> = flow {
         emit(Result.Loading)
 
-        val cacheResult = dao.query(query)
+        // A throwing SQLDelight read must degrade to a cache miss rather than
+        // escape the flow (see Trade/Transport/Social/Science repositories).
+        val cacheResult = try {
+            dao.query(query)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
         val hadCache = cacheResult != null
 
         if (cacheResult != null) {
