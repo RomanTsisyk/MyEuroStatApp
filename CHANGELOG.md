@@ -4,7 +4,9 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — v0.7 development (branches `develop-v0.7`, `develop-v0.8`)
+## [Unreleased]
+
+## [0.7.0] — 2026-09-23
 
 ### Added
 
@@ -32,8 +34,8 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Tag-triggered release workflow (`.github/workflows/release.yml`):
   pushing a `v*` tag builds the release APK (real signature when the
   keystore secrets are configured, debug-signed fallback otherwise) and
-  the three native desktop installers on a macOS/Windows/Ubuntu matrix,
-  attaching everything to the GitHub Release for the tag
+  the three native desktop installers on a macOS/Windows/Ubuntu matrix
+  (later reworked into a single-publish-job flow — see below)
 
 - feature-compare: a dedicated cross-module comparison screen — pick one
   of 8 headline indicators (population, GDP, GHG, exports, air
@@ -73,7 +75,21 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `packageUberJarForCurrentOS`
 - Version sync: `versionCode` 60 / `versionName` 0.6.0 across Android,
   the Settings About screen (no longer hardcoded to 0.4.0), and the iOS
-  `Info.plist`
+  `Info.plist`; later bumped again to `versionCode` 70 / `versionName` 0.7.0
+  for this release (same three places), plus `msiPackageVersion` /
+  `debPackageVersion` 0.7.0 for the desktop installers (`packageVersion`
+  itself stays 1.0.0 — macOS `jpackage` rejects a `0.x` major and it also
+  names the uber JAR)
+- Store changelogs for `versionCode` 70
+  (`fastlane/metadata/android/{en-US,pl,uk}/changelogs/70.txt`)
+- Release workflow: a plain `workflow_dispatch` run now shares the APK/Dmg/Msi/Deb
+  build jobs with a tag push, so the Msi and Deb jobs (which had never run) can be
+  dry-run before cutting a tag; only a tag push runs the new `publish` job, which
+  downloads every build artifact and creates **one draft** GitHub release (instead
+  of four jobs racing to attach to the same release) with the matching
+  `## [X.Y.Z]` CHANGELOG section plus the SHA-256 of every attached file as the notes
+- F-Droid recipe (`metadata/eu.eurostat.app.yml`) now targets `versionName` 0.7.0 /
+  `versionCode` 70 / `commit: v0.7.0`
 
 ### Changed
 
@@ -99,7 +115,9 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   wrong" instead of "No connection — check your network". Fixed for
   Android and desktop (`java.net` exceptions) and iOS (`NSURLErrorDomain`
   codes, classified from the Darwin error text; the classifier is unit-tested
-  on the JVM, the iOS glue is compiled only by the CI iOS job)
+  on the JVM, and the iOS glue itself compiles and passes on the iOS Simulator
+  via `iosSimulatorArm64Test` — actually going offline in the simulator was not
+  exercised)
 - Status bar: icons now follow the theme chosen in Settings (dark icons on
   a dark background made the clock invisible on every screen), and the
   Overview's dark header gets light icons
@@ -169,10 +187,10 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   walk-through; a run on a physical Android device (the emulator
   walk-through is done — see `RUN_REPORT.md`)
 - Real Android release signing key (currently debug-keystore fallback);
-  Msi/Deb installers verified via CI (only Dmg verified locally so far)
-- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata
-  MR; the recipe still pins `v0.4.0` / `versionCode` 40 and must be updated
-  to the tag cut for the next release)
+  a `workflow_dispatch` dry run of the Msi/Deb/Dmg/APK build jobs before the
+  `v0.7.0` tag (only `packageDmg` has been run for real so far, locally)
+- F-Droid inclusion: the recipe in `metadata/` now targets `v0.7.0`; file the
+  merge request against fdroiddata once that tag is pushed
 
 ## [0.5.0] — 2026-07-07
 
