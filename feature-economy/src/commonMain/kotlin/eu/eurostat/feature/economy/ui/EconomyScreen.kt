@@ -328,7 +328,14 @@ private fun EconomyContent(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     chartSeries.forEach { s ->
-                        LegendDot(color = s.color, label = s.label)
+                        // `s.label` is the country code (the chart series identity
+                        // key, also used by the point-tap lookup below); show the
+                        // localized name in the legend.
+                        val displayName = countryDisplayName(
+                            s.label,
+                            fallback = EurostatCountries.byCode(s.label)?.name ?: s.label,
+                        )
+                        LegendDot(color = s.color, label = displayName)
                     }
                 }
             }
@@ -416,7 +423,12 @@ private fun EconomyContent(
             ?.fieldFor(selectedMetric)
         val resolvedValue = absolute ?: point.y.takeUnless { state.normalized }
         ChartPointDetailSheet(
-            seriesLabel = label,
+            // `label` is the country code (the chart series identity key); show
+            // the localized name in the sheet title.
+            seriesLabel = countryDisplayName(
+                label,
+                fallback = EurostatCountries.byCode(label)?.name ?: label,
+            ),
             year = year.toString(),
             value = metricValueText(selectedMetric, resolvedValue),
             unit = metricUnitText(selectedMetric),

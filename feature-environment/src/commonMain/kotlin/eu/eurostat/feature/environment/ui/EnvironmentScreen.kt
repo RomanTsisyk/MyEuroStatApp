@@ -62,6 +62,7 @@ import eu.eurostat.ui.layout.adaptiveChartHeight
 import eu.eurostat.ui.theme.Euro
 import kotlin.math.roundToLong
 import myeurostatapp.feature_environment.generated.resources.Res
+import myeurostatapp.feature_environment.generated.resources.environment_chart_axis_year
 import myeurostatapp.feature_environment.generated.resources.environment_chart_empty_body
 import myeurostatapp.feature_environment.generated.resources.environment_chart_title_energy
 import myeurostatapp.feature_environment.generated.resources.environment_chart_title_ghg
@@ -259,6 +260,7 @@ private fun EnvironmentContent(
         EnvMetric.Energy to stringResource(Res.string.environment_tile_unit_energy),
         EnvMetric.Sdg to stringResource(Res.string.environment_tile_unit_sdg),
     )
+    val chartAxisYear = stringResource(Res.string.environment_chart_axis_year)
     val metricDropdownLabel = stringResource(Res.string.environment_metric_dropdown_label)
     val chartEmptyHeadline = stringResource(Res.string.environment_empty_headline)
     val chartEmptyBody = stringResource(Res.string.environment_chart_empty_body)
@@ -374,7 +376,7 @@ private fun EnvironmentContent(
                 } else {
                     EurostatLineChart(
                         series = chartSeries,
-                        xAxis = yearAxis(label = "year"),
+                        xAxis = yearAxis(label = chartAxisYear),
                         yAxis = ChartAxis(label = yAxisLabel(metric)),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -387,7 +389,13 @@ private fun EnvironmentContent(
                         horizontalArrangement = Arrangement.spacedBy(Euro.spacing.base),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        chartSeries.forEach { LegendDot(color = it.color, label = it.label) }
+                        chartSeries.forEach { series ->
+                            val displayName = countryDisplayName(
+                                series.label,
+                                fallback = EurostatCountries.byCode(series.label)?.name ?: series.label,
+                            )
+                            LegendDot(color = series.color, label = displayName)
+                        }
                     }
                 }
             }

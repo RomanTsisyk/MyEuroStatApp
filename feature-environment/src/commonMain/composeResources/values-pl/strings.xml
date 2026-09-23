@@ -47,4 +47,7 @@
     <string name="environment_tile_unit_ghg">Mt CO₂-ekw.</string>
     <string name="environment_tile_unit_energy">ktoe</string>
     <string name="environment_tile_unit_sdg">1990=100</string>
+
+    <!-- Chart axis -->
+    <string name="environment_chart_axis_year">Rok</string>
 </resources>
