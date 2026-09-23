@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.coroutines.coroutineScope
 import eu.eurostat.core.common.DispatcherProvider
 import eu.eurostat.core.common.cache.CacheMaintenance
 import eu.eurostat.core.common.prefs.AppPreferences
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,7 +81,14 @@ class DefaultSettingsComponent(
         scope.launch {
             isClearingCache.value = true
             cacheCleared.value = false
-            val succeeded = runCatching { cacheMaintenance.clearAllCaches() }.isSuccess
+            val succeeded = try {
+                cacheMaintenance.clearAllCaches()
+                true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
             isClearingCache.value = false
             cacheCleared.value = succeeded
         }
