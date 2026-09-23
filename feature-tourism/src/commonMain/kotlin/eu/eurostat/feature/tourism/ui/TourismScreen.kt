@@ -90,10 +90,16 @@ import org.jetbrains.compose.resources.stringResource
  * data is loading or when the fetch fails.
  *
  * @param component the Decompose component driving this screen.
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
+fun TourismScreen(
+    component: TourismComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent: Color = Euro.moduleAccents.forModule("Tourism")
 
@@ -115,6 +121,7 @@ fun TourismScreen(component: TourismComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
+            onSearch = onSearch,
             onRefresh = { component.onIntent(TourismIntent.Refresh) },
         )
 

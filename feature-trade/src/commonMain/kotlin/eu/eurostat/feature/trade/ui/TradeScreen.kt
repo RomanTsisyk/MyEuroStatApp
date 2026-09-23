@@ -84,10 +84,17 @@ private const val MAX_VISIBLE_YEARS = 8
  * Binds to [TradeComponent.state]. Chip taps dispatch [TradeIntent.SelectActiveCountry]
  * (no re-fetch). The "+" chip opens a [CountryPickerSheet] whose "Apply" dispatches
  * [TradeIntent.SelectCountries], triggering a re-fetch.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
+fun TradeScreen(
+    component: TradeComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Trade")
 
@@ -109,6 +116,7 @@ fun TradeScreen(component: TradeComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
+            onSearch = onSearch,
             onRefresh = { component.onIntent(TradeIntent.Refresh) },
         )
 

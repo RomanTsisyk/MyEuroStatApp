@@ -98,10 +98,17 @@ import org.jetbrains.compose.resources.stringResource
  *    dataset is keyed by port not country and is intentionally disabled.
  *  - [CountryChipsRow] derived from the country codes present in [series].
  *  - [SourceFooter] citing the underlying datasets.
+ *
+ * @param onSearch invoked when the header search icon is tapped; the icon is
+ *   hidden when null so an unwired host never shows a dead button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
+fun TransportScreen(
+    component: TransportComponent,
+    onBack: () -> Unit = {},
+    onSearch: (() -> Unit)? = null,
+) {
     val state by component.state.collectAsState()
     val accent = Euro.moduleAccents.forModule("Transport")
 
@@ -123,6 +130,7 @@ fun TransportScreen(component: TransportComponent, onBack: () -> Unit = {}) {
             onBack = onBack,
             year = appBarYear,
             country = appBarCountry,
+            onSearch = onSearch,
             onRefresh = { component.onIntent(TransportIntent.Refresh) },
         )
 

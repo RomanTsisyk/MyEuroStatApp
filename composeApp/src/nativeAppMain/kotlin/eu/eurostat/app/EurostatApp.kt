@@ -121,14 +121,17 @@ private fun AppContent(root: RootComponent, darkTheme: Boolean) {
                     is TradeComponent       -> TradeScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is TransportComponent   -> TransportScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is TourismComponent     -> TourismScreen(
                         component = c,
                         onBack = { root.onBack() },
+                        onSearch = onSearch,
                     )
                     is SocialComponent      -> SocialScreen(
                         component = c,
