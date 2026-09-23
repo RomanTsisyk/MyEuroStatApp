@@ -65,18 +65,26 @@ Screens before the fix are in [`docs/run-report/before/`](docs/run-report/before
   exercised offline in the simulator**: Darwin reports `NSURLErrorDomain`
   codes (e.g. -1009); they are classified from the error text by
   `UrlErrorClassification.kt`, whose 8 tests pass on the iOS Simulator too.
-- **Manual refresh while offline with a cache**: the data stays and the
-  footer still says "fresh" (the cache is inside its 12 h TTL and a failed
-  refresh is swallowed). Accepted earlier as a UX gap; no "refresh failed" hint.
 - **Wide screens**: a phone in landscape and a ~1070 dp-wide tablet both switch
   to the two-pane layout and scroll correctly, but on the tablet the lower
   half of the screen is empty, and in landscape the right pane's viewport is
   short (the chart needs a scroll to be seen whole).
-- Science tile label "Wykształcenie wyższe" is ellipsised in Polish.
-- Trade, Transport and Tourism show no header search icon (Search is still
-  reachable from the Overview header).
 - No axis labels on Transport small multiples, Social lines, Tourism bars or
   the seasonality heatmap (months/years) — not investigated whether by design.
+
+## Fixed on fix/code-leftovers
+
+Not yet checked on a device or emulator — verified by reading the code only.
+
+- **Trade, Transport and Tourism header search icon**: added, so all 8 feature
+  screens plus Compare now have it (matches the `feature-search` entry points).
+- **Science tile label in Polish**: `science_spark_tertiary` in
+  `feature-science/src/commonMain/composeResources/values-pl/strings.xml` is
+  already the short form "Wykszt. wyższe" (not the ellipsised
+  "Wykształcenie wyższe" originally reported).
+- **Manual refresh while offline with a cache**: superseded — the
+  "refresh failed" hint (see "Fixed after the second pass" below) now covers
+  this on nine screens.
 
 ## Fixed after the second pass
 
@@ -109,9 +117,11 @@ Trade and Compare (Compare in Ukrainian; airplane mode, warm cache, refresh icon
 successful refresh); the other six are unit-tested on Android and Native but not looked at. Overview
 is not covered; see `NEXT_STEPS.md`.
 
-**Found while checking, not fixed:** the Economy chart legend and the country chips still show raw
-codes (`DE`, `EU27_2020`, `FR`, `PL`) in Polish and Ukrainian, while the Compare legend now shows
-localized names; the same pattern is likely on the other module screens.
+**Found while checking, not fixed:** the country chips (`CountryChip.kt` in `core-ui`, used across
+every module) still render the raw code (`code.uppercase()`) rather than a localized name — that part
+of the earlier note still holds. The Economy and Environment chart legends, however, are no longer
+raw codes: both now call `countryDisplayName(code, ...)` (`EconomyScreen.kt`, `EnvironmentScreen.kt`),
+matching the Compare legend. Not checked on a device or emulator — verified by reading the code only.
 
 ## Also covered in the second pass
 
