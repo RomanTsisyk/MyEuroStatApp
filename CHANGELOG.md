@@ -8,6 +8,17 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.7.0] — 2026-09-23
 
+### Note
+
+**The APK attached to the GitHub release is debug-signed.** No release-signing
+secrets (`KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`)
+are configured yet, so `release.yml` fell back to the debug keystore for this
+build. F-Droid users are unaffected — F-Droid builds from source and signs
+with its own key. If you installed the GitHub APK: a future release signed
+with the real upstream key will be refused as an upgrade by Android
+(different signature), so you will need to uninstall this APK first before
+installing the next one (only cached data and local settings are lost).
+
 ### Added
 
 - Polish and Ukrainian country names: `countryDisplayName(code, fallback)`
@@ -90,6 +101,17 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `## [X.Y.Z]` CHANGELOG section plus the SHA-256 of every attached file as the notes
 - F-Droid recipe (`metadata/eu.eurostat.app.yml`) now targets `versionName` 0.7.0 /
   `versionCode` 70 / `commit: v0.7.0`
+- CI: `build.yml` skips docs-only pushes/PRs (`paths-ignore: docs/**, **/*.md,
+  fastlane/**, NLNET_SUBMISSION/**, design/**, metadata/**`), cancels superseded
+  runs on non-`master` branches, runs with a read-only `GITHUB_TOKEN`, and adds
+  per-job timeouts plus Kotlin/Native cache restore-keys
+- CI: `release.yml` grants `contents: write` only to the `publish` job and adds
+  timeouts plus a no-cancel concurrency group; every action across both
+  workflows is now pinned to its current major and to a commit SHA (this also
+  fixes the "Failed to restore gradle cache … 400" warnings from `setup-gradle`
+  v3 and the Node 20 / `setup-java` v4 deprecation warnings); a new
+  `.github/dependabot.yml` keeps GitHub Actions current (Gradle deliberately
+  left out until a separate toolchain-upgrade PR)
 
 ### Changed
 
@@ -314,6 +336,7 @@ the snapshot referenced in the NLnet NGI Zero Commons Fund proposal.
   `eurostat.android.application`) under `build-logic/`
 - Centralised version catalog (`gradle/libs.versions.toml`)
 
-[Unreleased]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/RomanTsisyk/MyEuroStatApp/releases/tag/v0.4.0
+[Unreleased]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/RomanTsisyk/MyEuroStatApp/releases/tag/v0.7.0
+[0.5.0]: https://github.com/RomanTsisyk/MyEuroStatApp/commit/5eebc72b432b67fe0bed90c57ad263cf03b45557
+[0.4.0]: https://github.com/RomanTsisyk/MyEuroStatApp/commit/49c3d97a6935cb470c456c9b2765bedfc8ec2463
