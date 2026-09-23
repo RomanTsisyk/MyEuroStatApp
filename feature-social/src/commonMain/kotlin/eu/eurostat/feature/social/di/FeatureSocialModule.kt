@@ -20,7 +20,7 @@ fun featureSocialModule() = module {
     single<SocialRepository> { SocialRepositoryImpl(get(), get(), get(), get()) }
     factory<Clock> { Clock.System }
     factory { GetSocialTimeSeriesUseCase(get()) }
-    factory<ComponentFactory<Any>>(qualifier = named(ChildConfig.Social::class.qualifiedName!!)) {
+    factory<ComponentFactory<Any>>(qualifier = named(requireNotNull(ChildConfig.Social::class.qualifiedName))) {
         ComponentFactory { ctx -> DefaultSocialComponent(ctx, get(), get(), get()) }
     }
 }

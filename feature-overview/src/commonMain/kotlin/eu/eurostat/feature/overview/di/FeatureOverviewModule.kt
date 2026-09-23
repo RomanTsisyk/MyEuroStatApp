@@ -14,7 +14,7 @@ import org.koin.dsl.module
  */
 fun featureOverviewModule() = module {
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Home::class.qualifiedName!!),
+        qualifier = named(requireNotNull(ChildConfig.Home::class.qualifiedName)),
     ) {
         ComponentFactory { ctx ->
             DefaultOverviewComponent(

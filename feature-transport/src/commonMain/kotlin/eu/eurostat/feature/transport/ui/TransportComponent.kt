@@ -206,9 +206,10 @@ class DefaultTransportComponent(
             .flatMap { it.points }
             .filter { it.roadPassengers != null }
             .maxOfOrNull { it.year }
+        val currentSelectedYear = selectedYear
         val resolvedYear = when {
             availableYears.isEmpty() -> query.yearRange.last
-            selectedYear != null && selectedYear!! in availableYears -> selectedYear!!
+            currentSelectedYear != null && currentSelectedYear in availableYears -> currentSelectedYear
             else -> latestRoadYear ?: availableYears.last()
         }
         selectedYear = resolvedYear

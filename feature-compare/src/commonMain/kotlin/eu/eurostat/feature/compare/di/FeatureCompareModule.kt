@@ -31,7 +31,7 @@ fun featureCompareModule() = module {
         )
     }
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Compare::class.qualifiedName!!),
+        qualifier = named(requireNotNull(ChildConfig.Compare::class.qualifiedName)),
     ) {
         ComponentFactory { ctx ->
             DefaultCompareComponent(

@@ -21,7 +21,7 @@ fun featureTradeModule() = module {
     factory<Clock> { Clock.System }
     factory { GetTradeTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Trade::class.qualifiedName!!)
+        qualifier = named(requireNotNull(ChildConfig.Trade::class.qualifiedName))
     ) {
         ComponentFactory { ctx -> DefaultTradeComponent(ctx, get(), get(), get()) }
     }

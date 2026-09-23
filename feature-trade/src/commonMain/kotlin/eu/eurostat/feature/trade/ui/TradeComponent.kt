@@ -190,9 +190,10 @@ class DefaultTradeComponent(
 
         val activeSeries = series.firstOrNull { it.countryCode == activeCountry }
         val availableYears = activeSeries?.points?.map { it.year }?.sorted() ?: emptyList()
+        val currentSelectedYear = selectedYear
         val resolvedYear = when {
             availableYears.isEmpty() -> query.yearRange.last
-            selectedYear != null && selectedYear!! in availableYears -> selectedYear!!
+            currentSelectedYear != null && currentSelectedYear in availableYears -> currentSelectedYear
             else -> availableYears.max()
         }.coerceIn(availableYears.minOrNull() ?: query.yearRange.first, availableYears.maxOrNull() ?: query.yearRange.last)
 

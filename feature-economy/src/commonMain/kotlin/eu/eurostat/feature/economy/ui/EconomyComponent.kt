@@ -193,9 +193,10 @@ class DefaultEconomyComponent(
 
         val seriesForCountry = data.firstOrNull { it.countryCode == activeCountry }
         val availableYears = seriesForCountry?.points?.map { it.year }?.sorted().orEmpty()
+        val requestedYear = selectedYear
         val activeYear = when {
             availableYears.isEmpty() -> query.yearRange.last
-            selectedYear != null && selectedYear in availableYears -> selectedYear!!
+            requestedYear != null && requestedYear in availableYears -> requestedYear
             else -> availableYears.last()
         }.coerceIn(availableYears.firstOrNull() ?: query.yearRange.first, availableYears.lastOrNull() ?: query.yearRange.last)
         selectedYear = activeYear

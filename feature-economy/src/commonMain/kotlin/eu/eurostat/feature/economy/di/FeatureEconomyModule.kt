@@ -21,7 +21,7 @@ fun featureEconomyModule() = module {
     single<EconomyRepository> { EconomyRepositoryImpl(get(), get(), get(), get()) }
     factory { GetEconomyTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Economy::class.qualifiedName!!)
+        qualifier = named(requireNotNull(ChildConfig.Economy::class.qualifiedName))
     ) {
         ComponentFactory { ctx -> DefaultEconomyComponent(ctx, get(), get(), get()) }
     }

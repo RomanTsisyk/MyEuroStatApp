@@ -31,7 +31,7 @@ fun featurePopulationModule() = module {
     }
     factory { GetPopulationTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Population::class.qualifiedName!!)
+        qualifier = named(requireNotNull(ChildConfig.Population::class.qualifiedName))
     ) {
         ComponentFactory { ctx -> DefaultPopulationComponent(ctx, get(), get(), get()) }
     }

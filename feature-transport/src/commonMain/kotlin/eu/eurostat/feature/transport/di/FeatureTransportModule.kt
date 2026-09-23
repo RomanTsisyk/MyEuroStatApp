@@ -21,7 +21,7 @@ fun featureTransportModule() = module {
     factory<Clock> { Clock.System }
     factory { GetTransportTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Transport::class.qualifiedName!!)
+        qualifier = named(requireNotNull(ChildConfig.Transport::class.qualifiedName))
     ) {
         ComponentFactory { ctx -> DefaultTransportComponent(ctx, get(), get(), get()) }
     }

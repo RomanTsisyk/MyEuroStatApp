@@ -8,7 +8,7 @@ import org.koin.dsl.module
 
 fun featureSettingsModule() = module {
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Settings::class.qualifiedName!!)
+        qualifier = named(requireNotNull(ChildConfig.Settings::class.qualifiedName))
     ) {
         ComponentFactory { ctx -> DefaultSettingsComponent(ctx, get(), get(), get()) }
     }

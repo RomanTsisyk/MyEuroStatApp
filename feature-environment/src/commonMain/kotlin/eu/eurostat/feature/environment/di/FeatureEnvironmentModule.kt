@@ -21,7 +21,7 @@ fun featureEnvironmentModule() = module {
     single<EnvironmentRepository> { EnvironmentRepositoryImpl(get(), get(), get(), get()) }
     factory { GetEnvironmentTimeSeriesUseCase(get()) }
     factory<ComponentFactory<Any>>(
-        qualifier = named(ChildConfig.Environment::class.qualifiedName!!)
+        qualifier = named(requireNotNull(ChildConfig.Environment::class.qualifiedName))
     ) {
         ComponentFactory { ctx -> DefaultEnvironmentComponent(ctx, get(), get(), get()) }
     }
