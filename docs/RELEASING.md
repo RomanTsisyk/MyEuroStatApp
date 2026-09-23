@@ -54,6 +54,19 @@ hardware token, encrypted offsite copy). Losing the key means every
 existing install has to be uninstalled before the next release can be
 installed.
 
+**v0.7.0 decision (2026-09-23):** shipped debug-signed on GitHub — no
+`KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` / `KEY_ALIAS` / `KEY_PASSWORD`
+repository secrets exist yet, so `release.yml` fell back to the debug
+keystore for the GitHub-release APK. F-Droid is unaffected: it builds from
+source and signs with its own key regardless of what the upstream build is
+signed with. Consequence for anyone who installed the GitHub APK: the first
+release built with a real upstream key will be refused as an "upgrade" by
+Android (different signature), so they have to uninstall the debug-signed
+APK first (only cached data and local settings are lost). When the four
+signing secrets are finally configured for a real key, add a CHANGELOG note
+in that release telling GitHub-APK users to uninstall the old build before
+installing the new one.
+
 ## Native desktop installers
 
 `composeApp/build.gradle.kts` configures `compose.desktop.application.nativeDistributions`
@@ -111,7 +124,14 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
 4. Add a new file `fastlane/metadata/android/{en-US,pl,uk}/changelogs/<versionCode>.txt`
    summarising the release in 1–3 sentences per locale (F-Droid reads
    these in its catalogue listing, 500 characters at most). `70.txt` already
-   exists for `0.7.0`.
+   exists for `0.7.0`. While touching store metadata, check every changed
+   file against its character limit: title 30, short description 80, full
+   description 4000, changelog 500. Count **characters, not bytes** — in a
+   shell without a UTF-8 locale, `wc -m` counts bytes and doubles the length
+   of Cyrillic (Polish/Ukrainian) text. Use instead:
+   ```bash
+   python3 -c "import sys;print(len(open(sys.argv[1],encoding='utf-8').read().rstrip(chr(10))))" <file>
+   ```
 5. Commit and push the release-prep changes.
 5a. **Dry run** (the Msi and Deb jobs have never run for real, so do this before
    the first tag): run the Release workflow by hand on the release branch,
@@ -157,7 +177,13 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
 GitHub Actions in [`.github/workflows/build.yml`](../.github/workflows/build.yml)
 runs on push to `main`/`master`/`develop-v*` (the `develop-v*` pattern was
 added so the maintainer's actual working branches are covered, not just
-`main`) and on pull requests against `main`/`master`. Three jobs: `android`
+`main`) and on pull requests against `main`/`master`. It now has a
+`paths-ignore` covering `docs/**`, `**/*.md`, `fastlane/**`,
+`NLNET_SUBMISSION/**`, `design/**` and `metadata/**` — a docs-only push or PR
+shows no checks at all, so don't wait for a green build.yml run on one.
+Superseded runs on non-`master` branches are cancelled via a concurrency
+group, the `GITHUB_TOKEN` is read-only, jobs have timeouts, and the
+Kotlin/Native cache uses restore-keys. Three jobs: `android`
 (assembles a debug APK, runs the full test suite, and now also runs
 `assembleRelease` so the R8/proguard pass is exercised on every push,
 falling back to the debug keystore without secrets), `desktop`
@@ -171,4 +197,12 @@ keystore secrets are set, debug-signed otherwise) and a three-OS matrix
 packages the native installers; every job attaches its artifact to the
 GitHub release for the tag. Installers ship unsigned for now —
 Gatekeeper/SmartScreen warnings are expected until signing certificates
-are budgeted (post-grant item).
+are budgeted (post-grant item). Only the `publish` job has `contents:
+write`; the build jobs have a read-only token, timeouts and a no-cancel
+concurrency group (a release build should never be cancelled mid-flight
+by a newer push).
+
+Every action in both workflows is pinned to its current major and to a
+commit SHA. `.github/dependabot.yml` opens grouped update PRs for GitHub
+Actions to keep those pins current (Gradle dependency updates are
+deliberately left out for now — that needs its own toolchain-upgrade PR).
