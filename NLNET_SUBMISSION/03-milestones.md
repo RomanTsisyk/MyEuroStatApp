@@ -9,6 +9,11 @@ Each milestone is tracked as a separate GitHub Milestone on the public repo
 (`https://github.com/RomanTsisyk/<REPO>/milestones`) with linked issues and a final
 checklist closed when the deliverable is signed off.
 
+*Post-submission update (September 2026, before review):* the four GitHub
+Milestones (M1–M4) were created on 2026-09-24, each with a deliverable
+checklist marking what is done and what is open:
+https://github.com/RomanTsisyk/MyEuroStatApp/milestones
+
 Funding model:
 - **Lead maintainer development** — the majority of the effort: four milestones
   of roughly equal size (~70 hours/milestone) over four months, at a modest
@@ -74,6 +79,21 @@ and green `:composeApp:build` across all targets. At MoU time the author
 proposes rescoping the freed hours toward the stretch list at the bottom of
 this document.
 
+*Post-submission update (September 2026, before review):* further progress on
+the author's own time. The 8-tab walk-through on the iPhone 17 simulator
+(iOS 26.5) was completed and recorded in the public `RUN_REPORT.md`, alongside
+the Android emulator (API 36) walk-through, both with screenshots. The full
+`iosSimulatorArm64Test` suite (673 Kotlin/Native tests) now also runs in CI
+(`build.yml` ios-test job) and passes, not just locally. Still open from this
+milestone: verification on a physical iPhone and a physical Android device
+(the completed walk-throughs used simulators/emulators only), TestFlight
+distribution, and running `./gradlew :composeApp:build` for all targets as a
+single command. (Separately, in July 2026, after submission, the project's
+own JSON-stat 2.0 parser was extracted into a standalone Kotlin
+Multiplatform library, `kotlin-jsonstat`, public on GitHub under Apache-2.0
+but not yet released; it is pre-grant work, not part of this submission's
+funded scope, and the app still uses its own in-repo copy of the parser.)
+
 ### Acceptance
 
 - `./gradlew :composeApp:build` passes ALL targets including iOS (the iOS
@@ -125,6 +145,17 @@ Unit-tested including on-device-equivalent `iosSimulatorArm64Test`. Still open
 from this milestone: bundled SVG flags via Compose Resources (the last item —
 everything else in M2's scope is now delivered).
 
+*Post-submission update (September 2026, before review):* the last open item
+has since shipped, also on the author's own time: 33 circle-flag vector
+drawables (HatScripts, MIT-licensed) are now bundled as Compose Resources via
+a `CountryFlag` component, and `CountryChip` resolves a country code to its
+real flag; the Unicode-emoji flags remain only as the fallback for flagless
+aggregates such as EA20. All deliverables originally scoped for M2 are now
+complete. Two deviations from the original scope, noted for transparency:
+the comparison screen is reached from a pill on the Overview header rather
+than from each screen's `ModuleAppBar`, and only the single-chart line-overlay
+variant exists (no small-multiples compare view).
+
 ---
 
 ## M3 — Tablet & desktop responsive + PL/UK localization
@@ -175,6 +206,15 @@ UI language immediately instead of on next launch. What remains funded by
 this milestone: the responsive layout pass at 360/600/840/1280 dp, and a
 native-speaker review of the PL translations (the author's working knowledge
 of Polish, not native fluency).
+
+*Post-submission update (September 2026, before review):* the two-pane
+master-detail layout (`AdaptiveTwoPane`: a 320 dp controls pane plus a
+content pane at widths >= 840 dp) now ships on all 8 feature screens, on the
+author's own time. Still open from this milestone: the visual pass across
+360/600/840/1280 dp widths — an internal check on a roughly 1070 dp tablet
+found the lower half of the screen empty at that width, and phone landscape
+needs the chart area to scroll — plus the native-speaker review of the PL
+translations.
 
 ### Out of scope
 
@@ -234,6 +274,19 @@ fallback), a tag-triggered release workflow that builds and uploads all
 four artifacts to a GitHub Release, F-Droid inclusion-queue submission, and
 physical-device verification.
 
+*Post-submission update (September 2026, before review):* the tag-triggered
+release workflow (`.github/workflows/release.yml`) has since been added, but
+it has not yet run — no `v*` tag has been pushed, so the Msi and Deb
+artifacts have never actually been built by it. App icons for Android
+(adaptive), iOS, and desktop are now in place, and R8 is exercised in CI via
+`assembleRelease`. A v0.7.0 release is being prepared and will ship on
+GitHub debug-signed, since a real Android release signing key is still not
+available. Still fully open: the release signing key itself; an AAB (none
+exists yet, and `targetSdk` is 35 while Google Play has required 36 since
+31 Aug 2026); the F-Droid merge request (a recipe is prepared for 0.7.0 but
+not filed); a Flatpak manifest (not started); and testers on
+macOS/Linux/Windows.
+
 ### Notes on signing
 
 - Apple Developer Programme membership and a Windows code-signing certificate are NOT included in this grant. The v1.0 release ships unsigned macOS and Windows binaries (users see Gatekeeper / SmartScreen warnings, can bypass). Signed releases are deferred to a post-grant phase or a stretch goal if earlier milestones finish ahead of schedule.
@@ -250,6 +303,19 @@ Items tracked in `NEXT_STEPS.md` but explicitly NOT funded here:
 - **Pull-to-refresh, detail modal on chart tap, chart performance profiling** — P3 items, post-1.0.
 - **Federated data sources** (Destatis, INSEE, GUS alongside Eurostat) — Phase 9, future grant.
 - **DE/FR/IT/ES/PT/NL app strings** — only PL + UK funded here. The landing page already has all 8 EU translations (community contribution welcome for app strings).
+
+*Post-submission update (September 2026, before review):* two corrections to
+the list above. First, the accessibility bullet: only the WCAG 2.1 AA
+tap-target minimum (48 dp) has actually been verified; a September code
+review found that charts in `core-charts` expose no semantics or text
+alternative for screen readers, custom selection controls expose no role or
+selected state, and some chart colours fall below WCAG contrast for graphics
+(e.g. one `SeriesPalette` colour at 2.78:1 on light cards, and dimmed lines
+in the highlight chart at 1.52:1, against the 3:1 required). Second,
+"Pull-to-refresh, detail modal on chart tap" listed above as not funded here
+have in fact already been built, on the author's own time: pull-to-refresh
+ships on all 8 feature screens, and a chart-tap detail sheet exists for
+Economy, Environment, and Compare. Chart performance profiling remains open.
 
 ---
 
@@ -281,6 +347,18 @@ If M1–M4 finish under budget or ahead of schedule, the remaining time goes to
 P3 items from `NEXT_STEPS.md` — pull-to-refresh, locale-aware error messages,
 font bundling, etc. — and the grant report at the end will list these as
 stretch deliverables.
+
+*Post-submission update (September 2026, before review):* the stretch items
+named above (pull-to-refresh, locale-aware error messages, font bundling)
+are already done, along with other pre-grant work (Search screen, Settings
+persistence). Per NLnet's rules — work is only funded after selection, and
+already-completed tasks in a milestone may be replaced with other work of
+equal size — the author will propose a re-planned scope of the same overall
+size at MoU time, replacing the now-completed tasks with open work. That
+scope has not been discussed with NLnet yet; briefly, the themes under
+consideration are: a signed store release and distribution, accessibility of
+charts and controls, `kotlin-jsonstat` reaching a 1.0 reusable-library release,
+and data-integrity tooling.
 
 If a milestone overruns, the author absorbs the cost (this is how solo OSS
 grant work normally goes) and ships the milestone late rather than cutting

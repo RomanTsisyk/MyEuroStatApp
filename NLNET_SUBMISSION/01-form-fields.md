@@ -90,6 +90,8 @@ During the grant period, the maintainer will run recurring user-testing sessions
 This is the maintainer's first NLnet application.
 ```
 
+*Post-submission update (September 2026, before review):* since submission, the JSON-stat 2.0 parser originally built for this project was extracted into a standalone public repository, `kotlin-jsonstat` (https://github.com/RomanTsisyk/kotlin-jsonstat, Apache-2.0, 9 Kotlin Multiplatform targets, 30 parser tests, CI). It is not yet published to Maven Central and this app still uses its own in-tree copy of the parser.
+
 ---
 
 ## SECTION 4 — Requested support
@@ -115,6 +117,8 @@ Excluded from the budget (honest scope decisions):
 - All other infrastructure is free: GitHub Actions CI on the open-source tier; GitHub Pages for hosting; F-Droid submission is free.
 
 If milestones finish ahead of schedule, the remaining time goes to P3 items from NEXT_STEPS.md (pull-to-refresh, locale-aware error messages, font bundling), listed in the grant report as stretch deliverables. If a milestone overruns, the maintainer absorbs the cost and ships late rather than cutting quality.
+
+*Post-submission update (September 2026, before review):* the three stretch items named above — pull-to-refresh, locale-aware error messages, and font bundling — have since been completed on the author's own time, ahead of the funded window; see the M3 update in `03-milestones.md`. Separately, the "Excluded from the budget" accessibility line above needs a correction: a September 2026 code review found that WCAG 2.1 AA tap-target minimums were the only accessibility property actually verified. Charts in `core-charts` expose no semantics or text alternative for screen readers, custom selection controls expose no role or selected state, and some chart colours fall below the WCAG contrast needed for graphics (e.g. a `SeriesPalette` colour at 2.78:1 on light cards, and dimmed lines in the highlight chart at 1.52:1, against the 3:1 minimum). It is recorded here as a correction to the claim above. The GitHub Milestones for M1–M4 were created on 2026-09-24 with deliverable checklists: https://github.com/RomanTsisyk/MyEuroStatApp/milestones
 
 ### Field 13 · Comparison
 
@@ -148,6 +152,8 @@ Four concrete technical challenges across the funded milestones:
 The data layer is already solved: a generic JSON-stat 2.0 parser handles all 19 Eurostat datasets with no per-dataset code; per-feature CellMapper extensions shape the cells into typed domain models. Stale-while-revalidate caching is implemented and tested per module. This layer is actively maintained against a live, changing upstream — a recent audit re-verified all 19 dataset codes against the production Eurostat API and caught two that Eurostat had restructured (`ilc_li02` lost a dimension, so its old filter now returns HTTP 400; `ilc_peps01` froze at 2020), both fixed the same day by migrating to the current dataset codes. The funded milestones do NOT change the data-layer architecture — they're pure UI + distribution work on top of an already-tested, actively-maintained foundation.
 ```
 
+*Post-submission update (September 2026, before review):* status on the four challenges above, per the detailed notes in `03-milestones.md`. (1) iOS toolchain verification is largely resolved: a real Xcode project (XcodeGen, `iosApp/project.yml`) replaced the stub, the app builds and launches on the iPhone 17 simulator rendering live data, and the full `iosSimulatorArm64Test` suite runs in CI and passes; physical-device and TestFlight verification remain open. (2) The country picker and comparison overlay are delivered: `CountryPickerSheet` plus a dedicated cross-module compare screen (`feature-compare`, 8 indicators, 2-5 countries, Absolute/Indexed-100 toggle); the flag set now uses 33 bundled circle-flag vector drawables rather than the placeholder rectangles described above. (3) and (4), the responsive layout and localization work, are also largely delivered ahead of the funded window: `AdaptiveTwoPane` master-detail ships on all 8 screens, and Compose Resources strings (EN/PL/UK) with a runtime language switch are complete across every module. Given this progress, the closing claim that the funded milestones are "pure UI + distribution work" no longer describes the full remaining scope: the accessibility gaps recorded under Field 12 are not covered by the plan as submitted. A re-planned scope of the same overall size, replacing the tasks already completed, will be proposed to NLnet at MoU time.
+
 ### Field 15 · Ecosystem
 
 ```
@@ -163,6 +169,8 @@ Engagement strategy across all three: public issue tracker on GitHub from day on
 
 User validation is built into the development loop. Throughout the four-month grant period, the maintainer will run recurring focus-group sessions every 2–4 weeks with 5–8 community participants — students, journalists, NGO researchers, and curious citizens from the Wrocław area and the wider EU open-data network. Sessions are informal, in person where possible (with refreshments provided from the project budget), and remote otherwise. Each session focuses on what shipped in the most recent milestone: usability, accessibility, navigation, chart legibility, and translation quality. Feedback is filed as public GitHub issues and feeds directly into the next milestone's planning. In addition, continuous feedback is gathered through public GitHub issues, discussions, and release-channel reports — keeping the validation loop open between sessions and beyond the grant.
 ```
+
+*Post-submission update (September 2026, before review):* the accessibility paragraph above overstates what was checked: only the WCAG 2.1 AA tap-target minimum had been verified, and a September 2026 code review found the gaps recorded under Field 12 (no screen-reader semantics or text alternative for charts, no role or selected state on custom selection controls, some chart colours below WCAG contrast). No focus-group sessions have been held yet; they remain part of the funded budget. Separately, `kotlin-jsonstat` (https://github.com/RomanTsisyk/kotlin-jsonstat) — the JSON-stat 2.0 parser extracted from this project into a standalone Apache-2.0 Kotlin Multiplatform library (9 targets, 30 parser tests, CI) — is a second reusable building block for the KMP ecosystem, alongside the app itself; it is not yet released to Maven Central and this app still uses its own in-tree copy.
 
 ---
 
