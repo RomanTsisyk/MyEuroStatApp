@@ -206,3 +206,22 @@ Every action in both workflows is pinned to its current major and to a
 commit SHA. `.github/dependabot.yml` opens grouped update PRs for GitHub
 Actions to keep those pins current (Gradle dependency updates are
 deliberately left out for now — that needs its own toolchain-upgrade PR).
+
+### Configuring the signing secrets (not done yet)
+
+In GitHub: *Settings → Secrets and variables → Actions → New repository
+secret*, add four secrets:
+
+| Secret | Value |
+|---|---|
+| `KEYSTORE_BASE64` | `base64 -w0 release.keystore` (macOS: `base64 -i release.keystore`) |
+| `KEYSTORE_PASSWORD` | the store password |
+| `KEY_ALIAS` | `eu-stats-release` |
+| `KEY_PASSWORD` | the key password (PKCS12 keystores use the store password) |
+
+Check a downloaded APK with
+`$ANDROID_HOME/build-tools/35.0.0/apksigner verify --print-certs composeApp-release.apk`:
+the certificate DN must be the release identity, not `CN=Android Debug`.
+
+`packageDeb` needs `fakeroot` (jpackage fails without it); `release.yml`
+installs it on the Ubuntu runner. Locally: `sudo apt-get install fakeroot`.
