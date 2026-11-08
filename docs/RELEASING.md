@@ -70,9 +70,9 @@ same store icon used for the Android/F-Droid listing.
 
 Each `package*` task only runs on its native OS (you cannot build a `.msi`
 on macOS). `packageDmg` has been verified locally, producing
-`EU Stats-1.0.0.dmg` (122 MB); `packageMsi` / `packageDeb` are exercised
-in CI (see below) but not yet verified against a real Windows/Linux
-install. All three installers are **unsigned** for now — macOS Gatekeeper
+`EU Stats-1.0.0.dmg` (122 MB); `packageDeb` has been built on Linux
+(`eu-stats_1.0.0_amd64.deb`, 77 MB — needs `fakeroot` installed);
+`packageMsi` has only CI coverage so far. All three installers are **unsigned** for now — macOS Gatekeeper
 and Windows SmartScreen will warn on first launch; signing is deferred to
 a post-grant phase (no Apple Developer / Windows code-signing cert
 budgeted — see `NLNET_SUBMISSION/03-milestones.md`).
@@ -129,11 +129,9 @@ JAVA_HOME=~/.gradle/jdks/<temurin-dir> ./gradlew :composeApp:packageDmg
 9. If this is a new public release: open a merge request against
    [fdroiddata](https://gitlab.com/fdroid/fdroiddata) updating
    `metadata/eu.eurostat.app.yml` to point at the new tag. See
-   [`docs/FDROID.md`](FDROID.md). **TODO before the first submission:** the
-   recipe still lists `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`
-   (and `CurrentVersion` / `CurrentVersionCode`), while the app is at 0.6.0 /
-   60 — and no `v*` tag exists in the local repository. Update the recipe to
-   the tag that is actually cut.
+   [`docs/FDROID.md`](FDROID.md). The recipe currently points at `v0.6.0` /
+   `versionCode` 60; bump `versionName`, `versionCode`, `commit`,
+   `CurrentVersion` and `CurrentVersionCode` together for every new tag.
 
 ## CI
 
@@ -150,8 +148,36 @@ the real `iosSimulatorArm64Test` suite — not just a compile — gated behind
 
 [`release.yml`](../.github/workflows/release.yml) runs on `v*` tag pushes:
 an `android` job assembles the release APK (real signature when the
-keystore secrets are set, debug-signed otherwise) and a three-OS matrix
-packages the native installers; every job attaches its artifact to the
-GitHub release for the tag. Installers ship unsigned for now —
+keystore secrets are set, debug-signed otherwise), writes the release notes
+(the fastlane changelog for the current `versionCode` plus the APK's
+SHA-256) and creates the GitHub release; a three-OS matrix then packages the
+native installers and attaches them to that release. The matrix waits for
+the `android` job so that only one job ever creates the release.
+
+**Dry run before tagging:** Actions → *Release* → *Run workflow* on any
+branch builds exactly the same files but uploads them as workflow artifacts
+(`android-release`, `desktop-packageDmg`/`Msi`/`Deb`) instead of publishing
+a release. Use it to check the Windows and Linux installers, which cannot be
+built on a Mac.
+
+### Configuring the signing secrets
+
+In GitHub: *Settings → Secrets and variables → Actions → New repository
+secret*, add four secrets:
+
+| Secret | Value |
+|---|---|
+| `KEYSTORE_BASE64` | `base64 -w0 release.keystore` (macOS: `base64 -i release.keystore`) |
+| `KEYSTORE_PASSWORD` | the store password |
+| `KEY_ALIAS` | `eu-stats-release` |
+| `KEY_PASSWORD` | the key password (PKCS12 keystores use the store password) |
+
+Then check the signature of a downloaded APK:
+
+```bash
+$ANDROID_HOME/build-tools/35.0.0/apksigner verify --print-certs composeApp-release.apk
+```
+
+The certificate DN must be the release identity, not `CN=Android Debug`. Installers ship unsigned for now —
 Gatekeeper/SmartScreen warnings are expected until signing certificates
 are budgeted (post-grant item).
