@@ -4,7 +4,24 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — v0.7 development (branches `develop-v0.7`, `develop-v0.8`)
+## [Unreleased]
+
+### Planned for v0.7 / v1.0
+
+- Verified launch on a physical iPhone (TestFlight) and the iOS simulator
+  walk-through; a run on a physical Android device (the emulator
+  walk-through is done — see `RUN_REPORT.md`)
+- Upstream release signing key in CI (until the four `KEYSTORE_*` /
+  `KEY_*` secrets are set, the release APK is debug-signed); signed
+  desktop installers (post-grant)
+- F-Droid inclusion (the recipe in `metadata/` now points at `v0.6.0` /
+  `versionCode` 60 — pending the fdroiddata merge request)
+
+## [0.6.0] — 2026-11-08
+
+First public, tagged release: earlier versions were internal milestones
+that were never tagged. GitHub Release ships the release APK plus unsigned
+`.dmg` / `.msi` / `.deb` desktop installers.
 
 ### Added
 
@@ -163,17 +180,6 @@ this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   clears on the next query change or a stale reload. `SourceFooter` gained a
   `refreshFailed` parameter (default false). Overview is not covered
 
-### Planned for v0.8 / v1.0
-
-- Verified launch on a physical iPhone (TestFlight) and the iOS simulator
-  walk-through; a run on a physical Android device (the emulator
-  walk-through is done — see `RUN_REPORT.md`)
-- Real Android release signing key (currently debug-keystore fallback);
-  Msi/Deb installers verified via CI (only Dmg verified locally so far)
-- F-Droid inclusion (metadata.yml prepared in `metadata/` — pending fdroiddata
-  MR; the recipe still pins `v0.4.0` / `versionCode` 40 and must be updated
-  to the tag cut for the next release)
-
 ## [0.5.0] — 2026-07-07
 
 ### Added
@@ -296,6 +302,5 @@ the snapshot referenced in the NLnet NGI Zero Commons Fund proposal.
   `eurostat.android.application`) under `build-logic/`
 - Centralised version catalog (`gradle/libs.versions.toml`)
 
-[Unreleased]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/RomanTsisyk/MyEuroStatApp/releases/tag/v0.4.0
+[Unreleased]: https://github.com/RomanTsisyk/MyEuroStatApp/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/RomanTsisyk/MyEuroStatApp/releases/tag/v0.6.0

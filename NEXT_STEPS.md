@@ -375,8 +375,10 @@ Original notes below.
 
 **Update:** the tag-triggered release workflow exists (`.github/workflows/release.yml`: on a `v*` tag it builds the release APK — signed when the `KEYSTORE_*`/`KEY_*` secrets are set, debug-signed otherwise — plus the Dmg/Msi/Deb installers on a macOS/Windows/Ubuntu matrix and attaches them to the GitHub Release).
 
+**Update (v0.6.0 release prep):** `release.yml` gained a `workflow_dispatch` dry run (same build, files uploaded as workflow artifacts instead of a release), release notes built from the fastlane changelog + APK SHA-256, and the desktop matrix now `needs: android` so only one job creates the release. The secrets table is in `docs/RELEASING.md`.
+
 **Steps still open:**
-1. Run it once for real: no `v*` tag has ever been pushed, so the Msi and Deb jobs have never executed (only `packageDmg` was verified, locally).
+1. Run it once for real: no `v*` tag has ever been pushed, so the Msi job has never executed. Dmg was verified locally on macOS; `assembleRelease` + `packageDeb` were verified on Linux on 2026-11-08 (4.4 MB R8 APK, versionCode 60; `eu-stats_1.0.0_amd64.deb`, 77 MB) — that run showed `packageDeb` needs `fakeroot`, now installed by the workflow.
 2. Configure the four signing secrets for a real release key.
 
 ---
@@ -388,7 +390,7 @@ Original notes below.
 **Steps still open:**
 1. Real Android release signing keystore (currently the documented debug-keystore fallback in `docs/RELEASING.md`).
 2. iOS deployment target review.
-3. F-Droid recipe: `metadata/eu.eurostat.app.yml` still pins `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`, and no `v*` tag exists in the local repo — update it (and the `CurrentVersion*` lines) to the tag cut for the next release before filing the fdroiddata merge request.
+3. ~~F-Droid recipe pinned at 0.4.0~~ — now points at `v0.6.0` / `versionCode` 60. File the fdroiddata merge request once the `v0.6.0` tag is pushed.
 
 ---
 

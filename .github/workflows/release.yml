@@ -3,6 +3,15 @@ name: Release
 # Pushing a tag like v0.6.0 builds the release APK and the three native
 # desktop installers and attaches them to a GitHub Release for that tag.
 #
+# Dry run: start the workflow by hand (Actions → Release → Run workflow) on
+# any branch. Everything is built the same way, but the files are uploaded
+# as workflow artifacts instead of being published as a release.
+#
+# The android job creates the release (notes = the fastlane changelog for
+# the current versionCode + the APK's SHA-256); the desktop jobs wait for
+# it and only attach their installer, so parallel jobs never race to create
+# the same release.
+#
 # Android signing: when the four KEYSTORE_*/KEY_* secrets are configured the
 # APK is signed with the real release key; otherwise the build falls back to
 # the debug keystore (same behavior as local builds without
@@ -10,6 +19,7 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -54,13 +64,52 @@ jobs:
       - name: Assemble Release APK
         run: ./gradlew :composeApp:assembleRelease
 
-      - name: Attach APK to the release
+      - name: Write release notes
+        run: |
+          code=$(sed -n 's/^ *versionCode = \([0-9]*\).*/\1/p' composeApp/build.gradle.kts | head -1)
+          apk=$(ls composeApp/build/outputs/apk/release/*.apk | head -1)
+          {
+            echo "## What's new"
+            echo
+            cat "fastlane/metadata/android/en-US/changelogs/${code}.txt"
+            echo
+            echo "Full history: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/CHANGELOG.md)"
+            echo
+            echo "## Downloads"
+            echo
+            echo "- **Android**: \`$(basename "$apk")\` (minSdk 24)"
+            echo "- **macOS** \`.dmg\`, **Windows** \`.msi\`, **Linux** \`.deb\`: unsigned, so Gatekeeper / SmartScreen warn on first launch"
+            echo
+            echo "## APK checksum"
+            echo
+            echo '```'
+            (cd "$(dirname "$apk")" && sha256sum "$(basename "$apk")")
+            echo '```'
+            if [ "$HAS_KEYSTORE" != "true" ]; then
+              echo
+              echo "> This APK is signed with the debug key (no release key configured in CI)."
+            fi
+          } > release-notes.md
+          cat release-notes.md
+
+      - name: Create the release and attach the APK
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: release-notes.md
           files: composeApp/build/outputs/apk/release/*.apk
 
+      - name: Upload APK (dry run)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: |
+            composeApp/build/outputs/apk/release/*.apk
+            release-notes.md
+
   desktop:
+    needs: android
     # One native installer per OS; unsigned for now (Gatekeeper/SmartScreen
     # warnings are expected — signing certs are a post-grant item, see
     # docs/RELEASING.md).
@@ -90,11 +139,23 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      # jpackage builds the .deb with fakeroot and fails without it.
+      - name: Install fakeroot
+        if: ${{ matrix.task == 'packageDeb' }}
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+
       - name: Package installer
         run: ./gradlew :composeApp:${{ matrix.task }}
 
       - name: Attach installer to the release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
           files: ${{ matrix.artifact }}
+
+      - name: Upload installer (dry run)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.task }}
+          path: ${{ matrix.artifact }}
