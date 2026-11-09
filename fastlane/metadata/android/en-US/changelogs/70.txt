@@ -1,0 +1,8 @@
+• Compare countries side by side: pick an indicator and 2–5 countries
+• Search across all 27 indicators
+• Full Polish and Ukrainian translation, switchable instantly in Settings
+• Real country flags and country names in your language
+• Tap a chart point to see its exact value
+• Air passenger data on the Transport screen
+• Real years on chart axes; clearer offline messages
+• Readable status bar in the dark theme

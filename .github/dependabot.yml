@@ -1,0 +1,20 @@
+version: 2
+
+updates:
+  # GitHub Actions: keep workflow `uses:` versions patched. Grouped into a
+  # single weekly PR instead of one PR per action.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "CI"
+
+  # The Gradle ecosystem is intentionally NOT enabled yet: Kotlin / Compose
+  # Multiplatform / AGP must be bumped together and verified with
+  # iosSimulatorArm64Test, which Dependabot cannot do (it only opens PRs, it
+  # doesn't run our Native test suite). Planned as a separate, manually
+  # driven toolchain-upgrade PR instead.

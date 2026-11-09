@@ -12,8 +12,9 @@ request against [`fdroiddata`](https://gitlab.com/fdroid/fdroiddata) is
 prepared and will be filed alongside the next signed upstream tag. The build
 recipe lives at [`metadata/eu.eurostat.app.yml`](../metadata/eu.eurostat.app.yml)
 in this repository so reviewers can inspect it ahead of submission. It pins
-`v0.6.0` (`versionCode` 60), the first public tag — see step 9 of
-[`RELEASING.md`](RELEASING.md).
+`v0.7.0` (`versionCode` 70), a tag that does not exist yet — file the merge
+request only after that tag is pushed, and change the recipe if a different tag
+is cut (see step 9 of [`RELEASING.md`](RELEASING.md)).
 
 The F-Droid inclusion review typically takes 2–6 weeks. Until then, the
 APK is available as a [GitHub release](https://github.com/RomanTsisyk/MyEuroStatApp/releases)

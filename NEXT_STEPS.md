@@ -375,10 +375,10 @@ Original notes below.
 
 **Update:** the tag-triggered release workflow exists (`.github/workflows/release.yml`: on a `v*` tag it builds the release APK — signed when the `KEYSTORE_*`/`KEY_*` secrets are set, debug-signed otherwise — plus the Dmg/Msi/Deb installers on a macOS/Windows/Ubuntu matrix and attaches them to the GitHub Release).
 
-**Update (v0.6.0 release prep):** `release.yml` gained a `workflow_dispatch` dry run (same build, files uploaded as workflow artifacts instead of a release), release notes built from the fastlane changelog + APK SHA-256, and the desktop matrix now `needs: android` so only one job creates the release. The secrets table is in `docs/RELEASING.md`.
+**Update (v0.7.0 release-prep, ✅ done) — CI hygiene:** `build.yml` now has a `paths-ignore` (`docs/**`, `**/*.md`, `fastlane/**`, `NLNET_SUBMISSION/**`, `design/**`, `metadata/**`) so docs-only pushes/PRs show no checks, cancels superseded runs on non-`master` branches via a concurrency group, runs with a read-only `GITHUB_TOKEN`, and adds per-job timeouts plus Kotlin/Native cache restore-keys. `release.yml` grants `contents: write` only to the `publish` job and adds timeouts plus a no-cancel concurrency group. Every action across both workflows is pinned to its current major and to a commit SHA (this also fixed the "Failed to restore gradle cache … 400" warnings from `setup-gradle` v3 and the Node 20 / `setup-java` v4 deprecation warnings). A new `.github/dependabot.yml` keeps GitHub Actions current via grouped update PRs (Gradle deliberately left out until a separate toolchain-upgrade PR).
 
 **Steps still open:**
-1. Run it once for real: no `v*` tag has ever been pushed, so the Msi job has never executed. Dmg was verified locally on macOS; `assembleRelease` + `packageDeb` were verified on Linux on 2026-11-08 (4.4 MB R8 APK, versionCode 60; `eu-stats_1.0.0_amd64.deb`, 77 MB) — that run showed `packageDeb` needs `fakeroot`, now installed by the workflow.
+1. Run it once for real: no `v*` tag has ever been pushed, so the Msi and Deb jobs have never executed (only `packageDmg` was verified, locally) — do the `workflow_dispatch` dry run described in `docs/RELEASING.md` step 5a before cutting the `v0.7.0` tag.
 2. Configure the four signing secrets for a real release key.
 
 ---
@@ -387,10 +387,18 @@ Original notes below.
 
 **Status:** iOS app icon (`AppIcon.appiconset`, single-size 1024 no-alpha, wired via `project.yml`/XcodeGen) and desktop per-OS icons (`.icns`/`.ico`/`.png` generated from the store icon) are done; version sync landed (`versionCode` 60 / `versionName` 0.6.0 across Android, the Settings About screen, and iOS `Info.plist`); Proguard/R8 is now exercised in CI via `assembleRelease` on every push (see CI above), not just a manual step.
 
+**v0.7.0 decision (2026-09-23):** shipped debug-signed on GitHub — no
+`KEYSTORE_*`/`KEY_*` secrets are configured, so `release.yml` falls back to
+the debug keystore for the GitHub-release APK (F-Droid is unaffected; it
+signs with its own key). Documented in `CHANGELOG.md` and
+`docs/RELEASING.md`. Consequence: a future release built with the real key
+will be refused as an "upgrade" by Android, so GitHub-APK users will need to
+uninstall first.
+
 **Steps still open:**
 1. Real Android release signing keystore (currently the documented debug-keystore fallback in `docs/RELEASING.md`).
 2. iOS deployment target review.
-3. ~~F-Droid recipe pinned at 0.4.0~~ — now points at `v0.6.0` / `versionCode` 60. File the fdroiddata merge request once the `v0.6.0` tag is pushed.
+3. F-Droid recipe: `metadata/eu.eurostat.app.yml` still pins `versionName` 0.4.0 / `versionCode` 40 / `commit: v0.4.0`, and no `v*` tag exists in the local repo — update it (and the `CurrentVersion*` lines) to the tag cut for the next release before filing the fdroiddata merge request.
 
 ---
 
